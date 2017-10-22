@@ -21,6 +21,7 @@
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
+    <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -281,6 +282,7 @@
     <Compile Include="Controllers\CBUdtSendGiftController.cs" />
     <Compile Include="Controllers\CBUdtReturnItemController.cs" />
     <Compile Include="Controllers\CBComSelMemberGameInfoStagesController.cs" />
+    <Compile Include="Controllers\DefaultController.cs" />
     <Compile Include="Controllers\TodoItemController.cs" />
     <Compile Include="Controllers\PingController.cs" />
     <Compile Include="DataObjects\globalVal.cs" />
