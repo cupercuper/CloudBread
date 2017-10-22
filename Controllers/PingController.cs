@@ -22,7 +22,7 @@ namespace CloudBread.Controllers
         public string Get()
         {
 
-            return "Hello"; 
+            return "Hello Ping"; 
         }
 
         // POST api/ping - return current authentication member SID
