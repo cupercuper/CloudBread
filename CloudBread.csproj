@@ -283,10 +283,20 @@
     <Compile Include="Controllers\CBUdtReturnItemController.cs" />
     <Compile Include="Controllers\CBComSelMemberGameInfoStagesController.cs" />
     <Compile Include="Controllers\DefaultController.cs" />
+    <Compile Include="Controllers\DWBuyUnitController.cs" />
+    <Compile Include="Controllers\DWChangeCaptianController.cs" />
+    <Compile Include="Controllers\DWChangeUnitListController.cs" />
+    <Compile Include="Controllers\DWEnhancementUnitController.cs" />
+    <Compile Include="Controllers\DWGetUserDataController.cs" />
+    <Compile Include="Controllers\DWInsertUserDataController.cs" />
+    <Compile Include="Controllers\DWSellUnitController.cs" />
+    <Compile Include="Controllers\DWUdtStageInfoController.cs" />
     <Compile Include="Controllers\TodoItemController.cs" />
     <Compile Include="Controllers\PingController.cs" />
     <Compile Include="DataObjects\globalVal.cs" />
     <Compile Include="DataObjects\TodoItem.cs" />
+    <Compile Include="DataTable\DataTable_Server.cs" />
+    <Compile Include="DWDataTableManager.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

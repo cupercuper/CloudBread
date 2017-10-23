@@ -60,7 +60,8 @@ namespace CloudBread
                     // execute redis rank fill task
                     CBRedis.FillAllRankFromDB();
                 }
-                
+
+                DWDataTableManager.LoadAllDataTable();
 
             }
             catch (System.Exception ex)

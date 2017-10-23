@@ -24,6 +24,7 @@ using System.Security.Claims;
 using Microsoft.Practices.TransientFaultHandling;
 using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.SqlAzure;
 using CloudBread.Models;
+using System.Text;
 
 
 namespace CloudBread.Controllers
@@ -34,7 +35,38 @@ namespace CloudBread.Controllers
         // GET api/Default
         public string Get()
         {
-            return "Hello from custom controller!";
+            RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+            SqlConnection connection = new SqlConnection(globalVal.DBConnectionString);
+            
+            string strQuery = string.Format("SELECT * FROM [UnitDataTable] Where SerialNo = '2'");
+            SqlCommand command = new SqlCommand(strQuery, connection);
+            DataTable dt = new DataTable();
+            using (SqlDataAdapter da = new SqlDataAdapter(command))
+            {
+                da.Fill(dt);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            foreach(DataRow dr in dt.Rows)
+            {
+                sb.Append(dr[0].ToString());
+                sb.Append(dr[1].ToString());
+                sb.Append(dr[2].ToString());
+                sb.Append(dr[3].ToString());
+                sb.Append(dr[4].ToString());
+                sb.Append(dr[5].ToString());
+                sb.Append(dr[6].ToString());
+                sb.Append(dr[7].ToString());
+                sb.Append(dr[8].ToString());
+                sb.Append(dr[9].ToString());
+                sb.Append(dr[10].ToString());
+                sb.Append(dr[11].ToString());
+                sb.Append(dr[12].ToString());
+                sb.Append(dr[13].ToString());
+                sb.Append(dr[14].ToString());
+            }
+
+            return sb.ToString();// "Hello from custom controller!";
         }
 
         public HttpResponseMessage Post(ComSelMemberInputParams p)
