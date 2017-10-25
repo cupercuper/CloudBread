@@ -103,6 +103,20 @@ namespace CloudBread
 
         public static uint AddUnitDic(ref Dictionary<uint, UnitData> unitDic, ulong serialNo)
         {
+            if(unitDic.Count == 0)
+            {
+                UnitData unitData = new UnitData()
+                {
+                    EnhancementCount = 0,
+                    Level = 1,
+                    SerialNo = serialNo
+                };
+
+                unitDic.Add(1, unitData);
+
+                return 1;
+            }
+
             uint[] keys = new uint[unitDic.Keys.Count];
             unitDic.Keys.CopyTo(keys, 0);
 
@@ -113,7 +127,6 @@ namespace CloudBread
                 if (curKey == uint.MaxValue)
                 {
                     curKey = 0;
-                    continue;
                 }
 
                 curKey++;
