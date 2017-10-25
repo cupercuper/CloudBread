@@ -48,8 +48,8 @@ namespace CloudBread
                 AddDataTable(StageDataTable_List.NAME, new StageDataTable_List());
                 AddDataTable(UnitDataTable_List.NAME, new UnitDataTable_List());
                 AddDataTable(UnitSummonDataTable_List.NAME, new UnitSummonDataTable_List());
-                //AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
-                //AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
+                AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
+                AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
 
                 //_random = new Random((int)DateTime.Now.Ticks);
 
