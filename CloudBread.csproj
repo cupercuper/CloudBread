@@ -297,6 +297,8 @@
     <Compile Include="DataObjects\TodoItem.cs" />
     <Compile Include="DataTable\DataTable_Server.cs" />
     <Compile Include="DWDataTableManager.cs" />
+    <Compile Include="DWGlobalConstants.cs" />
+    <Compile Include="DWMemberData.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -319,6 +321,13 @@
     <Compile Include="Models\ComUdtMemberGameInfoStages.cs" />
     <Compile Include="Models\ComUdtMemberItem.cs" />
     <Compile Include="Models\ComUdtMemberItemPurchase.cs" />
+    <Compile Include="Models\DWBuyUnit.cs" />
+    <Compile Include="Models\DWChangeCaptian.cs" />
+    <Compile Include="Models\DWChangeUnitList.cs" />
+    <Compile Include="Models\DWEnhancementUnit.cs" />
+    <Compile Include="Models\DWGetUserData.cs" />
+    <Compile Include="Models\DWInsUserData.cs" />
+    <Compile Include="Models\DWSellUnit.cs" />
     <Compile Include="Models\EncryptedData.cs" />
     <Compile Include="Models\InsRegMember.cs" />
     <Compile Include="Models\MobileServiceContext.cs" />
