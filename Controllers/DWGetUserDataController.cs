@@ -116,9 +116,10 @@ namespace CloudBread.Controllers
                     {
                         if(dreader.HasRows == false)
                         {
-                            result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                            result.ErrorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
                             return result;
                         }
+
                         while (dreader.Read())
                         {
                             DWGetUserData workItem = new DWGetUserData()

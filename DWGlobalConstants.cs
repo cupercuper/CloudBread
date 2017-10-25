@@ -8,6 +8,7 @@ namespace CloudBread
     public enum DW_ERROR_CODE
     {
         OK = 0,
+        NOT_FOUND_USER,
     }
 
     public enum MONEY_TYPE

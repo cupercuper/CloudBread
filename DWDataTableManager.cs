@@ -67,7 +67,7 @@ namespace CloudBread
         static void AddDataTable(string tableName, DataTableListBase dataTableListBase)
         {
             LoadDataTable(tableName, dataTableListBase);
-            LoadDataVersion(tableName, dataTableListBase);
+            //LoadDataVersion(tableName, dataTableListBase);
             _dataTableDic.Add(tableName, dataTableListBase);
         }
 
