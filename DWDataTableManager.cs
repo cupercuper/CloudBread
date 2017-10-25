@@ -43,7 +43,7 @@ namespace CloudBread
             try
             {
                 AddDataTable(BossDataTable_List.NAME, new BossDataTable_List());
-                //AddDataTable(CaptianDataTable_List.NAME, new CaptianDataTable_List());
+                AddDataTable(CaptianDataTable_List.NAME, new CaptianDataTable_List());
                 //AddDataTable(EnemyDataTable_List.NAME, new EnemyDataTable_List());
                 //AddDataTable(StageDataTable_List.NAME, new StageDataTable_List());
                 //AddDataTable(UnitDataTable_List.NAME, new UnitDataTable_List());
