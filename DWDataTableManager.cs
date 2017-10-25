@@ -51,10 +51,10 @@ namespace CloudBread
                 AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
                 AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
 
-                //_random = new Random((int)DateTime.Now.Ticks);
+                _random = new Random((int)DateTime.Now.Ticks);
 
-                //BuildUnitSummonRatioList();
-                //BuildCaptianList();
+                BuildUnitSummonRatioList();
+                BuildCaptianList();
 
                 return true;
             }
@@ -151,6 +151,11 @@ namespace CloudBread
             foreach(KeyValuePair<ulong, DataTableBase> kv in unitSummomnList)
             {
                 UnitSummonDataTable unitSummonDataTable = kv.Value as UnitSummonDataTable;
+                if(unitSummonDataTable.GroupID >= (int)GROUP_ID.MAX_GROUP)
+                {
+                    continue;
+                }
+
                 GROUP_ID groupID = (GROUP_ID)unitSummonDataTable.GroupID;
                 List<UnitRatioData> unitRatioList = null;
                 if(_unitRatioDataDic.TryGetValue((GROUP_ID)groupID, out unitRatioList) == false)
