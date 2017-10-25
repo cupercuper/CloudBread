@@ -42,19 +42,19 @@ namespace CloudBread
         {
             try
             {
-                AddDataTable(BossDataTable_List.NAME, new BossDataTable_List());
-                AddDataTable(CaptianDataTable_List.NAME, new CaptianDataTable_List());
-                AddDataTable(EnemyDataTable_List.NAME, new EnemyDataTable_List());
-                AddDataTable(StageDataTable_List.NAME, new StageDataTable_List());
-                AddDataTable(UnitDataTable_List.NAME, new UnitDataTable_List());
-                AddDataTable(UnitSummonDataTable_List.NAME, new UnitSummonDataTable_List());
-                AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
-                AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
+                //AddDataTable(BossDataTable_List.NAME, new BossDataTable_List());
+                //AddDataTable(CaptianDataTable_List.NAME, new CaptianDataTable_List());
+                //AddDataTable(EnemyDataTable_List.NAME, new EnemyDataTable_List());
+                //AddDataTable(StageDataTable_List.NAME, new StageDataTable_List());
+                //AddDataTable(UnitDataTable_List.NAME, new UnitDataTable_List());
+                //AddDataTable(UnitSummonDataTable_List.NAME, new UnitSummonDataTable_List());
+                //AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
+                //AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
 
-                _random = new Random((int)DateTime.Now.Ticks);
+                //_random = new Random((int)DateTime.Now.Ticks);
 
-                BuildUnitSummonRatioList();
-                BuildCaptianList();
+                //BuildUnitSummonRatioList();
+                //BuildCaptianList();
 
                 return true;
             }
