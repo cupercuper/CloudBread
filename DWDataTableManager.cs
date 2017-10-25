@@ -25,6 +25,7 @@ namespace CloudBread
         }
 
         static Dictionary<GROUP_ID, List<UnitRatioData>> _unitRatioDataDic = new Dictionary<GROUP_ID, List<UnitRatioData>>();
+        static List<int> _cacheList = new List<int>();
         static float[] _unitRatioTotalArray = new float[(int)GROUP_ID.MAX_GROUP];
 
         static int[] _groupMaxCount = new int[(int)GROUP_ID.MAX_GROUP]
@@ -36,7 +37,6 @@ namespace CloudBread
         static Dictionary<string, DataTableListBase> _dataTableDic = new Dictionary<string, DataTableListBase>();
 
         static List<byte> _captianLIst = new List<byte>();
-        static Random _random = null;
 
         public static bool LoadAllDataTable()
         {
@@ -50,8 +50,6 @@ namespace CloudBread
                 AddDataTable(UnitSummonDataTable_List.NAME, new UnitSummonDataTable_List());
                 AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
                 AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
-
-                _random = new Random((int)DateTime.Now.Ticks);
 
                 BuildUnitSummonRatioList();
                 BuildCaptianList();
@@ -208,6 +206,11 @@ namespace CloudBread
                 return;
             }
 
+            float maxRatio = _unitRatioTotalArray[(int)groupID];
+            List<int> inputList = new List<int>();
+
+            Random random = new Random((int)DateTime.Now.Ticks);
+
             while (true)
             {
                 if (summonUnitList.Count == _groupMaxCount[(int)groupID])
@@ -215,13 +218,21 @@ namespace CloudBread
                     break;
                 }
 
-                float ratio = (float)_random.NextDouble() * _unitRatioTotalArray[(int)groupID];
+                float ratio = (float)random.NextDouble() * maxRatio;
 
                 for(int i = 0; i < unitRatioList.Count; ++i)
                 {
-                    if(ratio <= unitRatioList[i].Ratio && summonUnitList.Contains(unitRatioList[i].SummonSerialNo) == false)
+                    if(inputList.Contains(i))
+                    {
+                        continue;
+                    }
+
+                    if(ratio <= unitRatioList[i].Ratio)
                     {
                         summonUnitList.Add(unitRatioList[i].SummonSerialNo);
+                        maxRatio -= unitRatioList[i].Ratio;
+                        inputList.Add(i);
+                        break;
                     }
                     ratio -= unitRatioList[i].Ratio;
                 }
@@ -241,7 +252,8 @@ namespace CloudBread
 
         public static byte GetCaptianID()
         {
-            int index = _random.Next(0, _captianLIst.Count);
+            Random random = new Random((int)DateTime.Now.Ticks);
+            int index = random.Next(0, _captianLIst.Count);
             return _captianLIst[index];
         }
 
