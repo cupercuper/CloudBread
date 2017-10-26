@@ -22,6 +22,7 @@ using Microsoft.Practices.TransientFaultHandling;
 using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.SqlAzure;
 using CloudBread.Models;
 using System.IO;
+using DW.CommonData;
 
 namespace CloudBread.Controllers
 {
@@ -119,7 +120,7 @@ namespace CloudBread.Controllers
                     {
                         if(dreader.HasRows == false)
                         {
-                            result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                            result.errorCode = (byte)DW_ERROR_CODE.OK;
                             return result;
                         }
 
@@ -136,13 +137,13 @@ namespace CloudBread.Controllers
 
             if (unitList == null || canBuyUnitList == null)
             {
-                result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
                 return result;
             }
 
             if (canBuyUnitList.Count == 0 || canBuyUnitList.Count <= p.index || p.index < 0)
             {
-                result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
                 return result;
             }
 
@@ -150,16 +151,16 @@ namespace CloudBread.Controllers
             UnitSummonDataTable unitSummonDataTable = DWDataTableManager.GetDataTable(UnitSummonDataTable_List.NAME, serialNo) as UnitSummonDataTable;
             if (unitSummonDataTable == null)
             {
-                result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
                 return result;
             }
 
             switch ((MONEY_TYPE)unitSummonDataTable.BuyType)
             {
-                case MONEY_TYPE.ENHANCEMENT_TYPE:
+                case MONEY_TYPE.ENHANCEDSTONE_TYPE:
                     if (enhancedStone < unitSummonDataTable.BuyCount)
                     {
-                        result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.OK;
                         return result;
                     }
                     else
@@ -170,7 +171,7 @@ namespace CloudBread.Controllers
                 case MONEY_TYPE.GEM_TYPE:
                     if (gem < unitSummonDataTable.BuyCount)
                     {
-                        result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.OK;
                         return result;
                     }
                     else
@@ -186,7 +187,7 @@ namespace CloudBread.Controllers
             UnitData unitData = null;
             if (unitList.TryGetValue(instanceNo, out unitData) == false)
             {
-                result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
                 return result;
             }
 
@@ -205,16 +206,23 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.OK;
                         return result;
                     }
                 }
             }
-            
-            result.UnitData = unitData;
-            result.Gem = gem;
-            result.EnhancedStone = enhancedStone;
-            result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+
+            result.unitData = new ClientUnitData()
+            {
+                instanceNo = instanceNo,
+                level = unitData.Level,
+                enhancementCount = unitData.EnhancementCount,
+                serialNo = unitData.SerialNo
+            };
+
+            result.gem = gem;
+            result.enhancedStone = enhancedStone;
+            result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;  
 

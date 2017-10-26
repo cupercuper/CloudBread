@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.IO;
-
+using DW.CommonData;
 
 namespace CloudBread
 {
@@ -61,6 +61,22 @@ namespace CloudBread
             ms.Close();
 
             return unitDic;
+        }
+
+        public static List<ClientUnitData> ConvertClientUnitData(Dictionary<uint, UnitData> unitDic)
+        {
+            List<ClientUnitData> clientUnitDataList = new List<ClientUnitData>();
+
+            foreach(KeyValuePair<uint, UnitData> kv in unitDic)
+            {
+                ClientUnitData unitData = new ClientUnitData();
+                unitData.instanceNo = kv.Key;
+                unitData.level = kv.Value.Level;
+                unitData.enhancementCount = kv.Value.EnhancementCount;
+                unitData.serialNo = kv.Value.SerialNo;
+            }
+
+            return clientUnitDataList;
         }
 
         public static byte[] ConvertByte(List<ulong> list)

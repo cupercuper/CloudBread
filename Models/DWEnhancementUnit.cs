@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using DW.CommonData;
 
 namespace CloudBread.Models
 {
+    [Serializable]
     public class DWEnhancementUnitInputParam
     {
         public string memberID;
@@ -13,11 +15,11 @@ namespace CloudBread.Models
         public byte enhancedCount;
     }
 
+    [Serializable]
     public class DWEnhancementUnitModel
     {
-        public uint InstanceNo;
-        public UnitData UnitData;
-        public int EnhancedStone;
-        public byte ErrorCode;
+        public ClientUnitData unitData;
+        public int enhancedStone;
+        public byte errorCode;
     }
 }

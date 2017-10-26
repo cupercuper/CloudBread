@@ -22,6 +22,8 @@ using Microsoft.Practices.TransientFaultHandling;
 using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.SqlAzure;
 using CloudBread.Models;
 using System.IO;
+using DW.CommonData;
+
 
 
 namespace CloudBread.Controllers
@@ -116,32 +118,32 @@ namespace CloudBread.Controllers
                     {
                         if(dreader.HasRows == false)
                         {
-                            result.ErrorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
+                            result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
                             return result;
                         }
 
                         while (dreader.Read())
                         {
-                            DWGetUserData workItem = new DWGetUserData()
+                            Dictionary<uint, UnitData> unitDic = DWMemberData.ConvertUnitDic(dreader[8] as byte[]);
+                            DWUserData workItem = new DWUserData()
                             {
-                                MemberID = dreader[0].ToString(),
-                                NickName = dreader[1].ToString(),
-                                RecommenderID = dreader[2].ToString(),
-                                CaptianLevel = (short)dreader[3],
-                                CaptianID = (byte)dreader[4],
-                                LastWorld = (short)dreader[5],
-                                CurWorld = (short)dreader[6],
-                                CurStage = (short)dreader[7],
-                                UnitList = DWMemberData.ConvertUnitDic(dreader[8] as byte[]),
-                                CanBuyUnitList = DWMemberData.ConvertUnitList(dreader[9] as byte[]),
-                                Gold = (int)dreader[10],
-                                Gem = (int)dreader[11],
-                                EnhancedStone = (int)dreader[12],
-
+                                memberID = dreader[0].ToString(),
+                                nickName = dreader[1].ToString(),
+                                recommenderID = dreader[2].ToString(),
+                                captianLevel = (short)dreader[3],
+                                captianID = (byte)dreader[4],
+                                lastWorld = (short)dreader[5],
+                                curWorld = (short)dreader[6],
+                                curStage = (short)dreader[7],
+                                unitList = DWMemberData.ConvertClientUnitData(unitDic),
+                                canBuyUnitList = DWMemberData.ConvertUnitList(dreader[9] as byte[]),
+                                gold = (int)dreader[10],
+                                gem = (int)dreader[11],
+                                enhancedStone = (int)dreader[12],
                             };
 
-                            result.UserDataList.Add(workItem);
-                            result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                            result.userDataList.Add(workItem);
+                            result.errorCode = (byte)DW_ERROR_CODE.OK;
                         }
                     }
                 }

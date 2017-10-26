@@ -296,8 +296,8 @@
     <Compile Include="DataObjects\globalVal.cs" />
     <Compile Include="DataObjects\TodoItem.cs" />
     <Compile Include="DataTable\DataTable_Server.cs" />
+    <Compile Include="DWCommonData.cs" />
     <Compile Include="DWDataTableManager.cs" />
-    <Compile Include="DWGlobalConstants.cs" />
     <Compile Include="DWMemberData.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

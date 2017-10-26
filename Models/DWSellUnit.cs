@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace CloudBread.Models
 {
+    [Serializable]
     public class DWSellUnitInputParam
     {
         public string memberID;
@@ -12,11 +11,12 @@ namespace CloudBread.Models
         public string token;
     }
 
+    [Serializable]
     public class DWSellUnitModel
     {
-        public uint InstanceNo;
-        public int Gem;
-        public int EnhancedStone;
-        public byte ErrorCode;
+        public uint instanceNo;
+        public int gem;
+        public int enhancedStone;
+        public byte errorCode;
     }
 }

@@ -22,6 +22,7 @@ using Microsoft.Practices.TransientFaultHandling;
 using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.SqlAzure;
 using CloudBread.Models;
 using System.IO;
+using DW.CommonData;
 
 namespace CloudBread.Controllers
 {
@@ -103,28 +104,30 @@ namespace CloudBread.Controllers
 
         DWInsUserDataModel GetResult(DWInsUserDataInputParams p)
         {
-            DWInsUserDataModel result = new DWInsUserDataModel()
+            DWInsUserDataModel result = new DWInsUserDataModel();
+            result.userData = new DWUserData()
             {
-                MemberID = p.memberID,
-                NickName = p.nickName,
-                RecommenderID = p.recommenderID,
-                CaptianLevel = 0,
-                CaptianID = 0,
-                LastWorld = 1,
-                CurWorld = 1,
-                CurStage = 1,
-                UnitList = new Dictionary<uint, UnitData>(),
-                CanBuyUnitList = DWDataTableManager.GetCanBuyUnitList(),
-                Gold = 0,
-                Gem = 0,
-                EnhancedStone = 0
+                memberID = p.memberID,
+                nickName = p.nickName,
+                recommenderID = p.recommenderID,
+                captianLevel = 0,
+                captianID = 0,
+                lastWorld = 1,
+                curWorld = 1,
+                curStage = 1,
+                unitList = null,
+                canBuyUnitList = DWDataTableManager.GetCanBuyUnitList(),
+                gold = 0,
+                gem = 0,
+                enhancedStone = 0
             };
 
             // Init Unit
-            Dictionary<uint, UnitData> unitLIst = result.UnitList;
-            DWMemberData.AddUnitDic(ref unitLIst, 1);
-            DWMemberData.AddUnitDic(ref unitLIst, 2);
-            DWMemberData.AddUnitDic(ref unitLIst, 3);
+            Dictionary<uint, UnitData> unitDic = new Dictionary<uint, UnitData>();
+            DWMemberData.AddUnitDic(ref unitDic, 1);
+            DWMemberData.AddUnitDic(ref unitDic, 2);
+            DWMemberData.AddUnitDic(ref unitDic, 3);
+            result.userData.unitList = DWMemberData.ConvertClientUnitData(unitDic);
             //---------------------------------------------------------
 
             /// Database connection retry policy
@@ -134,32 +137,32 @@ namespace CloudBread.Controllers
                 string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.MemberID;
-                    command.Parameters.Add("@nickName", SqlDbType.NVarChar).Value = result.NickName;
-                    command.Parameters.Add("@recommenderID", SqlDbType.NVarChar).Value = result.RecommenderID;
-                    command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = result.CaptianLevel;
-                    command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = result.CaptianID;
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = result.LastWorld;
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = result.CurWorld;
-                    command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = result.CurStage;
-                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.UnitList);
-                    command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.CanBuyUnitList);
-                    command.Parameters.Add("@gold", SqlDbType.Int).Value = result.Gold;
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = result.Gem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = result.EnhancedStone;
+                    command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
+                    command.Parameters.Add("@nickName", SqlDbType.NVarChar).Value = result.userData.nickName;
+                    command.Parameters.Add("@recommenderID", SqlDbType.NVarChar).Value = result.userData.recommenderID;
+                    command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = result.userData.captianLevel;
+                    command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = result.userData.captianID;
+                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = result.userData.lastWorld;
+                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = result.userData.curWorld;
+                    command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = result.userData.curStage;
+                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
+                    command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.canBuyUnitList);
+                    command.Parameters.Add("@gold", SqlDbType.Int).Value = result.userData.gold;
+                    command.Parameters.Add("@gem", SqlDbType.Int).Value = result.userData.gem;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = result.userData.enhancedStone;
 
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.OK;
                         return result;
                     }
                 }
             }
 
-            result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+            result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
     }

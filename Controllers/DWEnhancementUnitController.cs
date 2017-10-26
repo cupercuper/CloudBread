@@ -22,6 +22,8 @@ using Microsoft.Practices.TransientFaultHandling;
 using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.SqlAzure;
 using CloudBread.Models;
 using System.IO;
+using DW.CommonData;
+
 
 namespace CloudBread.Controllers
 {
@@ -119,7 +121,7 @@ namespace CloudBread.Controllers
                     {
                         if(dreader.HasRows == false)
                         {
-                            result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                            result.errorCode = (byte)DW_ERROR_CODE.OK;
                             return result;
                         }
 
@@ -135,7 +137,7 @@ namespace CloudBread.Controllers
             UnitData unitData = null;
             if (unitLIst.TryGetValue(p.InstanceNo, out unitData) == false)
             {
-                result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
                 return result;
             }
                 
@@ -153,16 +155,21 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.ErrorCode = (byte)DW_ERROR_CODE.OK; 
+                        result.errorCode = (byte)DW_ERROR_CODE.OK; 
                         return result;
                     }
                 }
             }
 
-            result.UnitData = unitData;
-            result.InstanceNo = p.InstanceNo;
-            result.EnhancedStone = enhancedStone;
-            result.ErrorCode = (byte)DW_ERROR_CODE.OK;
+            result.unitData = new ClientUnitData()
+            {
+                instanceNo= p.InstanceNo,
+                level= unitData.Level,
+                enhancementCount = unitData.EnhancementCount,
+                serialNo = unitData.SerialNo
+            };
+            result.enhancedStone = enhancedStone;
+            result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
     }
