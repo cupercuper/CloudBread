@@ -74,6 +74,8 @@ namespace CloudBread
                 unitData.level = kv.Value.Level;
                 unitData.enhancementCount = kv.Value.EnhancementCount;
                 unitData.serialNo = kv.Value.SerialNo;
+
+                clientUnitDataList.Add(unitData);
             }
 
             return clientUnitDataList;
