@@ -112,6 +112,7 @@ namespace CloudBread.Controllers
                 recommenderID = p.recommenderID,
                 captianLevel = 0,
                 captianID = 0,
+                captianChange = 0,
                 lastWorld = 1,
                 curWorld = 1,
                 curStage = 1,
@@ -134,7 +135,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone)";
+                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -142,6 +143,7 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@recommenderID", SqlDbType.NVarChar).Value = result.userData.recommenderID;
                     command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = result.userData.captianLevel;
                     command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = result.userData.captianID;
+                    command.Parameters.Add("@captianChange", SqlDbType.TinyInt).Value = result.userData.captianChange;
                     command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = result.userData.lastWorld;
                     command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = result.userData.curWorld;
                     command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = result.userData.curStage;

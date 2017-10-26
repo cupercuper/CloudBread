@@ -15,6 +15,7 @@ namespace CloudBread.Models
     {
         public byte captianID;
         public int enhancedStone;
+        public byte captianChange;
         public byte errorCode;
     }
 }

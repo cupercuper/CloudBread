@@ -105,11 +105,12 @@ namespace CloudBread.Controllers
             DWChangeCaptianModel result = new DWChangeCaptianModel();
 
             int enhancedStone = 0;
+            byte captianChange = 0;
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT EnhancedStone, CaptianChange FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -125,19 +126,22 @@ namespace CloudBread.Controllers
                         while (dreader.Read())
                         {
                             enhancedStone = (int)dreader[0];
+                            captianChange = (byte)dreader[1];
                         }
                     }
                 }
             }
 
+            captianChange = 1;
             byte captianID = DWDataTableManager.GetCaptianID();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             { 
-                string strQuery = string.Format("UPDATE DWMembers SET CaptianID = @captianID, CaptianLevel = @captianLevel, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET CaptianID = @captianID, CaptianLevel = @captianLevel, CaptianChange = @captianChange, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = captianID;
                     command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = 1;
+                    command.Parameters.Add("@captianChange", SqlDbType.TinyInt).Value = captianChange;
                     command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
 
                     connection.OpenWithRetry(retryPolicy);
@@ -153,6 +157,7 @@ namespace CloudBread.Controllers
 
             result.captianID = captianID;
             result.enhancedStone = enhancedStone;
+            result.captianChange = captianChange;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;

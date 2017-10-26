@@ -34,6 +34,7 @@ namespace DW.CommonData
         public string recommenderID;
         public short captianLevel;
         public byte captianID;
+        public byte captianChange;
         public short lastWorld;
         public short curWorld;
         public short curStage;

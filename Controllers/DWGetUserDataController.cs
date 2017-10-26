@@ -110,7 +110,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -124,7 +124,7 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            Dictionary<uint, UnitData> unitDic = DWMemberData.ConvertUnitDic(dreader[8] as byte[]);
+                            Dictionary<uint, UnitData> unitDic = DWMemberData.ConvertUnitDic(dreader[9] as byte[]);
                             DWUserData workItem = new DWUserData()
                             {
                                 memberID = dreader[0].ToString(),
@@ -132,14 +132,15 @@ namespace CloudBread.Controllers
                                 recommenderID = dreader[2].ToString(),
                                 captianLevel = (short)dreader[3],
                                 captianID = (byte)dreader[4],
-                                lastWorld = (short)dreader[5],
-                                curWorld = (short)dreader[6],
-                                curStage = (short)dreader[7],
+                                captianChange = (byte)dreader[5],
+                                lastWorld = (short)dreader[6],
+                                curWorld = (short)dreader[7],
+                                curStage = (short)dreader[8],
                                 unitList = DWMemberData.ConvertClientUnitData(unitDic),
-                                canBuyUnitList = DWMemberData.ConvertUnitList(dreader[9] as byte[]),
-                                gold = (int)dreader[10],
-                                gem = (int)dreader[11],
-                                enhancedStone = (int)dreader[12],
+                                canBuyUnitList = DWMemberData.ConvertUnitList(dreader[10] as byte[]),
+                                gold = (int)dreader[11],
+                                gem = (int)dreader[12],
+                                enhancedStone = (int)dreader[13],
                             };
 
                             result.userDataList.Add(workItem);
