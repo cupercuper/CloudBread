@@ -121,6 +121,40 @@ public class EnemyDataTable : DataTableBase
 	}
 }
 
+public class ProjectileDataTable_List : DataTableListBase
+{
+	public const string NAME = "Projectile";
+	public const string DATAFILENAME = "ProjectileData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			ProjectileDataTable data = new ProjectileDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class ProjectileDataTable : DataTableBase
+{
+	public string Name;
+	public string PrefabName;
+	public int Speed;
+	public int RotateSpeed;
+	public string DestroyEffect;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		PrefabName = dataRow[2].ToString();
+		Speed = int.Parse(dataRow[3].ToString());
+		RotateSpeed = int.Parse(dataRow[4].ToString());
+		DestroyEffect = dataRow[5].ToString();
+	}
+}
+
 public class StageDataTable_List : DataTableListBase
 {
 	public const string NAME = "Stage";
@@ -186,6 +220,7 @@ public class UnitDataTable : DataTableBase
 	public bool Flip_180;
 	public bool Flip_270;
 	public bool Flip_360;
+	public ulong Projectile;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -202,6 +237,7 @@ public class UnitDataTable : DataTableBase
 		Flip_180 = bool.Parse(dataRow[12].ToString());
 		Flip_270 = bool.Parse(dataRow[13].ToString());
 		Flip_360 = bool.Parse(dataRow[14].ToString());
+		Projectile = ulong.Parse(dataRow[15].ToString());
 	}
 }
 
