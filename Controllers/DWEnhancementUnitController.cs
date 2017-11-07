@@ -148,7 +148,7 @@ namespace CloudBread.Controllers
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitLIst);
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = enhancedStone;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
 
                     connection.OpenWithRetry(retryPolicy);
 
