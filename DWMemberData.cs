@@ -87,8 +87,7 @@ namespace CloudBread
             BinaryWriter bw = new BinaryWriter(ms);
 
             bw.Write(list.Count);
-            // 꺼꾸로 넣어 준다. 나중에 읽을떄 바로 읽기 위해서
-            for(int i = list.Count - 1; i >= 0; --i)
+            for(int i = 0; i < list.Count; ++i)
             {
                 bw.Write(list[i]);
             }
