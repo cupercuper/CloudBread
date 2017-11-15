@@ -136,13 +136,14 @@ namespace CloudBread.Controllers
             byte captianID = DWDataTableManager.GetCaptianID();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             { 
-                string strQuery = string.Format("UPDATE DWMembers SET CaptianID = @captianID, CaptianLevel = @captianLevel, CaptianChange = @captianChange, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET CaptianID = @captianID, CaptianLevel = @captianLevel, CaptianChange = @captianChange, EnhancedStone = @enhancedStone, CurWorld = @curWorld WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = captianID;
                     command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = 1;
                     command.Parameters.Add("@captianChange", SqlDbType.TinyInt).Value = captianChange;
                     command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
+                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = 1;
 
                     connection.OpenWithRetry(retryPolicy);
 
