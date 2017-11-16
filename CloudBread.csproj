@@ -290,6 +290,7 @@
     <Compile Include="Controllers\DWGetUserDataController.cs" />
     <Compile Include="Controllers\DWInsertUserDataController.cs" />
     <Compile Include="Controllers\DWSellUnitController.cs" />
+    <Compile Include="Controllers\DWServerCheckController.cs" />
     <Compile Include="Controllers\DWUdtStageInfoController.cs" />
     <Compile Include="Controllers\TodoItemController.cs" />
     <Compile Include="Controllers\PingController.cs" />
@@ -328,6 +329,7 @@
     <Compile Include="Models\DWGetUserData.cs" />
     <Compile Include="Models\DWInsUserData.cs" />
     <Compile Include="Models\DWSellUnit.cs" />
+    <Compile Include="Models\DWServerCheckData.cs" />
     <Compile Include="Models\EncryptedData.cs" />
     <Compile Include="Models\InsRegMember.cs" />
     <Compile Include="Models\MobileServiceContext.cs" />

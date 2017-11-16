@@ -17,6 +17,14 @@ namespace DW.CommonData
         MAX_TYPE
     }
 
+    public enum SERVER_CHECK_TYPE
+    {
+        NOT_TYPE,
+        REGISTER_TYPE,
+        CHECKING_TYPE,
+        MAX_TYPE
+    }
+
     [Serializable]
     public class ClientUnitData
     {
