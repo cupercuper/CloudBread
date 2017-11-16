@@ -41,6 +41,7 @@ public class BossDataTable : DataTableBase
 	public int HP;
 	public int Defence;
 	public int MoveSpeed;
+	public int Level;
 	public string Description;
 	public void Load(DataRow dataRow)
 	{
@@ -49,7 +50,8 @@ public class BossDataTable : DataTableBase
 		HP = int.Parse(dataRow[3].ToString());
 		Defence = int.Parse(dataRow[4].ToString());
 		MoveSpeed = int.Parse(dataRow[5].ToString());
-		Description = dataRow[6].ToString();
+		Level = int.Parse(dataRow[6].ToString());
+		Description = dataRow[7].ToString();
 	}
 }
 
@@ -118,6 +120,40 @@ public class EnemyDataTable : DataTableBase
 		MoveSpeed = int.Parse(dataRow[5].ToString());
 		MoveType = byte.Parse(dataRow[6].ToString());
 		Description = dataRow[7].ToString();
+	}
+}
+
+public class EnhancementDataTable_List : DataTableListBase
+{
+	public const string NAME = "Enhancement";
+	public const string DATAFILENAME = "EnhancementData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			EnhancementDataTable data = new EnhancementDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class EnhancementDataTable : DataTableBase
+{
+	public int Grade_1;
+	public int Grade_2;
+	public int Grade_3;
+	public int Grade_4;
+	public int Grade_5;
+	public void Load(DataRow dataRow)
+	{
+		Grade_1 = int.Parse(dataRow[1].ToString());
+		Grade_2 = int.Parse(dataRow[2].ToString());
+		Grade_3 = int.Parse(dataRow[3].ToString());
+		Grade_4 = int.Parse(dataRow[4].ToString());
+		Grade_5 = int.Parse(dataRow[5].ToString());
 	}
 }
 
@@ -221,6 +257,7 @@ public class UnitDataTable : DataTableBase
 	public bool Flip_270;
 	public bool Flip_360;
 	public ulong Projectile;
+	public List<byte> AttackType;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -238,6 +275,41 @@ public class UnitDataTable : DataTableBase
 		Flip_270 = bool.Parse(dataRow[13].ToString());
 		Flip_360 = bool.Parse(dataRow[14].ToString());
 		Projectile = ulong.Parse(dataRow[15].ToString());
+		AttackType = new List<byte>();
+		string [] AttackType_tempArray = dataRow[16].ToString().Split(',');
+		for( int i = 0; i < AttackType_tempArray.Length; ++i)
+		{
+			byte temp = byte.Parse(AttackType_tempArray[i]);
+			AttackType.Add(temp);
+		}
+	}
+}
+
+public class UnitSlotDataTable_List : DataTableListBase
+{
+	public const string NAME = "UnitSlot";
+	public const string DATAFILENAME = "UnitSlotData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			UnitSlotDataTable data = new UnitSlotDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class UnitSlotDataTable : DataTableBase
+{
+	public byte UnitMaxCount;
+	public int UpgradeMoney;
+	public void Load(DataRow dataRow)
+	{
+		UnitMaxCount = byte.Parse(dataRow[1].ToString());
+		UpgradeMoney = int.Parse(dataRow[2].ToString());
 	}
 }
 
@@ -355,6 +427,7 @@ public class WorldDataTable : DataTableBase
 	public string BackGround2;
 	public List<ulong> StageList;
 	public ulong BossSerialNo;
+	public int BossLevel;
 	public string Description;
 	public void Load(DataRow dataRow)
 	{
@@ -369,7 +442,8 @@ public class WorldDataTable : DataTableBase
 			StageList.Add(temp);
 		}
 		BossSerialNo = ulong.Parse(dataRow[5].ToString());
-		Description = dataRow[6].ToString();
+		BossLevel = int.Parse(dataRow[6].ToString());
+		Description = dataRow[7].ToString();
 	}
 }
 

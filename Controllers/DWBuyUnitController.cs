@@ -108,11 +108,12 @@ namespace CloudBread.Controllers
             List<ulong> canBuyUnitList = null;
             int gem = 0;
             int enhancedStone = 0;
+            byte unitSlotIdx = 1;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT UnitList, CanBuyUnitList, Gem, EnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT UnitList, CanBuyUnitList, Gem, EnhancedStone, UnitSlotIdx FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -130,12 +131,26 @@ namespace CloudBread.Controllers
                             canBuyUnitList = DWMemberData.ConvertUnitList(dreader[1] as byte[]);
                             gem = (int)dreader[2];
                             enhancedStone = (int)dreader[3];
+                            unitSlotIdx = (byte)dreader[4];
                         }
                     }
                 }
             }
 
             if (unitList == null || canBuyUnitList == null)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                return result;
+            }
+
+            UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSummonDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
+            if(unitSlotDataTable == null)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                return result;
+            }
+
+            if(unitSlotDataTable.UnitMaxCount == unitList.Count)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.OK;
                 return result;

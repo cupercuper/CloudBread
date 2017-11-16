@@ -23,19 +23,18 @@ using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.
 using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
-
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWInsertUserDataController : ApiController
+    public class DWUnitSlotUpgradeController : ApiController
     {
-        // GET api/DWInsertUserData
+        // GET api/DWUnitSlotUpgrade
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWInsUserDataInputParams p)
+        public HttpResponseMessage Post(DWUnitSlotUpgradeInputParam p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -43,7 +42,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWInsUserDataInputParams>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWUnitSlotUpgradeInputParam>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -60,13 +59,12 @@ namespace CloudBread.Controllers
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
             string jsonParam = JsonConvert.SerializeObject(p);
 
-
             HttpResponseMessage response = new HttpResponseMessage();
             EncryptedData encryptedResult = new EncryptedData();
-            
+
             try
             {
-                DWInsUserDataModel result = GetResult(p);
+                DWUnitSlotUpgradeModel result = result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -85,7 +83,7 @@ namespace CloudBread.Controllers
                 }
 
                 response = Request.CreateResponse(HttpStatusCode.OK, result);
-                return response;   
+                return response;
             }
 
             catch (Exception ex)
@@ -93,7 +91,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWInsertUserDataController";
+                logMessage.Logger = "DWGetUserDataController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -102,70 +100,72 @@ namespace CloudBread.Controllers
             }
         }
 
-        DWInsUserDataModel GetResult(DWInsUserDataInputParams p)
+        DWUnitSlotUpgradeModel GetResult(DWUnitSlotUpgradeInputParam p)
         {
-            DWInsUserDataModel result = new DWInsUserDataModel();
-            result.userData = new DWUserData()
-            {
-                memberID = p.memberID,
-                nickName = p.nickName,
-                recommenderID = p.recommenderID,
-                captianLevel = 0,
-                captianID = 0,
-                captianChange = 0,
-                lastWorld = 1,
-                curWorld = 1,
-                curStage = 1,
-                unitList = null,
-                canBuyUnitList = DWDataTableManager.GetCanBuyUnitList(),
-                gold = 0,
-                gem = 0,
-                enhancedStone = 0,
-                unitSlotIdx = 1
-            };
+            DWUnitSlotUpgradeModel result = new DWUnitSlotUpgradeModel();
 
-            // Init Unit
-            Dictionary<uint, UnitData> unitDic = new Dictionary<uint, UnitData>();
-            DWMemberData.AddUnitDic(ref unitDic, 1);
-            DWMemberData.AddUnitDic(ref unitDic, 3);
-            DWMemberData.AddUnitDic(ref unitDic, 4);
-            result.userData.unitList = DWMemberData.ConvertClientUnitData(unitDic);
-            //---------------------------------------------------------
+            int gem = 0;
+            byte unitSlotIdx = 1;
 
-            /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone, UnitSlotIdx) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone, @unitSlotIdx)";
+                string strQuery = string.Format("SELECT Gem, UnitSlotIdx FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
-                    command.Parameters.Add("@nickName", SqlDbType.NVarChar).Value = result.userData.nickName;
-                    command.Parameters.Add("@recommenderID", SqlDbType.NVarChar).Value = result.userData.recommenderID;
-                    command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = result.userData.captianLevel;
-                    command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = result.userData.captianID;
-                    command.Parameters.Add("@captianChange", SqlDbType.TinyInt).Value = result.userData.captianChange;
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = result.userData.lastWorld;
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = result.userData.curWorld;
-                    command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = result.userData.curStage;
-                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
-                    command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.canBuyUnitList);
-                    command.Parameters.Add("@gold", SqlDbType.Int).Value = result.userData.gold;
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = result.userData.gem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = result.userData.enhancedStone;
-                    command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = 1;
-                    
+                    connection.OpenWithRetry(retryPolicy);
+                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+                    {
+                        if (dreader.HasRows == false)
+                        {
+                            result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
+                            return result;
+                        }
+
+                        while (dreader.Read())
+                        {
+                            gem = (int)dreader[0];
+                            unitSlotIdx = (byte)dreader[1];
+                        }
+                    }
+                }
+            }
+
+            unitSlotIdx++;
+            UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
+            if(unitSlotDataTable == null || gem < unitSlotDataTable.UpgradeMoney)
+            {
+                unitSlotIdx--;
+                result.gem = gem;
+                result.unitSlotIdx = unitSlotIdx;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            gem -= unitSlotDataTable.UpgradeMoney;
+
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, UnitSlotIdx = @unitSlotIdx WHERE MemberID = '{0}'", p.memberID);
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                    command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = unitSlotIdx;
+
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
 
+            
+            result.gem = gem;
+            result.unitSlotIdx = unitSlotIdx;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

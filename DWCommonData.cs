@@ -7,6 +7,8 @@ namespace DW.CommonData
     {
         OK = 0,
         NOT_FOUND_USER,
+        DB_ERROR,
+        LOGIC_ERROR
     }
 
     public enum MONEY_TYPE
@@ -51,6 +53,7 @@ namespace DW.CommonData
         public int gold;
         public int gem;
         public int enhancedStone;
+        public byte unitSlotIdx;
     }
 
 }
