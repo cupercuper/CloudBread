@@ -143,7 +143,7 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSummonDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
+            UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
             if(unitSlotDataTable == null)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.OK;
