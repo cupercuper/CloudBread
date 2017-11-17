@@ -61,7 +61,7 @@ namespace CloudBread
                     CBRedis.FillAllRankFromDB();
                 }
 
-                DWDataTableManager.LoadAllDataTable();
+                //DWDataTableManager.LoadAllDataTable();
 
             }
             catch (System.Exception ex)
