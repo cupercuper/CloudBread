@@ -1,21 +1,19 @@
 ﻿using System;
-using DW.CommonData;
 
 namespace CloudBread.Models
 {
     [Serializable]
-    public class DWInsUserDataInputParams
+    public class DWUdtStageInfoInputParams
     {
         public string memberID;
-        public string nickName;
-        public string recommenderID;
+        public short worldNo;
         public string token;
     }
 
     [Serializable]
-    public class DWInsUserDataModel
+    public class DWUdtStageInfoModel
     {
-        public DWUserData userData;
+        public short worldNo;
         public byte errorCode;
     }
 }

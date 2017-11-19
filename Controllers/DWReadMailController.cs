@@ -27,15 +27,15 @@ using DW.CommonData;
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWUdtStageInfoController : ApiController
+    public class DWReadMailController : ApiController
     {
-        // GET api/DWUdtStageInfo
+        // GET api/DWReadMail
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWUdtStageInfoInputParams p)
+        public HttpResponseMessage Post(DWReadMailInputParams p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -43,7 +43,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWUdtStageInfoInputParams>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWReadMailInputParams>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -65,7 +65,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                DWUdtStageInfoModel result = result = GetResult(p);
+                DWReadMailModel result = result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -100,19 +100,45 @@ namespace CloudBread.Controllers
                 throw;
             }
         }
-
-
-        DWUdtStageInfoModel GetResult(DWUdtStageInfoInputParams p)
+        
+        DWReadMailModel GetResult(DWReadMailInputParams p)
         {
-            DWUdtStageInfoModel result = new DWUdtStageInfoModel();
+            DWReadMailModel result = new DWReadMailModel();
 
-            short lastWorld = 0;
-            short curWorld = 0;
-
+            DWMailData mailData = null;
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastWorld, CurWorld FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = "SELECT MailData FROM[dbo].[DWMail] Where ReceiveID = @receiveID AND [Index] = @index AND [Read] = 0";
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@receiveID", SqlDbType.NVarChar).Value = p.memberID;
+                    command.Parameters.Add("@index", SqlDbType.BigInt).Value = p.index;
+
+                    connection.OpenWithRetry(retryPolicy);
+                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+                    {
+                        while (dreader.Read())
+                        {
+                            mailData = DWMemberData.ConvertMailData(dreader[0] as byte[]);
+                        }
+                    }
+                }
+            }
+
+            if(mailData == null)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                return result;
+            }
+
+            int gem = 0;
+            int gold = 0;
+            int enhancedStone = 0;
+
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("SELECT Gold, Gem, EnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -126,34 +152,46 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            lastWorld = (short)dreader[0];
-                            curWorld = (short)dreader[1];
+                            gold = (int)dreader[0];
+                            gem = (int)dreader[1];
+                            enhancedStone = (int)dreader[2];                            
                         }
                     }
                 }
             }
 
-            short checkNum = (short)(p.worldNo - lastWorld);
-            if(checkNum > 1)
+            for (int i = 0; i < mailData.itemData.Count; ++i)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
+                ItemDataTable itemDataTable = DWDataTableManager.GetDataTable(ItemDataTable_List.NAME, mailData.itemData[0].itemNo) as ItemDataTable;
+                if(itemDataTable == null)
+                {
+                    continue;
+                }
 
-            if(p.worldNo > lastWorld)
-            {
-                lastWorld = p.worldNo;
-            }
+                switch((ITEM_TYPE)itemDataTable.ChangeType)
+                {
+                    case ITEM_TYPE.GOLD_TYPE:
+                        gold += mailData.itemData[0].count;
+                        break;
 
-            curWorld = p.worldNo;
+                    case ITEM_TYPE.GEM_TYPE:
+                        gem += mailData.itemData[0].count;
+                        break;
+
+                    case ITEM_TYPE.ENHANCEDSTONE_TYPE:
+                        enhancedStone += mailData.itemData[0].count;
+                        break;
+                }
+            }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET LastWorld = @lastWorld, CurWorld = @curWorld WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorld;
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = curWorld;
+                    command.Parameters.Add("@gold", SqlDbType.Int).Value = gold;
+                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -166,9 +204,33 @@ namespace CloudBread.Controllers
                 }
             }
 
-            result.worldNo = p.worldNo;
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("UPDATE DWMail SET [Read] = 1 WHERE [Index] = @index");
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@index", SqlDbType.BigInt).Value = p.index;
+
+                    connection.OpenWithRetry(retryPolicy);
+
+                    int rowCount = command.ExecuteNonQuery();
+                    if (rowCount <= 0)
+                    {
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                        return result;
+                    }
+                }
+            }
+
+            result.index = p.index;
+            result.gold = gold;
+            result.gem = gem;
+            result.enhancedStone = enhancedStone;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
+
             return result;
         }
     }
+
+
 }

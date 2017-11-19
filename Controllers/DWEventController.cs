@@ -27,15 +27,15 @@ using DW.CommonData;
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWUdtStageInfoController : ApiController
+    public class DWEventController : ApiController
     {
-        // GET api/DWUdtStageInfo
+        // GET api/DWEvent
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWUdtStageInfoInputParams p)
+        public HttpResponseMessage Post(DWEventInputParams p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -43,7 +43,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWUdtStageInfoInputParams>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWEventInputParams>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -65,7 +65,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                DWUdtStageInfoModel result = result = GetResult(p);
+                DWEventModel result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -86,7 +86,6 @@ namespace CloudBread.Controllers
                 response = Request.CreateResponse(HttpStatusCode.OK, result);
                 return response;
             }
-
             catch (Exception ex)
             {
                 // error log
@@ -101,59 +100,76 @@ namespace CloudBread.Controllers
             }
         }
 
-
-        DWUdtStageInfoModel GetResult(DWUdtStageInfoInputParams p)
+        DWEventModel GetResult(DWEventInputParams p)
         {
-            DWUdtStageInfoModel result = new DWUdtStageInfoModel();
+            DWEventModel result = new DWEventModel();
 
-            short lastWorld = 0;
-            short curWorld = 0;
-
+            long index = 0;
+            EventData eventData = null;
+            /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastWorld, CurWorld FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT [Index], EventData FROM DWEvent WHERE EventType = @eventType AND StartTime <= @currentTime AND EndTime >= @currentTime");
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
+                    command.Parameters.Add("@eventType", SqlDbType.TinyInt).Value = p.eventCheckType;
+                    command.Parameters.Add("@currentTime", SqlDbType.DateTime).Value = DateTime.UtcNow;
+
                     connection.OpenWithRetry(retryPolicy);
+
                     using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
                     {
-                        if (dreader.HasRows == false)
-                        {
-                            result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
-                            return result;
-                        }
-
                         while (dreader.Read())
                         {
-                            lastWorld = (short)dreader[0];
-                            curWorld = (short)dreader[1];
+                            index = (long)dreader[0];
+                            eventData = DWMemberData.ConvertEventData(dreader[1] as byte[]);
                         }
                     }
                 }
             }
 
-            short checkNum = (short)(p.worldNo - lastWorld);
-            if(checkNum > 1)
+            if(eventData == null)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
                 return result;
             }
 
-            if(p.worldNo > lastWorld)
+            List<long> eventList = new List<long>();
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                lastWorld = p.worldNo;
+                string strQuery = string.Format("SELECT EventList FROM DWMembersInputEvent WHERE MemberID = @memberID");
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = p.memberID;
+
+                    connection.OpenWithRetry(retryPolicy);
+
+                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+                    {
+                        while (dreader.Read())
+                        {
+                            eventList = DWMemberData.ConvertEventList(dreader[0] as byte[]);
+                        }
+                    }
+                }
             }
 
-            curWorld = p.worldNo;
+            if(eventList.Contains(index))
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                return result;
+            }
+
+            eventList.Add(index);
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET LastWorld = @lastWorld, CurWorld = @curWorld WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersInputEvent SET EventList = @eventList WHERE MemberID = @memberID");
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorld;
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = curWorld;
+                    command.Parameters.Add("@eventList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(eventList);
+                    command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = p.memberID;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -166,8 +182,36 @@ namespace CloudBread.Controllers
                 }
             }
 
-            result.worldNo = p.worldNo;
+            DWMailData mailData = new DWMailData();
+            mailData.msg = eventData.msg;
+            mailData.itemData = new List<DWItemData>();
+            for(int i = 0; i < eventData.itemData.Count; ++i)
+            {
+                mailData.itemData.Add(eventData.itemData[i]);
+            }
+
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = "Insert into DWMail (SenderID, ReceiveID, MailData) VALUES (@senderID, @receiveID, @mailData)";
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@senderID", SqlDbType.NVarChar).Value = "Master";
+                    command.Parameters.Add("@receiveID", SqlDbType.NVarChar).Value = p.memberID;
+                    command.Parameters.Add("@mailData", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(mailData);
+
+                    connection.OpenWithRetry(retryPolicy);
+
+                    int rowCount = command.ExecuteNonQuery();
+                    if (rowCount <= 0)
+                    {
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                        return result;
+                    }
+                }
+            }
+
             result.errorCode = (byte)DW_ERROR_CODE.OK;
+
             return result;
         }
     }

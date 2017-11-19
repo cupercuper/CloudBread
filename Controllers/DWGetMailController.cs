@@ -24,18 +24,19 @@ using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
 
+
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWUdtStageInfoController : ApiController
+    public class DWGetMailController : ApiController
     {
-        // GET api/DWUdtStageInfo
+        // GET api/DWGetMail
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWUdtStageInfoInputParams p)
+        public HttpResponseMessage Post(DWGetMailInputParam p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -43,7 +44,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWUdtStageInfoInputParams>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWGetMailInputParam>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -65,7 +66,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                DWUdtStageInfoModel result = result = GetResult(p);
+                DWGetMailModel result = result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -101,74 +102,51 @@ namespace CloudBread.Controllers
             }
         }
 
-
-        DWUdtStageInfoModel GetResult(DWUdtStageInfoInputParams p)
+        const double LIMIT_DAY = 30.0;
+        DWGetMailModel GetResult(DWGetMailInputParam p)
         {
-            DWUdtStageInfoModel result = new DWUdtStageInfoModel();
+            DateTime utcTime = DateTime.UtcNow;
+            utcTime = utcTime.AddDays(-LIMIT_DAY);
 
-            short lastWorld = 0;
-            short curWorld = 0;
+            DWGetMailModel result = new DWGetMailModel();
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastWorld, CurWorld FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("WITH TEMPTABLE AS(SELECT ROW_NUMBER() OVER(ORDER BY CreatedAt) AS rownum, [Index], SenderID, ReceiveID, MailData, CreatedAt FROM DWMail WHERE CreatedAt >= @createdAt AND [Read] = 0 AND ReceiveID = @receiveID) SELECT[Index], SenderID, ReceiveID, MailData, CreatedAt FROM TEMPTABLE WHERE rownum > @start AND rownum <= @last ORDER BY rownum");
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
+                    command.Parameters.Add("@createdAt", SqlDbType.DateTime).Value = utcTime;
+                    command.Parameters.Add("@receiveID", SqlDbType.NVarChar).Value = p.memberID;                    
+                    command.Parameters.Add("@start", SqlDbType.Int).Value = p.startIndex;
+                    command.Parameters.Add("@last", SqlDbType.Int).Value = p.startIndex + p.offset;
+
                     connection.OpenWithRetry(retryPolicy);
                     using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
                     {
-                        if (dreader.HasRows == false)
-                        {
-                            result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
-                            return result;
-                        }
-
                         while (dreader.Read())
                         {
-                            lastWorld = (short)dreader[0];
-                            curWorld = (short)dreader[1];
+                            long index = (long)dreader[0];
+                            string senderID = (string)dreader[1];
+                            string receiveID = (string)dreader[2];
+                            DWMailData mailData = DWMemberData.ConvertMailData(dreader[3] as byte[]);
+                            DateTime createdAt = (DateTime)dreader[4];
+
+                            mailData.index = index;
+                            mailData.senderID = senderID;
+                            mailData.receiveID = receiveID;
+                            mailData.createdAt = createdAt;
+                        
+                            result.mailList.Add(mailData);
                         }
+
+                        result.errorCode = (byte)DW_ERROR_CODE.OK;
                     }
                 }
             }
 
-            short checkNum = (short)(p.worldNo - lastWorld);
-            if(checkNum > 1)
-            {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
-
-            if(p.worldNo > lastWorld)
-            {
-                lastWorld = p.worldNo;
-            }
-
-            curWorld = p.worldNo;
-
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-            {
-                string strQuery = string.Format("UPDATE DWMembers SET LastWorld = @lastWorld, CurWorld = @curWorld WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
-                {
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorld;
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = curWorld;
-
-                    connection.OpenWithRetry(retryPolicy);
-
-                    int rowCount = command.ExecuteNonQuery();
-                    if (rowCount <= 0)
-                    {
-                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                        return result;
-                    }
-                }
-            }
-
-            result.worldNo = p.worldNo;
-            result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
+
     }
 }

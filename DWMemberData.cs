@@ -118,6 +118,109 @@ namespace CloudBread
             return unitList;
         }
 
+        public static byte[] ConvertByte(DWMailData mailData)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(mailData.msg);
+
+            bw.Write(mailData.itemData.Count);
+            for (int i = 0; i < mailData.itemData.Count; ++i)
+            {
+                bw.Write(mailData.itemData[i].itemNo);
+                bw.Write(mailData.itemData[i].count);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static DWMailData ConvertMailData(byte[] buffer)
+        {
+            DWMailData mailData = new DWMailData();
+            mailData.itemData = new List<DWItemData>();
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            mailData.msg = br.ReadString();
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                DWItemData itemData = new DWItemData();
+                itemData.itemNo = br.ReadUInt64();
+                itemData.count = br.ReadInt32();
+
+                mailData.itemData.Add(itemData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return mailData;
+        }
+
+        public static EventData ConvertEventData(byte[] buffer)
+        {
+            EventData eventData = new EventData();
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+            
+            eventData.msg = br.ReadString();
+
+            int count = br.ReadInt32();
+
+            eventData.itemData = new List<DWItemData>();
+
+            for(int i = 0; i <count; ++i)
+            {
+                DWItemData itemData = new DWItemData();
+                itemData.itemNo = br.ReadUInt64();
+                itemData.count = br.ReadInt32();
+
+                eventData.itemData.Add(itemData);
+            }
+
+            return eventData;
+        }
+
+        public static List<long> ConvertEventList(byte[] buffer)
+        {
+            List<long> eventList = new List<long>();
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                eventList.Add(br.ReadInt64());
+            }
+
+            return eventList;
+        }
+
+        public static byte[] ConvertByte(List<long> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i]);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
         public static uint AddUnitDic(ref Dictionary<uint, UnitData> unitDic, ulong serialNo)
         {
             if(unitDic.Count == 0)
@@ -169,6 +272,8 @@ namespace CloudBread
 
             return 0;
         }
+
+
 
     }
 }

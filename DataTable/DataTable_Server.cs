@@ -157,6 +157,38 @@ public class EnhancementDataTable : DataTableBase
 	}
 }
 
+public class ItemDataTable_List : DataTableListBase
+{
+	public const string NAME = "Item";
+	public const string DATAFILENAME = "ItemData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			ItemDataTable data = new ItemDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class ItemDataTable : DataTableBase
+{
+	public string Name;
+	public byte ChangeType;
+	public int Count;
+	public string Description;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		ChangeType = byte.Parse(dataRow[2].ToString());
+		Count = int.Parse(dataRow[3].ToString());
+		Description = dataRow[4].ToString();
+	}
+}
+
 public class ProjectileDataTable_List : DataTableListBase
 {
 	public const string NAME = "Projectile";
@@ -423,8 +455,9 @@ public class WorldDataTable_List : DataTableListBase
 public class WorldDataTable : DataTableBase
 {
 	public string Name;
-	public string BackGround1;
-	public string BackGround2;
+	public string MapBackGround;
+	public string MapPlace;
+	public string MapShadow;
 	public List<ulong> StageList;
 	public ulong BossSerialNo;
 	public int BossLevel;
@@ -432,18 +465,19 @@ public class WorldDataTable : DataTableBase
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
-		BackGround1 = dataRow[2].ToString();
-		BackGround2 = dataRow[3].ToString();
+		MapBackGround = dataRow[2].ToString();
+		MapPlace = dataRow[3].ToString();
+		MapShadow = dataRow[4].ToString();
 		StageList = new List<ulong>();
-		string [] StageList_tempArray = dataRow[4].ToString().Split(',');
+		string [] StageList_tempArray = dataRow[5].ToString().Split(',');
 		for( int i = 0; i < StageList_tempArray.Length; ++i)
 		{
 			ulong temp = ulong.Parse(StageList_tempArray[i]);
 			StageList.Add(temp);
 		}
-		BossSerialNo = ulong.Parse(dataRow[5].ToString());
-		BossLevel = int.Parse(dataRow[6].ToString());
-		Description = dataRow[7].ToString();
+		BossSerialNo = ulong.Parse(dataRow[6].ToString());
+		BossLevel = int.Parse(dataRow[7].ToString());
+		Description = dataRow[8].ToString();
 	}
 }
 

@@ -160,7 +160,27 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                        return result;
+                    }
+                }
+            }
+
+            List<long> eventLIst = new List<long>();
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = "Insert into DWMembersInputEvent (MemberID, EventList) VALUES (@memberID, @eventList)";
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
+                    command.Parameters.Add("@eventList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(eventLIst);  
+
+                    connection.OpenWithRetry(retryPolicy);
+
+                    int rowCount = command.ExecuteNonQuery();
+                    if (rowCount <= 0)
+                    {
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }

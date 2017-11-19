@@ -1,21 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using DW.CommonData;
+
 
 namespace CloudBread.Models
 {
     [Serializable]
-    public class DWInsUserDataInputParams
+    public class DWGetMailInputParam
     {
         public string memberID;
-        public string nickName;
-        public string recommenderID;
+        public int startIndex;
+        public int offset;
         public string token;
     }
 
     [Serializable]
-    public class DWInsUserDataModel
+    public class DWGetMailModel
     {
-        public DWUserData userData;
+        public List<DWMailData> mailList;
         public byte errorCode;
     }
+
 }

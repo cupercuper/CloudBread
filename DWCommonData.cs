@@ -27,6 +27,20 @@ namespace DW.CommonData
         MAX_TYPE
     }
 
+    public enum ITEM_TYPE
+    {
+        GOLD_TYPE,
+        GEM_TYPE,
+        ENHANCEDSTONE_TYPE,
+        MAX_TYPE
+    }
+
+    public enum EVENT_TYPE
+    {
+        LOGIN_TYPE,
+        MAX_TYPE
+    }
+
     [Serializable]
     public class ClientUnitData
     {
@@ -56,4 +70,28 @@ namespace DW.CommonData
         public byte unitSlotIdx;
     }
 
+    [Serializable]
+    public class DWItemData
+    {
+        public ulong itemNo;
+        public int count;
+    }
+
+    [Serializable]
+    public class DWMailData
+    {
+        public long index;
+        public string senderID;
+        public string receiveID;
+        public string msg;
+        public DateTime createdAt;
+        public List<DWItemData> itemData;
+    }
+
+    [Serializable]
+    public class EventData
+    {
+        public string msg;
+        public List<DWItemData> itemData;
+    }
 }
