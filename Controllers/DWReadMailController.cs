@@ -92,7 +92,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGetUserDataController";
+                logMessage.Logger = "DWReadMailController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -103,6 +103,8 @@ namespace CloudBread.Controllers
         
         DWReadMailModel GetResult(DWReadMailInputParams p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWReadMailModel result = new DWReadMailModel();
 
             DWMailData mailData = null;
@@ -128,6 +130,12 @@ namespace CloudBread.Controllers
 
             if(mailData == null)
             {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWReadMailController";
+                logMessage.Message = string.Format("MailData null Index = {0}", p.index);
+                Logging.RunLog(logMessage);
+
                 result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                 return result;
             }
@@ -146,6 +154,12 @@ namespace CloudBread.Controllers
                     {
                         if (dreader.HasRows == false)
                         {
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWReadMailController";
+                            logMessage.Message = string.Format("Not Found User");
+                            Logging.RunLog(logMessage);
+
                             result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
                             return result;
                         }
@@ -200,6 +214,12 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWReadMailController";
+                        logMessage.Message = string.Format("Update Failed DWMembers");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
@@ -219,11 +239,23 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWReadMailController";
+                        logMessage.Message = string.Format("Update Failed DWMail");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWReadMailController";
+            logMessage.Message = string.Format("Cur Gem = {0}, Cur EnhancedStone = {1}, Add Gold = {2}", gem, enhancedStone, addGold);
+            Logging.RunLog(logMessage);
 
             result.index = p.index;
             result.gold = addGold;

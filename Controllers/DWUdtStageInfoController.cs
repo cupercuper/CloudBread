@@ -92,7 +92,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGetUserDataController";
+                logMessage.Logger = "DWUdtStageInfoController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -104,6 +104,8 @@ namespace CloudBread.Controllers
 
         DWUdtStageInfoModel GetResult(DWUdtStageInfoInputParams p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWUdtStageInfoModel result = new DWUdtStageInfoModel();
 
             short lastWorld = 0;
@@ -120,6 +122,12 @@ namespace CloudBread.Controllers
                     {
                         if (dreader.HasRows == false)
                         {
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWUdtStageInfoController";
+                            logMessage.Message = string.Format("Not Found User");
+                            Logging.RunLog(logMessage);
+
                             result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
                             return result;
                         }
@@ -136,6 +144,12 @@ namespace CloudBread.Controllers
             short checkNum = (short)(p.worldNo - lastWorld);
             if(checkNum > 1)
             {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWUdtStageInfoController";
+                logMessage.Message = string.Format("Stage Hack lastWorld = {0}, Input World = {1}", lastWorld, p.worldNo);
+                Logging.RunLog(logMessage);
+
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
@@ -160,6 +174,12 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWUdtStageInfoController";
+                        logMessage.Message = string.Format("Udpate Failed");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }

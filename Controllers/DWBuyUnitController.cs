@@ -91,7 +91,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGetUserDataController";
+                logMessage.Logger = "DWBuyUnitController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -102,6 +102,8 @@ namespace CloudBread.Controllers
 
         DWBuyUnitModel GetResult(DWBuyUnitInputParam p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWBuyUnitModel result = new DWBuyUnitModel();
 
             Dictionary<uint, UnitData> unitList = null;
@@ -121,7 +123,13 @@ namespace CloudBread.Controllers
                     {
                         if(dreader.HasRows == false)
                         {
-                            result.errorCode = (byte)DW_ERROR_CODE.OK;
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWBuyUnitController";
+                            logMessage.Message = string.Format("Not Found User = {0}", p.memberID);
+                            Logging.RunLog(logMessage);
+
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                             return result;
                         }
 
@@ -139,26 +147,48 @@ namespace CloudBread.Controllers
 
             if (unitList == null || canBuyUnitList == null)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWBuyUnitController";
+                logMessage.Message = string.Format("Not Found unitList OR canBuyUnitList = {0}", p.memberID);
+                Logging.RunLog(logMessage);
+
                 return result;
             }
 
             UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
             if(unitSlotDataTable == null)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWBuyUnitController";
+                logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
+                Logging.RunLog(logMessage);
                 return result;
             }
 
             if(unitSlotDataTable.UnitMaxCount == unitList.Count)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWBuyUnitController";
+                logMessage.Message = string.Format("UnitSlotDataTable MaxCount SerialNo = {0}, Cur Unit Count = {1}", unitSlotIdx, unitList.Count);
+                Logging.RunLog(logMessage);
                 return result;
             }
 
             if (canBuyUnitList.Count == 0 || canBuyUnitList.Count <= p.index || p.index < 0)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWBuyUnitController";
+                logMessage.Message = string.Format("CanBuyUnitList Error Cur Index = {0}", p.index);
+                Logging.RunLog(logMessage);
                 return result;
             }
 
@@ -166,7 +196,12 @@ namespace CloudBread.Controllers
             UnitSummonDataTable unitSummonDataTable = DWDataTableManager.GetDataTable(UnitSummonDataTable_List.NAME, serialNo) as UnitSummonDataTable;
             if (unitSummonDataTable == null)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWBuyUnitController";
+                logMessage.Message = string.Format("Not Found UnitSummonDataTable SerialNo = {0}", serialNo);
+                Logging.RunLog(logMessage);
                 return result;
             }
 
@@ -175,7 +210,14 @@ namespace CloudBread.Controllers
                 case MONEY_TYPE.ENHANCEDSTONE_TYPE:
                     if (enhancedStone < unitSummonDataTable.BuyCount)
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWBuyUnitController";
+                        logMessage.Message = string.Format("Lack EnhancedStone Cur EnhancedStone = {0}", enhancedStone);
+                        Logging.RunLog(logMessage);
+
                         return result;
                     }
                     else
@@ -186,7 +228,14 @@ namespace CloudBread.Controllers
                 case MONEY_TYPE.GEM_TYPE:
                     if (gem < unitSummonDataTable.BuyCount)
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWBuyUnitController";
+                        logMessage.Message = string.Format("Lack Gem Cur Gem = {0}", gem);
+                        Logging.RunLog(logMessage);
+
                         return result;
                     }
                     else
@@ -202,7 +251,14 @@ namespace CloudBread.Controllers
             UnitData unitData = null;
             if (unitList.TryGetValue(instanceNo, out unitData) == false)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWBuyUnitController";
+                logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
+                Logging.RunLog(logMessage);
+
                 return result;
             }
 
@@ -221,7 +277,14 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.OK;
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWBuyUnitController";
+                        logMessage.Message = string.Format("Update Failed");
+                        Logging.RunLog(logMessage);
+
                         return result;
                     }
                 }
@@ -234,6 +297,12 @@ namespace CloudBread.Controllers
                 enhancementCount = unitData.EnhancementCount,
                 serialNo = unitData.SerialNo
             };
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWBuyUnitController";
+            logMessage.Message = string.Format("UnitSummonNo = {0}, UnitSerialNo = {1}, CurCurEnhancementStone = {2}, CurGem = {3}", serialNo, unitData.SerialNo, enhancedStone, gem);
+            Logging.RunLog(logMessage);
 
             result.gem = gem;
             result.enhancedStone = enhancedStone;

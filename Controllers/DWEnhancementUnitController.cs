@@ -94,7 +94,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWInsertUserDataController";
+                logMessage.Logger = "DWEnhancementUnitController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -105,6 +105,8 @@ namespace CloudBread.Controllers
 
         DWEnhancementUnitModel GetResult(DWEnhancementUnitInputParam p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWEnhancementUnitModel result = new DWEnhancementUnitModel();
             int enhancedStone = 0;
             Dictionary<uint, UnitData> unitLIst = null;
@@ -121,7 +123,13 @@ namespace CloudBread.Controllers
                     {
                         if(dreader.HasRows == false)
                         {
-                            result.errorCode = (byte)DW_ERROR_CODE.OK;
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWEnhancementUnitController";
+                            logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
+                            Logging.RunLog(logMessage);
+
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                             return result;
                         }
 
@@ -137,7 +145,13 @@ namespace CloudBread.Controllers
             UnitData unitData = null;
             if (unitLIst.TryGetValue(p.InstanceNo, out unitData) == false)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWEnhancementUnitController";
+                logMessage.Message = string.Format("Not Found Unit InstanceNo = {0}", p.InstanceNo);
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
                 
@@ -155,11 +169,23 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWEnhancementUnitController";
+                        logMessage.Message = string.Format("Update Failed");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.OK; 
                         return result;
                     }
                 }
             }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWEnhancementUnitController";
+            logMessage.Message = string.Format("InstanceNo = {0}, SerialNo = {1}, enhancementCount = {2}", p.InstanceNo, unitData.SerialNo, unitData.EnhancementCount);
+            Logging.RunLog(logMessage);
 
             result.unitData = new ClientUnitData()
             {

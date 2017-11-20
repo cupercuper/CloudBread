@@ -89,7 +89,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = "Server Check";
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGetUserDataController";
+                logMessage.Logger = "DWServerCheckController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);

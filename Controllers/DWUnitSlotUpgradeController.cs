@@ -92,7 +92,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGetUserDataController";
+                logMessage.Logger = "DWUnitSlotUpgradeController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -103,6 +103,8 @@ namespace CloudBread.Controllers
 
         DWUnitSlotUpgradeModel GetResult(DWUnitSlotUpgradeInputParam p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWUnitSlotUpgradeModel result = new DWUnitSlotUpgradeModel();
 
             int gem = 0;
@@ -119,6 +121,12 @@ namespace CloudBread.Controllers
                     {
                         if (dreader.HasRows == false)
                         {
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWUnitSlotUpgradeController";
+                            logMessage.Message = string.Format("Not Found User");
+                            Logging.RunLog(logMessage);
+
                             result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
                             return result;
                         }
@@ -136,6 +144,12 @@ namespace CloudBread.Controllers
             UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
             if(unitSlotDataTable == null || gem < unitSlotDataTable.UpgradeMoney)
             {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWUnitSlotUpgradeController";
+                logMessage.Message = string.Format("Unit Slot Error SlotNo = {0}, Gem = {1}", unitSlotIdx, gem);
+                Logging.RunLog(logMessage);
+
                 unitSlotIdx--;
                 result.gem = gem;
                 result.unitSlotIdx = unitSlotIdx;
@@ -158,13 +172,24 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWUnitSlotUpgradeController";
+                        logMessage.Message = string.Format("UpdateFailed");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
 
-            
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWUnitSlotUpgradeController";
+            logMessage.Message = string.Format("Unit Slot SlotNo = {0}, Gem = {1}", unitSlotIdx, gem);
+            Logging.RunLog(logMessage);
+
             result.gem = gem;
             result.unitSlotIdx = unitSlotIdx;
             result.errorCode = (byte)DW_ERROR_CODE.OK;

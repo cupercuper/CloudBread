@@ -91,7 +91,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWChangeUnitListController";
+                logMessage.Logger = "DWChangeCaptianController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -102,6 +102,8 @@ namespace CloudBread.Controllers
 
         DWChangeCaptianModel GetResult(DWChangeCaptianInputParam p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWChangeCaptianModel result = new DWChangeCaptianModel();
 
             int enhancedStone = 0;
@@ -119,7 +121,14 @@ namespace CloudBread.Controllers
                     {
                         if (dreader.HasRows == false)
                         {
-                            result.errorCode = (byte)DW_ERROR_CODE.OK;
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWChangeCaptianController";
+                            logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
+                            Logging.RunLog(logMessage);
+
                             return result;
                         }
 
@@ -150,11 +159,23 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.OK;
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWChangeCaptianController";
+                        logMessage.Message = string.Format("Update Failed MemberID = {0}", p.memberID);
+                        Logging.RunLog(logMessage);
+
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWChangeCaptianController";
+            logMessage.Message = string.Format("CaptianID = {0}, EnhancedStone = {1}, CaptianChange = {2}", captianID, enhancedStone, captianChange);
+            Logging.RunLog(logMessage);
 
             result.captianID = captianID;
             result.enhancedStone = enhancedStone;

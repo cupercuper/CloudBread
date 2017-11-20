@@ -55,11 +55,11 @@ namespace CloudBread
                 }
 
                 // Regarding to configuration, check startup fill or not
-                //if (globalVal.CloudBreadFillRedisRankSetOnStartup)
-                //{
-                //    // execute redis rank fill task
-                //    CBRedis.FillAllRankFromDB();
-                //}
+                if (globalVal.CloudBreadFillRedisRankSetOnStartup)
+                {
+                    // execute redis rank fill task
+                    CBRedis.FillAllRankFromDB();
+                }
 
                 DWDataTableManager.LoadAllDataTable();
 

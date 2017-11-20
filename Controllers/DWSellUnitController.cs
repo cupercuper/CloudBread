@@ -93,7 +93,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGetUserDataController";
+                logMessage.Logger = "DWSellUnitController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -104,6 +104,8 @@ namespace CloudBread.Controllers
 
         DWSellUnitModel GetResult(DWSellUnitInputParam p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWSellUnitModel result = new DWSellUnitModel();
 
             /// Database connection retry policy
@@ -122,7 +124,13 @@ namespace CloudBread.Controllers
                     {
                         if(dreader.HasRows == false)
                         {
-                            result.errorCode = (byte)DW_ERROR_CODE.OK;
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWSellUnitController";
+                            logMessage.Message = string.Format("Not Found User");
+                            Logging.RunLog(logMessage);
+
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                             return result;
                         }
 
@@ -139,7 +147,13 @@ namespace CloudBread.Controllers
             UnitData unitData = null;
             if (unitList.TryGetValue(p.instanceNo, out unitData) == false)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.OK;
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWSellUnitController";
+                logMessage.Message = string.Format("Not Found Unit Instance = {0}", p.instanceNo);
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
 
@@ -158,11 +172,23 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.OK;
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWSellUnitController";
+                        logMessage.Message = string.Format("Update Failed");
+                        Logging.RunLog(logMessage);
+
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWSellUnitController";
+            logMessage.Message = string.Format("Instance No = {0}, Gem = {1}, EnhancedStone = {2}", p.instanceNo, gem, enhancedStone);
+            Logging.RunLog(logMessage);
 
             result.instanceNo = p.instanceNo;
             result.gem = gem;

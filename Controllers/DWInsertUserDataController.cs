@@ -104,6 +104,8 @@ namespace CloudBread.Controllers
 
         DWInsUserDataModel GetResult(DWInsUserDataInputParams p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWInsUserDataModel result = new DWInsUserDataModel();
             result.userData = new DWUserData()
             {
@@ -160,6 +162,12 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWInsertUserDataController";
+                        logMessage.Message = string.Format("Insert Failed DWMembers");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
@@ -180,11 +188,23 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWInsertUserDataController";
+                        logMessage.Message = string.Format("Insert Failed DWMembersInputEvent");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWInsertUserDataController";
+            logMessage.Message = string.Format("Insert User");
+            Logging.RunLog(logMessage);
 
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;

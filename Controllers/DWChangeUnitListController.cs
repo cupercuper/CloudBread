@@ -104,6 +104,8 @@ namespace CloudBread.Controllers
 
         DWChangeUnitListModel GetResult(DWChangeUnitListInputParam p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWChangeUnitListModel result = new DWChangeUnitListModel();
             int gem = 0;
             /// Database connection retry policy
@@ -119,7 +121,13 @@ namespace CloudBread.Controllers
                     {
                         if(dreader.HasRows == false)
                         {
-                            result.errorCode = (byte)DW_ERROR_CODE.OK;
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWChangeUnitListController";
+                            logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
+                            Logging.RunLog(logMessage);
+
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                             return result;
                         }
 
@@ -145,11 +153,23 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.OK;
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWChangeUnitListController";
+                        logMessage.Message = string.Format("Update failed");
+                        Logging.RunLog(logMessage);
+
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWChangeUnitListController";
+            logMessage.Message = string.Format("Cur Gem = {0}", gem);
+            Logging.RunLog(logMessage);
 
             result.unitList = unitLIst;
             result.gem = gem;

@@ -91,7 +91,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGetUserDataController";
+                logMessage.Logger = "DWEventController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -102,6 +102,8 @@ namespace CloudBread.Controllers
 
         DWEventModel GetResult(DWEventInputParams p)
         {
+            Logging.CBLoggers logMessage = new Logging.CBLoggers();
+
             DWEventModel result = new DWEventModel();
 
             long index = 0;
@@ -176,6 +178,12 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWEventController";
+                        logMessage.Message = string.Format("Update Failed");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
@@ -204,11 +212,23 @@ namespace CloudBread.Controllers
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWEventController";
+                        logMessage.Message = string.Format("Insert Failed");
+                        Logging.RunLog(logMessage);
+
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWEventController";
+            logMessage.Message = string.Format("Event Index = {0}", index);
+            Logging.RunLog(logMessage);
 
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
