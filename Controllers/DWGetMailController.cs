@@ -109,6 +109,7 @@ namespace CloudBread.Controllers
             utcTime = utcTime.AddDays(-LIMIT_DAY);
 
             DWGetMailModel result = new DWGetMailModel();
+            result.mailList = new List<DWMailData>();
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
