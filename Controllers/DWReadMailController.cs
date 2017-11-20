@@ -206,9 +206,10 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMail SET [Read] = 1 WHERE [Index] = @index");
+                string strQuery = string.Format("UPDATE DWMail SET [Read] = 1, [ReadAt] = @readAt WHERE [Index] = @index");
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
+                    command.Parameters.Add("@readAt", SqlDbType.DateTime).Value = DateTime.UtcNow;
                     command.Parameters.Add("@index", SqlDbType.BigInt).Value = p.index;
 
                     connection.OpenWithRetry(retryPolicy);
