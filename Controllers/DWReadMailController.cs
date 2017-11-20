@@ -160,6 +160,7 @@ namespace CloudBread.Controllers
                 }
             }
 
+            int addGold = 0;
             for (int i = 0; i < mailData.itemData.Count; ++i)
             {
                 ItemDataTable itemDataTable = DWDataTableManager.GetDataTable(ItemDataTable_List.NAME, mailData.itemData[0].itemNo) as ItemDataTable;
@@ -172,6 +173,7 @@ namespace CloudBread.Controllers
                 {
                     case ITEM_TYPE.GOLD_TYPE:
                         gold += mailData.itemData[0].count;
+                        addGold = mailData.itemData[0].count;
                         break;
 
                     case ITEM_TYPE.GEM_TYPE:
@@ -224,7 +226,7 @@ namespace CloudBread.Controllers
             }
 
             result.index = p.index;
-            result.gold = gold;
+            result.gold = addGold;
             result.gem = gem;
             result.enhancedStone = enhancedStone;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
