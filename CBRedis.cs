@@ -220,6 +220,9 @@ namespace CloudBreadRedis
             {
                 IDatabase cache = connection.GetDatabase(1);
                 count = cache.SetLength(globalVal.CloudBreadRankSortedSet);
+
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception)
             {
