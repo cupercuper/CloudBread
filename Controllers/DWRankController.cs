@@ -94,7 +94,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWUdtStageInfoController";
+                logMessage.Logger = "DWRankController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -151,7 +151,7 @@ namespace CloudBread.Controllers
                         {
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "INFO";
-                            logMessage.Logger = "DWUdtStageInfoController";
+                            logMessage.Logger = "DWRankController";
                             logMessage.Message = string.Format("Not Found User strQuery = {0}", strQuery);
                             Logging.RunLog(logMessage);
 
