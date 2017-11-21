@@ -157,6 +157,34 @@ public class EnhancementDataTable : DataTableBase
 	}
 }
 
+public class GlobalSettingDataTable_List : DataTableListBase
+{
+	public const string NAME = "GlobalSetting";
+	public const string DATAFILENAME = "GlobalSettingData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			GlobalSettingDataTable data = new GlobalSettingDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class GlobalSettingDataTable : DataTableBase
+{
+	public int UnitListChangeTime;
+	public int UnitListChangeGem;
+	public void Load(DataRow dataRow)
+	{
+		UnitListChangeTime = int.Parse(dataRow[1].ToString());
+		UnitListChangeGem = int.Parse(dataRow[2].ToString());
+	}
+}
+
 public class ItemDataTable_List : DataTableListBase
 {
 	public const string NAME = "Item";

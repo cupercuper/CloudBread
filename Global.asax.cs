@@ -51,7 +51,6 @@ namespace CloudBread
                     /// this queue is used for CloudBread queue method game log saving
                     queue = queueClient.GetQueueReference("cloudbread-batch");      /// must be lowercase
                     queue.CreateIfNotExists();
-
                 }
 
                 // Regarding to configuration, check startup fill or not

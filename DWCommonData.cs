@@ -68,6 +68,7 @@ namespace DW.CommonData
         public int gem;
         public int enhancedStone;
         public byte unitSlotIdx;
+        public DateTime unitListChangeTime;
     }
 
     [Serializable]

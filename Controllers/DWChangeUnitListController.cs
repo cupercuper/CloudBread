@@ -108,11 +108,13 @@ namespace CloudBread.Controllers
 
             DWChangeUnitListModel result = new DWChangeUnitListModel();
             int gem = 0;
+            DateTime utcTime = DateTime.UtcNow;
+            DateTime unitListChangeTime = DateTime.UtcNow;
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, UnitListChangeTime FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -134,8 +136,43 @@ namespace CloudBread.Controllers
                         while (dreader.Read())
                         {
                             gem = (int)dreader[0];
+                            unitListChangeTime = (DateTime)dreader[1];
                         }
                     } 
+                }
+            }
+
+            GlobalSettingDataTable globalSetting = DWDataTableManager.GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
+            if(globalSetting == null)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWChangeUnitListController";
+                logMessage.Message = string.Format("Not Found GlobalSettingDataTable SerialNo = 1");
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            // 2분을 갭을 준다.
+            unitListChangeTime = unitListChangeTime.AddMinutes((double)(globalSetting.UnitListChangeTime - 2));
+            if (unitListChangeTime > utcTime)
+            {
+                if(gem < globalSetting.UnitListChangeGem)
+                {
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "INFO";
+                    logMessage.Logger = "DWChangeUnitListController";
+                    logMessage.Message = string.Format("Lack Gem");
+                    Logging.RunLog(logMessage);
+
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                    return result;
+                }
+                else
+                {
+                    gem -= globalSetting.UnitListChangeGem;
                 }
             }
 
@@ -173,6 +210,7 @@ namespace CloudBread.Controllers
 
             result.unitList = unitLIst;
             result.gem = gem;
+            result.unitListChangeTime = utcTime;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

@@ -53,6 +53,7 @@ namespace CloudBread
                 AddDataTable(ProjectileDataTable_List .NAME, new ProjectileDataTable_List());
                 AddDataTable(UnitSlotDataTable_List.NAME, new UnitSlotDataTable_List());
                 AddDataTable(ItemDataTable_List.NAME, new ItemDataTable_List());
+                AddDataTable(GlobalSettingDataTable_List.NAME, new GlobalSettingDataTable_List());
 
                 BuildUnitSummonRatioList();
                 BuildCaptianList();

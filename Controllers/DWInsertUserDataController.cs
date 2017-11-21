@@ -123,7 +123,8 @@ namespace CloudBread.Controllers
                 gold = 0,
                 gem = 0,
                 enhancedStone = 0,
-                unitSlotIdx = 1
+                unitSlotIdx = 1,
+                unitListChangeTime = DateTime.UtcNow
             };
 
             // Init Unit
@@ -138,7 +139,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone, UnitSlotIdx) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone, @unitSlotIdx)";
+                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone, UnitSlotIdx, UnitListChangeTime) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone, @unitSlotIdx, @unitListChangeTime)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -156,6 +157,7 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@gem", SqlDbType.Int).Value = result.userData.gem;
                     command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = result.userData.enhancedStone;
                     command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = 1;
+                    command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = result.userData.unitListChangeTime;
                     
                     connection.OpenWithRetry(retryPolicy);
 
