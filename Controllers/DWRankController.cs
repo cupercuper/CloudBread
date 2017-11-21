@@ -172,7 +172,8 @@ namespace CloudBread.Controllers
 
             for(int i = 0; i < sortedSetRank.Length; ++i)
             {
-                if(userNickNameDic.TryGetValue(sortedSetRank[i].Element, out string nickName) == false)
+                string nickName = string.Empty;
+                if (userNickNameDic.TryGetValue(sortedSetRank[i].Element, out nickName) == false)
                 {
                     continue;
                 }
