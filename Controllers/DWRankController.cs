@@ -112,7 +112,8 @@ namespace CloudBread.Controllers
             result.rankList = new List<DWRankData>();
 
             result.rankCnt = CBRedis.GetRankCount();
-            long myRank = CBRedis.GetSortedSetRank(p.memberID);
+            // rank는 0 부터 시작한다.
+            long myRank = CBRedis.GetSortedSetRank(p.memberID) + 1;
             double myScore = CBRedis.GetSortedSetScore(p.memberID);
 
             result.myRankData = new DWRankData()
