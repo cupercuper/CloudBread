@@ -38,7 +38,8 @@ namespace CloudBreadRedis
             try
             {
                 // StringSet task
-                IDatabase cache = connection.GetDatabase(0);
+                //IDatabase cache = connection.GetDatabase(0);
+                IDatabase cache = connection.GetDatabase();
                 if (expTimeMin == null)
                 {
                     // save without expire time
@@ -72,7 +73,8 @@ namespace CloudBreadRedis
             try
             {
                 // StringGet task
-                IDatabase cache = connection.GetDatabase(0);
+                //IDatabase cache = connection.GetDatabase(0);
+                IDatabase cache = connection.GetDatabase();
                 result = cache.StringGet(key);
 
                 connection.Close();
@@ -94,7 +96,8 @@ namespace CloudBreadRedis
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                //IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase();
                 cache.SortedSetAdd(globalVal.CloudBreadRankSortedSet, sid, point);
 
                 connection.Close();
@@ -118,7 +121,8 @@ namespace CloudBreadRedis
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                //IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase();
                 rank = cache.SortedSetRank(globalVal.CloudBreadRankSortedSet, sid, Order.Descending) ?? 0;
 
                 connection.Close();
@@ -142,7 +146,8 @@ namespace CloudBreadRedis
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                //IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase();
                 score = cache.SortedSetScore(globalVal.CloudBreadRankSortedSet, sid) ?? 0;
 
                 connection.Close();
@@ -168,7 +173,8 @@ namespace CloudBreadRedis
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                //IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase();
                 //SortedSetEntry[] rank = cache.SortedSetRangeByScoreWithScores(globalVal.CloudBreadRankSortedSet, startRank, endRank, Exclude.None, Order.Descending);
                 SortedSetEntry[] se = cache.SortedSetRangeByRankWithScores(globalVal.CloudBreadRankSortedSet, startRank, endRank, Order.Descending);
                 //return JsonConvert.SerializeObject(se);
@@ -194,7 +200,8 @@ namespace CloudBreadRedis
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                //IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase();
                 SortedSetEntry[] sse = cache.SortedSetRangeByScoreWithScores(globalVal.CloudBreadRankSortedSet, order: Order.Descending, take: countNumber);
 
                 connection.Close();
@@ -218,7 +225,8 @@ namespace CloudBreadRedis
             long count = 0;
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                //IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase();
                 count = cache.SetLength(globalVal.CloudBreadRankSortedSet);
 
                 connection.Close();
@@ -245,7 +253,8 @@ namespace CloudBreadRedis
             {
                 // redis connection
                 ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
-                IDatabase cache = connection.GetDatabase(1);
+                //IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase();
 
                 // delete rank sorted set - caution. this process remove all rank set data
                 cache.KeyDelete(globalVal.CloudBreadRankSortedSet);
