@@ -216,11 +216,12 @@ namespace CloudBreadRedis
         {
             ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
 
+            string master = "Master";
             long count = 0;
             try
             {
                 IDatabase cache = connection.GetDatabase(1);
-                count = cache.SortedSetRank(globalVal.CloudBreadRankSortedSet, EMPTY_USER, Order.Descending) ?? 0;
+                count = cache.SortedSetRank(globalVal.CloudBreadRankSortedSet, master, Order.Descending) ?? 0;
 
                 connection.Close();
                 connection.Dispose();
@@ -282,7 +283,8 @@ namespace CloudBreadRedis
                 }
 
                 // 무조건 -1.0점 유저를 넣어서 Rank의 카운트를 얻어온다
-                sse[i] = new SortedSetEntry(EMPTY_USER, -1.0);
+                string master = "Master";
+                sse[i] = new SortedSetEntry(master, -1.0);
 
                 // fill out all rank data
                 cache.SortedSetAdd(globalVal.CloudBreadRankSortedSet, sse);
