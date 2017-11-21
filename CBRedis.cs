@@ -281,8 +281,8 @@ namespace CloudBreadRedis
                     i++;
                 }
 
-                // 무조건 0점 유저를 넣어서 Rank의 카운트를 얻어온다
-                sse[i] = new SortedSetEntry(EMPTY_USER, 0.0);
+                // 무조건 -1.0점 유저를 넣어서 Rank의 카운트를 얻어온다
+                sse[i] = new SortedSetEntry(EMPTY_USER, -1.0);
 
                 // fill out all rank data
                 cache.SortedSetAdd(globalVal.CloudBreadRankSortedSet, sse);
