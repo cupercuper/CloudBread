@@ -268,7 +268,7 @@ namespace CloudBreadRedis
                 }
 
                 /// make SortedSetEntry to fill out
-                SortedSetEntry[] sse = new SortedSetEntry[dt.Rows.Count];
+                SortedSetEntry[] sse = new SortedSetEntry[dt.Rows.Count + 1];
                 Int64 i = 0;
                 foreach (DataRow dr in dt.Rows)
                 {
@@ -281,11 +281,11 @@ namespace CloudBreadRedis
                     i++;
                 }
 
+                // 무조건 0점 유저를 넣어서 Rank의 카운트를 얻어온다
+                sse[i] = new SortedSetEntry(EMPTY_USER, 0.0);
+
                 // fill out all rank data
                 cache.SortedSetAdd(globalVal.CloudBreadRankSortedSet, sse);
-
-                // 무조건 0점 유저를 넣어서 Rank의 카운트를 얻어온다
-                cache.SortedSetAdd(globalVal.CloudBreadRankSortedSet, EMPTY_USER, 0);
 
                 connection.Close();
                 connection.Dispose();
