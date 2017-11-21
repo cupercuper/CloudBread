@@ -17,6 +17,7 @@ using StackExchange.Redis;
 using Newtonsoft.Json;
 using Microsoft.Practices.TransientFaultHandling;
 using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.SqlAzure;
+using CloudBread;
 //using Logger.Logging;
 
 namespace CloudBreadRedis
@@ -133,6 +134,31 @@ namespace CloudBreadRedis
             return rank;
         }
 
+        /// @brief Get rank value from Redis sorted set
+        public static double GetSortedSetScore(string sid)
+        {
+            double score = 0;
+            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
+
+            try
+            {
+                IDatabase cache = connection.GetDatabase(1);
+                score = cache.SortedSetScore(globalVal.CloudBreadRankSortedSet, sid) ?? 0;
+
+                connection.Close();
+                connection.Dispose();
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            return score;
+        }
+
+
         /// @brief Get selected rank range members. 
         /// Get my rank and then call this method to fetch +-10 rank(total 20) rank
         public static SortedSetEntry[] GetSortedSetRankByRange(long startRank, long endRank)
@@ -185,6 +211,25 @@ namespace CloudBreadRedis
 
         }
 
+        public static long GetRankCount()
+        {
+            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
+
+            long count = 0;
+            try
+            {
+                IDatabase cache = connection.GetDatabase(1);
+                count = cache.SetLength(globalVal.CloudBreadRankSortedSet);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            return count;
+        }
+
         /// fill out all rank redis cache from db
         /// @todo: huge amount of data processing - split 10,000 or ...
         /// dt.Rows check. if bigger than 10,000, seperate as another loop 
@@ -206,7 +251,7 @@ namespace CloudBreadRedis
                 RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
                 SqlConnection conn = new SqlConnection(globalVal.DBConnectionString);
                 conn.Open();
-                string strQuery = "SELECT Members.Name1, MemberGameInfoes.Points FROM Members inner join MemberGameInfoes on Members.MemberID = MemberGameInfoes.MemberID";
+                string strQuery = "SELECT MemberID, CaptianChange, LastWorld FROM DWMembers";
 
                 SqlCommand command = new SqlCommand(strQuery, conn);
 
@@ -221,8 +266,12 @@ namespace CloudBreadRedis
                 Int64 i = 0;
                 foreach (DataRow dr in dt.Rows)
                 {
+                    string id = (string)dr[0];
+                    byte captianChange = (byte)dr[1];
+                    short lastWorld = (short)dr[2];
+
                     // fill rank row to redis struct array
-                    sse[i] = new SortedSetEntry(dr[0].ToString(), Int64.Parse(dr[1].ToString()));
+                    sse[i] = new SortedSetEntry(id, DWMemberData.GetPoint(lastWorld, captianChange));
                     i++;
                 }
 

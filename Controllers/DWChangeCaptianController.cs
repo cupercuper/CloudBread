@@ -23,6 +23,8 @@ using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.
 using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
+using CloudBreadRedis;
+
 
 namespace CloudBread.Controllers
 {
@@ -106,13 +108,14 @@ namespace CloudBread.Controllers
 
             DWChangeCaptianModel result = new DWChangeCaptianModel();
 
+            short lastWorld = 0;
             int enhancedStone = 0;
             byte captianChange = 0;
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone, CaptianChange FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT EnhancedStone, CaptianChange, LastWorld FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -136,6 +139,7 @@ namespace CloudBread.Controllers
                         {
                             enhancedStone = (int)dreader[0];
                             captianChange = (byte)dreader[1];
+                            lastWorld = (short)dreader[2];
                         }
                     }
                 }
@@ -171,6 +175,8 @@ namespace CloudBread.Controllers
                     }
                 }
             }
+
+            CBRedis.SetSortedSetRank(p.memberID, DWMemberData.GetPoint(lastWorld, captianChange));
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";

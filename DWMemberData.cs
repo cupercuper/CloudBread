@@ -267,13 +267,16 @@ namespace CloudBread
                     unitDic.Add(curKey, unitData);
                     return curKey;
                 }
-
             }
 
             return 0;
         }
 
-
+        public static double GetPoint(short worldNo, int changeCaptianCnt)
+        {
+            double point = worldNo + changeCaptianCnt * 1000;
+            return point;
+        }
 
     }
 }

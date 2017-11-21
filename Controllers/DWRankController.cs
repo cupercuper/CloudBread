@@ -26,19 +26,18 @@ using DW.CommonData;
 using StackExchange.Redis;
 using CloudBreadRedis;
 
-
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWUdtStageInfoController : ApiController
+    public class DWRankController : ApiController
     {
-        // GET api/DWUdtStageInfo
+        // GET api/DWRank
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWUdtStageInfoInputParams p)
+        public HttpResponseMessage Post(DWRankInputParams p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -46,7 +45,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWUdtStageInfoInputParams>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWRankInputParams>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -68,7 +67,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                DWUdtStageInfoModel result = result = GetResult(p);
+                DWRankModel result = result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -104,20 +103,45 @@ namespace CloudBread.Controllers
             }
         }
 
-        DWUdtStageInfoModel GetResult(DWUdtStageInfoInputParams p)
+        const int MAX_COUNT = 20;
+        DWRankModel GetResult(DWRankInputParams p)
         {
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
-            DWUdtStageInfoModel result = new DWUdtStageInfoModel();
+            DWRankModel result = new DWRankModel();
+            result.rankList = new List<DWRankData>();
 
-            short lastWorld = 0;
-            short curWorld = 0;
-            byte captianChange = 0;
+            result.rankCnt = CBRedis.GetRankCount();
+            long myRank = CBRedis.GetSortedSetRank(p.memberID);
+            double myScore = CBRedis.GetSortedSetScore(p.memberID);
+
+            result.myRankData = new DWRankData()
+            {
+                memberID = p.memberID,
+                rank = myRank,
+                score = myScore
+            };
+
+            SortedSetEntry[] sortedSetRank = CBRedis.GetTopSortedSetRank(MAX_COUNT);
+            Dictionary<string, string> userNickNameDic = new Dictionary<string, string>();
+            string strQuery = string.Format("SELECT MemberID, NickName FROM[dbo].[DWMembers] Where MemberID IN (");
+            for(int i = 0; i < sortedSetRank.Length; ++i)
+            {
+                if (i == sortedSetRank.Length)
+                {
+                    strQuery += string.Format("'{0}'", sortedSetRank[i].Element);
+                }
+                else
+                {
+                    strQuery += string.Format("'{0}',", sortedSetRank[i].Element);
+                }
+            }
+
+            strQuery += ")";
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastWorld, CurWorld, CaptianChange FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -128,7 +152,7 @@ namespace CloudBread.Controllers
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "INFO";
                             logMessage.Logger = "DWUdtStageInfoController";
-                            logMessage.Message = string.Format("Not Found User");
+                            logMessage.Message = string.Format("Not Found User strQuery = {0}", strQuery);
                             Logging.RunLog(logMessage);
 
                             result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
@@ -137,61 +161,33 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            lastWorld = (short)dreader[0];
-                            curWorld = (short)dreader[1];
-                            captianChange = (byte)dreader[2];
+                            string memberID = (string)dreader[0];
+                            string nickName = (string)dreader[1];
+
+                            userNickNameDic.Add(memberID, nickName);
                         }
                     }
                 }
             }
 
-            short checkNum = (short)(p.worldNo - lastWorld);
-            if(checkNum > 1)
+            for(int i = 0; i < sortedSetRank.Length; ++i)
             {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
-                logMessage.Logger = "DWUdtStageInfoController";
-                logMessage.Message = string.Format("Stage Hack lastWorld = {0}, Input World = {1}", lastWorld, p.worldNo);
-                Logging.RunLog(logMessage);
-
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
-
-            if(p.worldNo > lastWorld)
-            {
-                lastWorld = p.worldNo;
-                CBRedis.SetSortedSetRank(p.memberID, DWMemberData.GetPoint(lastWorld, captianChange));
-            }
-
-            curWorld = p.worldNo;
-
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-            {
-                string strQuery = string.Format("UPDATE DWMembers SET LastWorld = @lastWorld, CurWorld = @curWorld WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                if(userNickNameDic.TryGetValue(sortedSetRank[i].Element, out string nickName) == false)
                 {
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorld;
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = curWorld;
-
-                    connection.OpenWithRetry(retryPolicy);
-
-                    int rowCount = command.ExecuteNonQuery();
-                    if (rowCount <= 0)
-                    {
-                        logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
-                        logMessage.Logger = "DWUdtStageInfoController";
-                        logMessage.Message = string.Format("Udpate Failed");
-                        Logging.RunLog(logMessage);
-
-                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                        return result;
-                    }
+                    continue;
                 }
+
+                DWRankData rankData = new DWRankData()
+                {
+                    memberID = sortedSetRank[i].Element,
+                    nickName = nickName,
+                    rank = i + 1,
+                    score = sortedSetRank[i].Score
+                };
+                result.rankList.Add(rankData);
             }
 
-            result.worldNo = p.worldNo;
+
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

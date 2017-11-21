@@ -41,6 +41,13 @@ namespace DW.CommonData
         MAX_TYPE
     }
 
+    public enum RANK_TYPE
+    {
+        TOP_RANK_TYPE,
+        MY_CENTER_TYPE,
+        MAX_TYPE
+    }
+
     [Serializable]
     public class ClientUnitData
     {
@@ -94,5 +101,14 @@ namespace DW.CommonData
     {
         public string msg;
         public List<DWItemData> itemData;
+    }
+
+    [Serializable]
+    public class DWRankData
+    {
+        public string memberID;
+        public string nickName;
+        public long rank;
+        public double score;
     }
 }
