@@ -28,6 +28,7 @@ namespace CloudBreadRedis
         static string redisConnectionStringSocket = globalVal.CloudBreadSocketRedisServer;
         static string redisConnectionStringRank = globalVal.CloudBreadRankRedisServer;
         static string CloudBreadGameLogRedisServer = globalVal.CloudBreadGameLogRedisServer;
+        static string EMPTY_USER = "Master";
 
         /// @brief save socket auth key in redis db0
         public static bool SetRedisKey(string key, string value, int? expTimeMin)    // todo: value as oject or ...?
@@ -213,27 +214,25 @@ namespace CloudBreadRedis
 
         public static long GetRankCount()
         {
+            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
 
             long count = 0;
+            try
+            {
+                IDatabase cache = connection.GetDatabase(1);
+                count = cache.SortedSetRank(globalVal.CloudBreadRankSortedSet, EMPTY_USER, Order.Descending) ?? 0;
+
+                connection.Close();
+                connection.Dispose();
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
             return count;
-
-            //ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
-
-            //try
-            //{
-            //    IDatabase cache = connection.GetDatabase(1);
-            //    count = cache.SetLength(globalVal.CloudBreadRankSortedSet);
-
-            //    connection.Close();
-            //    connection.Dispose();
-            //}
-            //catch (Exception)
-            //{
-
-            //    throw;
-            //}
-
-            //return count;
         }
 
         /// fill out all rank redis cache from db
@@ -284,6 +283,9 @@ namespace CloudBreadRedis
 
                 // fill out all rank data
                 cache.SortedSetAdd(globalVal.CloudBreadRankSortedSet, sse);
+
+                // 무조건 0점 유저를 넣어서 Rank의 카운트를 얻어온다
+                cache.SortedSetAdd(globalVal.CloudBreadRankSortedSet, EMPTY_USER, 0);
 
                 connection.Close();
                 connection.Dispose();
