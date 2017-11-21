@@ -247,8 +247,7 @@ namespace CloudBreadRedis
             {
                 // redis connection
                 ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
-                //IDatabase cache = connection.GetDatabase(1);
-                IDatabase cache = connection.GetDatabase();
+                IDatabase cache = connection.GetDatabase(1);
 
                 // delete rank sorted set - caution. this process remove all rank set data
                 cache.KeyDelete(globalVal.CloudBreadRankSortedSet);
