@@ -15,7 +15,7 @@ namespace CloudBread.Models
     {
         public List<ulong> unitList;
         public int gem;
-        public DateTime unitListChangeTime;
+        public long unitListChangeTime;
         public byte errorCode;
     }
 }

@@ -136,7 +136,7 @@ namespace CloudBread.Controllers
                             mailData.index = index;
                             mailData.senderID = senderID;
                             mailData.receiveID = receiveID;
-                            mailData.createdAt = createdAt;
+                            mailData.createdAt = createdAt.Ticks;
                         
                             result.mailList.Add(mailData);
                         }

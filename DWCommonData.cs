@@ -68,7 +68,7 @@ namespace DW.CommonData
         public int gem;
         public int enhancedStone;
         public byte unitSlotIdx;
-        public DateTime unitListChangeTime;
+        public long unitListChangeTime;
     }
 
     [Serializable]
@@ -85,7 +85,7 @@ namespace DW.CommonData
         public string senderID;
         public string receiveID;
         public string msg;
-        public DateTime createdAt;
+        public long createdAt;
         public List<DWItemData> itemData;
     }
 

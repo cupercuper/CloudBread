@@ -124,7 +124,7 @@ namespace CloudBread.Controllers
                 gem = 0,
                 enhancedStone = 0,
                 unitSlotIdx = 1,
-                unitListChangeTime = DateTime.UtcNow
+                unitListChangeTime = DateTime.UtcNow.Ticks
             };
 
             // Init Unit
@@ -157,7 +157,7 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@gem", SqlDbType.Int).Value = result.userData.gem;
                     command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = result.userData.enhancedStone;
                     command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = 1;
-                    command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = result.userData.unitListChangeTime;
+                    command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = new DateTime(result.userData.unitListChangeTime);
                     
                     connection.OpenWithRetry(retryPolicy);
 

@@ -142,7 +142,7 @@ namespace CloudBread.Controllers
                                 gem = (int)dreader[12],
                                 enhancedStone = (int)dreader[13],
                                 unitSlotIdx = (byte)dreader[14],
-                                unitListChangeTime = (DateTime)dreader[15]
+                                unitListChangeTime = ((DateTime)dreader[15]).Ticks
                             };
 
                             result.userDataList.Add(workItem);

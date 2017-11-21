@@ -156,8 +156,8 @@ namespace CloudBread.Controllers
             }
 
             // 2분을 갭을 준다.
-            unitListChangeTime = unitListChangeTime.AddMinutes((double)(globalSetting.UnitListChangeTime - 2));
-            if (unitListChangeTime > utcTime)
+            DateTime addChangeTime = unitListChangeTime.AddMinutes((double)(globalSetting.UnitListChangeTime - 2));
+            if (addChangeTime > utcTime)
             {
                 if(gem < globalSetting.UnitListChangeGem)
                 {
@@ -179,11 +179,12 @@ namespace CloudBread.Controllers
             List<ulong> unitLIst = DWDataTableManager.GetCanBuyUnitList();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET CanBuyUnitList = @canBuyUnitList, Gem = @gem WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET CanBuyUnitList = @canBuyUnitList, Gem = @gem, UnitListChangeTime = @unitListChangeTime WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitLIst);
                     command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                    command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = utcTime;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -210,7 +211,7 @@ namespace CloudBread.Controllers
 
             result.unitList = unitLIst;
             result.gem = gem;
-            result.unitListChangeTime = utcTime;
+            result.unitListChangeTime = utcTime.Ticks;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
