@@ -213,24 +213,27 @@ namespace CloudBreadRedis
 
         public static long GetRankCount()
         {
-            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
 
             long count = 0;
-            try
-            {
-                IDatabase cache = connection.GetDatabase(1);
-                count = cache.SetLength(globalVal.CloudBreadRankSortedSet);
-
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception)
-            {
-
-                throw;
-            }
-
             return count;
+
+            //ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
+
+            //try
+            //{
+            //    IDatabase cache = connection.GetDatabase(1);
+            //    count = cache.SetLength(globalVal.CloudBreadRankSortedSet);
+
+            //    connection.Close();
+            //    connection.Dispose();
+            //}
+            //catch (Exception)
+            //{
+
+            //    throw;
+            //}
+
+            //return count;
         }
 
         /// fill out all rank redis cache from db
