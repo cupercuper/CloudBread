@@ -127,7 +127,7 @@ namespace CloudBread.Controllers
             string strQuery = string.Format("SELECT MemberID, NickName FROM[dbo].[DWMembers] Where MemberID IN (");
             for(int i = 0; i < sortedSetRank.Length; ++i)
             {
-                if (i == sortedSetRank.Length)
+                if (i == sortedSetRank.Length - 1)
                 {
                     strQuery += string.Format("'{0}'", sortedSetRank[i].Element);
                 }
