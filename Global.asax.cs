@@ -27,8 +27,6 @@ namespace CloudBread
         {
             try
             {
-                List<int> testList = null;
-                testList.Add(1);
                 /// On start up, CreateIfNotExists CloudBreadLog table on Azure Table Storage
                 /// On start up, CreateIfNotExists messagestolog table on Azure Queue Service
                 if (globalVal.StorageConnectionString != "")
@@ -56,11 +54,11 @@ namespace CloudBread
                 }
 
                 // Regarding to configuration, check startup fill or not
-                if (globalVal.CloudBreadFillRedisRankSetOnStartup)
-                {
+                //if (globalVal.CloudBreadFillRedisRankSetOnStartup)
+                //{
                     // execute redis rank fill task
                     CBRedis.FillAllRankFromDB();
-                }
+                //}
 
                 DWDataTableManager.LoadAllDataTable();
 
