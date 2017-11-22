@@ -113,17 +113,54 @@ namespace CloudBread.Controllers
 
             result.rankCnt = CBRedis.GetRankCount();
             // rank는 0 부터 시작한다.
-            long myRank = CBRedis.GetSortedSetRank(p.memberID) + 1;
+            long myRank = CBRedis.GetSortedSetRank(p.memberID);
             double myScore = CBRedis.GetSortedSetScore(p.memberID);
 
             result.myRankData = new DWRankData()
             {
                 memberID = p.memberID,
-                rank = myRank,
+                rank = myRank + 1,
                 score = myScore
             };
 
-            SortedSetEntry[] sortedSetRank = CBRedis.GetTopSortedSetRank(MAX_COUNT);
+            long firstIndex = 0;
+            long lastIndex = 0;
+
+            if(p.rankType == (byte)RANK_TYPE.TOP_RANK_TYPE || result.rankCnt <= 20)
+            {
+                lastIndex = 19;
+            }
+            else
+            {
+                firstIndex = myRank - 9;
+                lastIndex = myRank + 10;
+
+                long firstGap = 0;
+                if (firstIndex < 0)
+                {
+                    firstGap = -firstIndex;
+                    firstIndex = 0;
+                }
+
+                long lastGap = 0;
+                if (lastIndex > result.rankCnt - 1)
+                {
+                    lastGap = lastIndex - (result.rankCnt - 1);
+                    lastIndex = result.rankCnt - 1;
+                }
+
+                if (firstGap > 0)
+                {
+                    lastIndex = lastIndex + firstGap;
+                }
+                else if (lastGap > 0)
+                {
+                    firstIndex = firstIndex - lastGap;
+                }
+            }
+
+
+            SortedSetEntry[] sortedSetRank = CBRedis.GetSortedSetRankByRange(firstIndex, lastIndex);
             Dictionary<string, string> userNickNameDic = new Dictionary<string, string>();
             string strQuery = string.Format("SELECT MemberID, NickName FROM[dbo].[DWMembers] Where MemberID IN (");
             for(int i = 0; i < sortedSetRank.Length; ++i)
@@ -183,12 +220,11 @@ namespace CloudBread.Controllers
                 {
                     memberID = sortedSetRank[i].Element,
                     nickName = nickName,
-                    rank = i + 1,
+                    rank = (firstIndex + 1) + i,
                     score = sortedSetRank[i].Score
                 };
                 result.rankList.Add(rankData);
             }
-
 
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
