@@ -111,17 +111,19 @@ namespace CloudBread.Controllers
             int gem = 0;
             int enhancedStone = 0;
             byte unitSlotIdx = 1;
+            byte unitStore = 0;
+            List<UnitStoreData> unitStoreList = null;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT UnitList, CanBuyUnitList, Gem, EnhancedStone, UnitSlotIdx FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT UnitList, CanBuyUnitList, Gem, EnhancedStone, UnitSlotIdx, UnitStore, UnitStoreList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
                     using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
                     {
-                        if(dreader.HasRows == false)
+                        if (dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "INFO";
@@ -140,6 +142,8 @@ namespace CloudBread.Controllers
                             gem = (int)dreader[2];
                             enhancedStone = (int)dreader[3];
                             unitSlotIdx = (byte)dreader[4];
+                            unitStore = (byte)dreader[5];
+                            unitStoreList = DWMemberData.ConvertUnitStoreList(dreader[6] as byte[]);
                         }
                     }
                 }
@@ -159,7 +163,7 @@ namespace CloudBread.Controllers
             }
 
             UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
-            if(unitSlotDataTable == null)
+            if (unitSlotDataTable == null)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
@@ -170,7 +174,7 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            if(unitSlotDataTable.UnitMaxCount == unitList.Count)
+            if (unitSlotDataTable.UnitMaxCount == unitList.Count && unitStore == 0)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
@@ -188,6 +192,17 @@ namespace CloudBread.Controllers
                 logMessage.Level = "INFO";
                 logMessage.Logger = "DWBuyUnitController";
                 logMessage.Message = string.Format("CanBuyUnitList Error Cur Index = {0}", p.index);
+                Logging.RunLog(logMessage);
+                return result;
+            }
+
+            if (p.unitStore == 1 && unitStore == 0)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWBuyUnitController";
+                logMessage.Message = string.Format("Not Open Unit Store", p.index);
                 Logging.RunLog(logMessage);
                 return result;
             }
@@ -247,62 +262,127 @@ namespace CloudBread.Controllers
 
             canBuyUnitList.RemoveAt(p.index);
 
-            uint instanceNo = DWMemberData.AddUnitDic(ref unitList, unitSummonDataTable.ChangeSerialNo);
-            UnitData unitData = null;
-            if (unitList.TryGetValue(instanceNo, out unitData) == false)
+            result.unitDataList = new List<ClientUnitData>();
+            result.unitStoreDataList = new List<UnitStoreData>();
+
+            if (p.unitStore == 0)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                uint instanceNo = 0;
+                UnitData unitData = null;
+                instanceNo = DWMemberData.AddUnitDic(ref unitList, unitSummonDataTable.ChangeSerialNo);
+                if (unitList.TryGetValue(instanceNo, out unitData) == false)
+                {
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "INFO";
+                    logMessage.Logger = "DWBuyUnitController";
+                    logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
+                    Logging.RunLog(logMessage);
+
+                    return result;
+                }
+
+                using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+                {
+                    string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, CanBuyUnitList = @canBuyUnitList, Gem = @gem, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
+                    using (SqlCommand command = new SqlCommand(strQuery, connection))
+                    {
+                        command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
+                        command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(canBuyUnitList);
+                        command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                        command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
+
+                        connection.OpenWithRetry(retryPolicy);
+
+                        int rowCount = command.ExecuteNonQuery();
+                        if (rowCount <= 0)
+                        {
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWBuyUnitController";
+                            logMessage.Message = string.Format("Unit List Update Failed");
+                            Logging.RunLog(logMessage);
+
+                            return result;
+                        }
+                    }
+                }
+
+                ClientUnitData clientUnitData = new ClientUnitData()
+                {
+                    instanceNo = instanceNo,
+                    level = unitData.Level,
+                    enhancementCount = unitData.EnhancementCount,
+                    serialNo = unitData.SerialNo
+                };
+
+                result.unitDataList.Add(clientUnitData);
 
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";
                 logMessage.Logger = "DWBuyUnitController";
-                logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
+                logMessage.Message = string.Format("UnitSummonNo = {0}, UnitSerialNo = {1}, CurCurEnhancementStone = {2}, CurGem = {3}", serialNo, unitData.SerialNo, enhancedStone, gem);
                 Logging.RunLog(logMessage);
 
-                return result;
             }
-
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            else
             {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, CanBuyUnitList = @canBuyUnitList, Gem = @gem, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                UnitStoreData unitStoreData = null;
+                unitStoreData = unitStoreList.Find(x => x.serialNo == unitSummonDataTable.ChangeSerialNo);
+                if (unitStoreData == null)
                 {
-                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
-                    command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(canBuyUnitList);
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
-
-                    connection.OpenWithRetry(retryPolicy);
-
-                    int rowCount = command.ExecuteNonQuery();
-                    if (rowCount <= 0)
+                    unitStoreData = new UnitStoreData()
                     {
-                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                        serialNo = unitSummonDataTable.ChangeSerialNo,
+                        count = 1
+                    };
 
-                        logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
-                        logMessage.Logger = "DWBuyUnitController";
-                        logMessage.Message = string.Format("Update Failed");
-                        Logging.RunLog(logMessage);
+                    unitStoreList.Add(unitStoreData);
+                }
+                else
+                {
+                    unitStoreData.count++;
+                }
 
-                        return result;
+                using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+                {
+                    string strQuery = string.Format("UPDATE DWMembers SET UnitStoreList = @unitStoreList, CanBuyUnitList = @canBuyUnitList, Gem = @gem, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
+                    using (SqlCommand command = new SqlCommand(strQuery, connection))
+                    {
+                        command.Parameters.Add("@unitStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitStoreList);
+                        command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(canBuyUnitList);
+                        command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                        command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
+
+                        connection.OpenWithRetry(retryPolicy);
+
+                        int rowCount = command.ExecuteNonQuery();
+                        if (rowCount <= 0)
+                        {
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWBuyUnitController";
+                            logMessage.Message = string.Format("Unit Store Update Failed");
+                            Logging.RunLog(logMessage);
+
+                            return result;
+                        }
                     }
                 }
+
+                result.unitStoreDataList.Add(unitStoreData);
+
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWBuyUnitController";
+                logMessage.Message = string.Format("Unit Store UnitSummonNo = {0}, UnitSerialNo = {1}, UnitCount = {2}, CurCurEnhancementStone = {3}, CurGem = {4}", serialNo, unitStoreData.serialNo, unitStoreData.count, enhancedStone, gem);
+                Logging.RunLog(logMessage);
             }
-
-            result.unitData = new ClientUnitData()
-            {
-                instanceNo = instanceNo,
-                level = unitData.Level,
-                enhancementCount = unitData.EnhancementCount,
-                serialNo = unitData.SerialNo
-            };
-
-            logMessage.memberID = p.memberID;
-            logMessage.Level = "INFO";
-            logMessage.Logger = "DWBuyUnitController";
-            logMessage.Message = string.Format("UnitSummonNo = {0}, UnitSerialNo = {1}, CurCurEnhancementStone = {2}, CurGem = {3}", serialNo, unitData.SerialNo, enhancedStone, gem);
-            Logging.RunLog(logMessage);
 
             result.gem = gem;
             result.enhancedStone = enhancedStone;

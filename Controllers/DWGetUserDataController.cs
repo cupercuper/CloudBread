@@ -110,7 +110,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone, UnitSlotIdx, UnitListChangeTime FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -142,7 +142,9 @@ namespace CloudBread.Controllers
                                 gem = (int)dreader[12],
                                 enhancedStone = (int)dreader[13],
                                 unitSlotIdx = (byte)dreader[14],
-                                unitListChangeTime = ((DateTime)dreader[15]).Ticks
+                                unitListChangeTime = ((DateTime)dreader[15]).Ticks,
+                                unitStore = (byte)dreader[16],
+                                unitStoreList = DWMemberData.ConvertUnitStoreList(dreader[17] as byte[])
                             };
 
                             result.userDataList.Add(workItem);

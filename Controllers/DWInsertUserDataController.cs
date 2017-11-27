@@ -124,7 +124,8 @@ namespace CloudBread.Controllers
                 gem = 0,
                 enhancedStone = 0,
                 unitSlotIdx = 1,
-                unitListChangeTime = DateTime.UtcNow.Ticks
+                unitListChangeTime = DateTime.UtcNow.Ticks,
+                unitStore = 0
             };
 
             // Init Unit
@@ -134,12 +135,14 @@ namespace CloudBread.Controllers
             DWMemberData.AddUnitDic(ref unitDic, 4);
             result.userData.unitList = DWMemberData.ConvertClientUnitData(unitDic);
             //---------------------------------------------------------
+     
+            result.userData.unitStoreList = new List<UnitStoreData>();
 
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone, UnitSlotIdx, UnitListChangeTime) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone, @unitSlotIdx, @unitListChangeTime)";
+                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -158,7 +161,9 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = result.userData.enhancedStone;
                     command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = 1;
                     command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = new DateTime(result.userData.unitListChangeTime);
-                    
+                    command.Parameters.Add("@unitStore", SqlDbType.TinyInt).Value = 0;
+                    command.Parameters.Add("@unitStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitStoreList);
+
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();

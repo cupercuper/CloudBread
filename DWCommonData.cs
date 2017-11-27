@@ -58,6 +58,13 @@ namespace DW.CommonData
     }
 
     [Serializable]
+    public class UnitStoreData
+    {
+        public ulong serialNo;
+        public int count;
+    }
+
+    [Serializable]
     public class DWUserData
     {
         public string memberID;
@@ -76,6 +83,8 @@ namespace DW.CommonData
         public int enhancedStone;
         public byte unitSlotIdx;
         public long unitListChangeTime;
+        public byte unitStore;
+        public List<UnitStoreData> unitStoreList;
     }
 
     [Serializable]

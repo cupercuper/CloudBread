@@ -15,6 +15,7 @@ namespace CloudBread.Models
     public class DWSellUnitModel
     {
         public uint instanceNo;
+        public int unitStoreCount;
         public int gem;
         public int enhancedStone;
         public byte errorCode;

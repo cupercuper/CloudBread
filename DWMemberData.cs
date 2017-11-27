@@ -38,6 +38,10 @@ namespace CloudBread
         public static Dictionary<uint, UnitData> ConvertUnitDic(byte [] buffer)
         {
             Dictionary<uint, UnitData> unitDic = new Dictionary<uint, UnitData>();
+            if(buffer == null)
+            {
+                return unitDic;
+            }
 
             MemoryStream ms = new MemoryStream(buffer);
             BinaryReader br = new BinaryReader(ms);
@@ -97,15 +101,65 @@ namespace CloudBread
             return ms.ToArray();
         }
 
+        public static List<UnitStoreData> ConvertUnitStoreList(byte[] buffer)
+        {
+            List<UnitStoreData> unitStoretList = new List<UnitStoreData>();
+
+            if (buffer == null)
+            {
+                return unitStoretList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                UnitStoreData unitStoreData = new UnitStoreData();
+                unitStoreData.serialNo = br.ReadUInt64();
+                unitStoreData.count = br.ReadInt32();
+
+                unitStoretList.Add(unitStoreData);
+            }
+            br.Close();
+            ms.Close();
+
+            return unitStoretList;
+        }
+
+        public static byte[] ConvertByte(List<UnitStoreData> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i].serialNo);
+                bw.Write(list[i].count);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+
         public static List<ulong> ConvertUnitList(byte[] buffer)
         {
+            List<ulong> unitList = new List<ulong>();
+            if (buffer == null)
+            {
+                return unitList;
+            }
+       
             MemoryStream ms = new MemoryStream(buffer);
             BinaryReader br = new BinaryReader(ms);
 
             int count = 0;
             count = br.ReadInt32();
-
-            List<ulong> unitList = new List<ulong>(count);
 
             for (int i = 0; i < count; ++i)
             {
@@ -114,7 +168,6 @@ namespace CloudBread
 
             br.Close();
             ms.Close();
-
             return unitList;
         }
 
@@ -141,6 +194,10 @@ namespace CloudBread
         {
             DWMailData mailData = new DWMailData();
             mailData.itemData = new List<DWItemData>();
+            if(buffer == null)
+            {
+                return mailData;
+            }
 
             MemoryStream ms = new MemoryStream(buffer);
             BinaryReader br = new BinaryReader(ms);
@@ -166,6 +223,11 @@ namespace CloudBread
         public static EventData ConvertEventData(byte[] buffer)
         {
             EventData eventData = new EventData();
+            eventData.itemData = new List<DWItemData>();
+            if(buffer == null)
+            {
+                return eventData;
+            }
 
             MemoryStream ms = new MemoryStream(buffer);
             BinaryReader br = new BinaryReader(ms);
@@ -173,8 +235,6 @@ namespace CloudBread
             eventData.msg = br.ReadString();
 
             int count = br.ReadInt32();
-
-            eventData.itemData = new List<DWItemData>();
 
             for(int i = 0; i <count; ++i)
             {
@@ -185,12 +245,19 @@ namespace CloudBread
                 eventData.itemData.Add(itemData);
             }
 
+            br.Close();
+            ms.Close();
+
             return eventData;
         }
 
         public static List<long> ConvertEventList(byte[] buffer)
         {
             List<long> eventList = new List<long>();
+            if(buffer == null)
+            {
+                return eventList;
+            }
 
             MemoryStream ms = new MemoryStream(buffer);
             BinaryReader br = new BinaryReader(ms);
@@ -201,6 +268,9 @@ namespace CloudBread
             {
                 eventList.Add(br.ReadInt64());
             }
+
+            br.Close();
+            ms.Close();
 
             return eventList;
         }

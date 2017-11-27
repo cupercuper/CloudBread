@@ -298,6 +298,8 @@
     <Compile Include="Controllers\DWServerCheckController.cs" />
     <Compile Include="Controllers\DWUdtStageInfoController.cs" />
     <Compile Include="Controllers\DWUnitSlotUpgradeController.cs" />
+    <Compile Include="Controllers\DWUnitStoreActiveController.cs" />
+    <Compile Include="Controllers\DWUnitStoreBuyController.cs" />
     <Compile Include="Controllers\TodoItemController.cs" />
     <Compile Include="Controllers\PingController.cs" />
     <Compile Include="DataObjects\globalVal.cs" />
@@ -343,6 +345,8 @@
     <Compile Include="Models\DWServerCheckData.cs" />
     <Compile Include="Models\DWUdtStageInfoData.cs" />
     <Compile Include="Models\DWUnitSlotUpgradeData.cs" />
+    <Compile Include="Models\DWUnitStoreActiveData.cs" />
+    <Compile Include="Models\DWUnitStoreBuyData.cs" />
     <Compile Include="Models\EncryptedData.cs" />
     <Compile Include="Models\InsRegMember.cs" />
     <Compile Include="Models\MobileServiceContext.cs" />

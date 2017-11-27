@@ -178,10 +178,12 @@ public class GlobalSettingDataTable : DataTableBase
 {
 	public int UnitListChangeTime;
 	public int UnitListChangeGem;
+	public int UnitStoreActiveGem;
 	public void Load(DataRow dataRow)
 	{
 		UnitListChangeTime = int.Parse(dataRow[1].ToString());
 		UnitListChangeGem = int.Parse(dataRow[2].ToString());
+		UnitStoreActiveGem = int.Parse(dataRow[3].ToString());
 	}
 }
 
@@ -318,6 +320,7 @@ public class UnitDataTable : DataTableBase
 	public bool Flip_360;
 	public ulong Projectile;
 	public List<byte> AttackType;
+	public int UnitStoreMoney;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -342,6 +345,7 @@ public class UnitDataTable : DataTableBase
 			byte temp = byte.Parse(AttackType_tempArray[i]);
 			AttackType.Add(temp);
 		}
+		UnitStoreMoney = int.Parse(dataRow[17].ToString());
 	}
 }
 

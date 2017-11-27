@@ -27,15 +27,15 @@ using DW.CommonData;
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWSellUnitController : ApiController
+    public class DWUnitStoreActiveController : ApiController
     {
-        // GET api/DWSellUnit
+        // GET api/DWUnitStoreActive
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWSellUnitInputParam p)
+        public HttpResponseMessage Post(DWUnitStoreActiveInputParam p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -43,7 +43,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWSellUnitInputParam>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWUnitStoreActiveInputParam>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -59,14 +59,13 @@ namespace CloudBread.Controllers
 
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
             string jsonParam = JsonConvert.SerializeObject(p);
-            
+
             HttpResponseMessage response = new HttpResponseMessage();
             EncryptedData encryptedResult = new EncryptedData();
 
             try
             {
-                /// Database connection retry policy
-                DWSellUnitModel result = GetResult(p);
+                DWUnitStoreActiveModel result = result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -93,7 +92,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWSellUnitController";
+                logMessage.Logger = "DWUnitStoreActiveController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -102,111 +101,119 @@ namespace CloudBread.Controllers
             }
         }
 
-        DWSellUnitModel GetResult(DWSellUnitInputParam p)
+        DWUnitStoreActiveModel GetResult(DWUnitStoreActiveInputParam p)
         {
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
-            DWSellUnitModel result = new DWSellUnitModel();
+            DWUnitStoreActiveModel result = new DWUnitStoreActiveModel();
 
-            /// Database connection retry policy
-            Dictionary<uint, UnitData> unitList = null;
-            List<UnitStoreData> unitStoreList = null;
             int gem = 0;
-            int enhancedStone = 0;
             byte unitStore = 0;
+            byte captianChange = 0;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT UnitList, Gem, EnhancedStone, UnitStore, UnitStoreList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, UnitStore, CaptianChange FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
                     using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
                     {
-                        if(dreader.HasRows == false)
+                        if (dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "INFO";
-                            logMessage.Logger = "DWSellUnitController";
+                            logMessage.Logger = "DWUnitStoreActiveController";
                             logMessage.Message = string.Format("Not Found User");
                             Logging.RunLog(logMessage);
 
-                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                            result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
                             return result;
                         }
 
                         while (dreader.Read())
                         {
-                            unitList = DWMemberData.ConvertUnitDic(dreader[0] as byte[]);
-                            gem = (int)dreader[1];
-                            enhancedStone = (int)dreader[2];
-                            unitStore = (byte)dreader[3];
-                            unitStoreList = DWMemberData.ConvertUnitStoreList(dreader[4] as byte[]);
+                            gem = (int)dreader[0];
+                            unitStore = (byte)dreader[1];
+                            captianChange = (byte)dreader[2];
                         }
                     }
                 }
             }
 
-            UnitData unitData = null;
-            if (unitList.TryGetValue(p.instanceNo, out unitData) == false)
+            if(unitStore == 1)
             {
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";
-                logMessage.Logger = "DWSellUnitController";
-                logMessage.Message = string.Format("Not Found Unit Instance = {0}", p.instanceNo);
+                logMessage.Logger = "DWUnitStoreActiveController";
+                logMessage.Message = string.Format("Opend Unit Store");
                 Logging.RunLog(logMessage);
 
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
 
-            unitList.Remove(p.instanceNo);
-
-            result.unitStoreCount = 0;
-            if(unitStore == 1)
+            if (captianChange == 0)
             {
-                UnitStoreData unitStoreData = unitStoreList.Find(x => x.serialNo == unitData.SerialNo);
-                if(unitStoreData == null)
-                {
-                    unitStoreData = new UnitStoreData()
-                    {
-                        serialNo = unitData.SerialNo,
-                        count = 1
-                    };
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWUnitStoreActiveController";
+                logMessage.Message = string.Format("Not Captian Change");
+                Logging.RunLog(logMessage);
 
-                    unitStoreList.Add(unitStoreData);
-                }
-                else
-                {
-                    unitStoreData.count++;
-                }
-
-                result.unitStoreCount = unitStoreData.count;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
             }
+
+            GlobalSettingDataTable globalSetting = DWDataTableManager.GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
+            if(globalSetting == null)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWUnitStoreActiveController";
+                logMessage.Message = string.Format("Not Found Global Setting");
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            if(gem < globalSetting.UnitStoreActiveGem)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWUnitStoreActiveController";
+                logMessage.Message = string.Format("Lack Gem");
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            gem -= globalSetting.UnitStoreActiveGem;
+            unitStore = 1;
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, Gem = @gem, EnhancedStone = @enhancedStone, UnitStoreList = @unitStoreList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, UnitStore = @unitStore WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
                     command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
-                    command.Parameters.Add("@unitStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitStoreList);
+                    command.Parameters.Add("@unitStore", SqlDbType.TinyInt).Value = unitStore;
 
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "INFO";
-                        logMessage.Logger = "DWSellUnitController";
+                        logMessage.Logger = "DWUnitStoreActiveController";
                         logMessage.Message = string.Format("Update Failed");
                         Logging.RunLog(logMessage);
-
-                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
@@ -214,13 +221,12 @@ namespace CloudBread.Controllers
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";
-            logMessage.Logger = "DWSellUnitController";
-            logMessage.Message = string.Format("Instance No = {0}, Gem = {1}, EnhancedStone = {2}", p.instanceNo, gem, enhancedStone);
+            logMessage.Logger = "DWUnitStoreActiveController";
+            logMessage.Message = string.Format("Success Unit Store Active Gem = {0}", gem);
             Logging.RunLog(logMessage);
 
-            result.instanceNo = p.instanceNo;
             result.gem = gem;
-            result.enhancedStone = enhancedStone;
+            result.unitStore = 1;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
