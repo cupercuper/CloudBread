@@ -142,18 +142,32 @@ public class EnhancementDataTable_List : DataTableListBase
 
 public class EnhancementDataTable : DataTableBase
 {
+	public int Probability;
 	public int Grade_1;
 	public int Grade_2;
 	public int Grade_3;
 	public int Grade_4;
 	public int Grade_5;
+	public int ProbabilityUp_Grade_1;
+	public int ProbabilityUp_Grade_2;
+	public int ProbabilityUp_Grade_3;
+	public int ProbabilityUp_Grade_4;
+	public int ProbabilityUp_Grade_5;
+	public int FailSub;
 	public void Load(DataRow dataRow)
 	{
-		Grade_1 = int.Parse(dataRow[1].ToString());
-		Grade_2 = int.Parse(dataRow[2].ToString());
-		Grade_3 = int.Parse(dataRow[3].ToString());
-		Grade_4 = int.Parse(dataRow[4].ToString());
-		Grade_5 = int.Parse(dataRow[5].ToString());
+		Probability = int.Parse(dataRow[1].ToString());
+		Grade_1 = int.Parse(dataRow[2].ToString());
+		Grade_2 = int.Parse(dataRow[3].ToString());
+		Grade_3 = int.Parse(dataRow[4].ToString());
+		Grade_4 = int.Parse(dataRow[5].ToString());
+		Grade_5 = int.Parse(dataRow[6].ToString());
+		ProbabilityUp_Grade_1 = int.Parse(dataRow[7].ToString());
+		ProbabilityUp_Grade_2 = int.Parse(dataRow[8].ToString());
+		ProbabilityUp_Grade_3 = int.Parse(dataRow[9].ToString());
+		ProbabilityUp_Grade_4 = int.Parse(dataRow[10].ToString());
+		ProbabilityUp_Grade_5 = int.Parse(dataRow[11].ToString());
+		FailSub = int.Parse(dataRow[12].ToString());
 	}
 }
 
@@ -179,11 +193,13 @@ public class GlobalSettingDataTable : DataTableBase
 	public int UnitListChangeTime;
 	public int UnitListChangeGem;
 	public int UnitStoreActiveGem;
+	public int GemUseAddProbability;
 	public void Load(DataRow dataRow)
 	{
 		UnitListChangeTime = int.Parse(dataRow[1].ToString());
 		UnitListChangeGem = int.Parse(dataRow[2].ToString());
 		UnitStoreActiveGem = int.Parse(dataRow[3].ToString());
+		GemUseAddProbability = int.Parse(dataRow[4].ToString());
 	}
 }
 

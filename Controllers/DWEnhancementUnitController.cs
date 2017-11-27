@@ -109,12 +109,13 @@ namespace CloudBread.Controllers
 
             DWEnhancementUnitModel result = new DWEnhancementUnitModel();
             int enhancedStone = 0;
+            int gem = 0;
             Dictionary<uint, UnitData> unitLIst = null;
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT EnhancedStone, Gem, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -136,7 +137,8 @@ namespace CloudBread.Controllers
                         while (dreader.Read())
                         {
                             enhancedStone = (int)dreader[0];
-                            unitLIst = DWMemberData.ConvertUnitDic(dreader[1] as byte[]);
+                            gem = (int)dreader[1];
+                            unitLIst = DWMemberData.ConvertUnitDic(dreader[2] as byte[]);
                         }
                     }
                 }
@@ -154,15 +156,128 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
-                
-            unitData.EnhancementCount += p.enhancedCount;
+
+            EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)(unitData.EnhancementCount + 1)) as EnhancementDataTable;
+            if(enhancementDataTable == null)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWEnhancementUnitController";
+                logMessage.Message = string.Format("Not Found EnhancementDataTable SerialNo = {0}", (unitData.EnhancementCount + 1));
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            UnitDataTable unitDataTable = DWDataTableManager.GetDataTable(UnitDataTable_List.NAME, unitData.SerialNo) as UnitDataTable;
+            if(unitDataTable == null)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWEnhancementUnitController";
+                logMessage.Message = string.Format("Not Found UnitDataTable SerialNo = {0}", unitData.SerialNo);
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            int necessaryStoneCount = 0;
+            int necessaryGemCount = 0;
+            switch (unitDataTable.Grade)
+            {
+                case 1:
+                    necessaryStoneCount = enhancementDataTable.Grade_1;
+                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_1;
+                    break;
+                case 2:
+                    necessaryStoneCount = enhancementDataTable.Grade_2;
+                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_2;
+                    break;
+                case 3:
+                    necessaryStoneCount = enhancementDataTable.Grade_3;
+                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_3;
+                    break;
+                case 4:
+                    necessaryStoneCount = enhancementDataTable.Grade_4;
+                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_4;
+                    break;
+                case 5:
+                    necessaryStoneCount = enhancementDataTable.Grade_5;
+                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_5;
+                    break;
+            }
+
+            if(enhancedStone < necessaryStoneCount)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWEnhancementUnitController";
+                logMessage.Message = string.Format("Lack enhancedStone cur stone = {0}, necessaryStoneCount = {1}, UnitSerial = {2}, Enhancement Serial = {3}", enhancedStone, necessaryStoneCount, unitData.SerialNo, (unitData.EnhancementCount + 1));
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+            
+            if (p.gemUse == 1 && gem < necessaryGemCount)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWEnhancementUnitController";
+                logMessage.Message = string.Format("Lack gem cur Gem = {0}, necessaryGemCount = {1}, UnitSerial = {2}, Enhancement Serial = {3}", gem, necessaryGemCount, unitData.SerialNo, (unitData.EnhancementCount + 1));
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            GlobalSettingDataTable globalSettingDataTable = DWDataTableManager.GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
+            if(globalSettingDataTable == null)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWEnhancementUnitController";
+                logMessage.Message = string.Format("Not Found GlobalSettingDataTable");
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            Random rand = new Random((int)DateTime.Now.Ticks);
+            int probability = rand.Next(0, 101);
+            int addProbability = p.gemUse == 1 ? globalSettingDataTable.GemUseAddProbability : 0;
+
+            if (probability <= enhancementDataTable.Probability + addProbability)
+            {
+                result.success = 1;
+                unitData.EnhancementCount++;
+            }
+            else
+            {
+                if(p.gemUse == 0)
+                {
+                    unitData.EnhancementCount = (ushort)(unitData.EnhancementCount - enhancementDataTable.FailSub);
+                }
+                result.success = 0;
+            }
+
+            enhancedStone -= necessaryStoneCount;
+            if(p.gemUse == 1)
+            {
+                gem -= necessaryGemCount;
+            }
+            
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, Gem = @gem WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitLIst);
                     command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
+                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -195,6 +310,7 @@ namespace CloudBread.Controllers
                 serialNo = unitData.SerialNo
             };
             result.enhancedStone = enhancedStone;
+            result.gem = gem;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

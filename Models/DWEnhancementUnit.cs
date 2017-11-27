@@ -8,8 +8,8 @@ namespace CloudBread.Models
     {
         public string memberID;
         public uint InstanceNo;
+        public byte gemUse;
         public string token;
-        public byte enhancedCount;
     }
 
     [Serializable]
@@ -17,6 +17,8 @@ namespace CloudBread.Models
     {
         public ClientUnitData unitData;
         public int enhancedStone;
+        public int gem;
+        public byte success;
         public byte errorCode;
     }
 }
