@@ -110,6 +110,8 @@ public class EnemyDataTable : DataTableBase
 	public int DefencePower;
 	public int MoveSpeed;
 	public byte MoveType;
+	public string DamageEffect;
+	public string DieEffect;
 	public string Description;
 	public void Load(DataRow dataRow)
 	{
@@ -119,7 +121,9 @@ public class EnemyDataTable : DataTableBase
 		DefencePower = int.Parse(dataRow[4].ToString());
 		MoveSpeed = int.Parse(dataRow[5].ToString());
 		MoveType = byte.Parse(dataRow[6].ToString());
-		Description = dataRow[7].ToString();
+		DamageEffect = dataRow[7].ToString();
+		DieEffect = dataRow[8].ToString();
+		Description = dataRow[9].ToString();
 	}
 }
 
@@ -194,12 +198,14 @@ public class GlobalSettingDataTable : DataTableBase
 	public int UnitListChangeGem;
 	public int UnitStoreActiveGem;
 	public int GemUseAddProbability;
+	public int CoinContainMaxCnt;
 	public void Load(DataRow dataRow)
 	{
 		UnitListChangeTime = int.Parse(dataRow[1].ToString());
 		UnitListChangeGem = int.Parse(dataRow[2].ToString());
 		UnitStoreActiveGem = int.Parse(dataRow[3].ToString());
 		GemUseAddProbability = int.Parse(dataRow[4].ToString());
+		CoinContainMaxCnt = int.Parse(dataRow[5].ToString());
 	}
 }
 
@@ -330,13 +336,12 @@ public class UnitDataTable : DataTableBase
 	public int SplashRange;
 	public int Size;
 	public string Description;
-	public bool Flip_90;
-	public bool Flip_180;
-	public bool Flip_270;
-	public bool Flip_360;
 	public ulong Projectile;
 	public List<byte> AttackType;
 	public int UnitStoreMoney;
+	public string FireEffect;
+	public string TargetPosEffect;
+	public byte AttackDirectionType;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -349,19 +354,18 @@ public class UnitDataTable : DataTableBase
 		SplashRange = int.Parse(dataRow[8].ToString());
 		Size = int.Parse(dataRow[9].ToString());
 		Description = dataRow[10].ToString();
-		Flip_90 = bool.Parse(dataRow[11].ToString());
-		Flip_180 = bool.Parse(dataRow[12].ToString());
-		Flip_270 = bool.Parse(dataRow[13].ToString());
-		Flip_360 = bool.Parse(dataRow[14].ToString());
-		Projectile = ulong.Parse(dataRow[15].ToString());
+		Projectile = ulong.Parse(dataRow[11].ToString());
 		AttackType = new List<byte>();
-		string [] AttackType_tempArray = dataRow[16].ToString().Split(',');
+		string [] AttackType_tempArray = dataRow[12].ToString().Split(',');
 		for( int i = 0; i < AttackType_tempArray.Length; ++i)
 		{
 			byte temp = byte.Parse(AttackType_tempArray[i]);
 			AttackType.Add(temp);
 		}
-		UnitStoreMoney = int.Parse(dataRow[17].ToString());
+		UnitStoreMoney = int.Parse(dataRow[13].ToString());
+		FireEffect = dataRow[14].ToString();
+		TargetPosEffect = dataRow[15].ToString();
+		AttackDirectionType = byte.Parse(dataRow[16].ToString());
 	}
 }
 
