@@ -145,6 +145,19 @@ namespace CloudBread.Controllers
                 }
             }
 
+            if(lastWorld <= 1)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWChangeCaptianController";
+                logMessage.Message = string.Format("Dont CaptainChange MemberID = {0}, LastWorld = {1}", p.memberID, lastWorld);
+                Logging.RunLog(logMessage);
+
+                return result;
+            }
+
             captianChange = 1;
             byte captianID = DWDataTableManager.GetCaptianID();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
