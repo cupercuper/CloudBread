@@ -43,11 +43,13 @@ namespace CloudBread
             try
             {
                 AddDataTable(BossDataTable_List.NAME, new BossDataTable_List());
+                AddDataTable(BuffDataTable_List.NAME, new BuffDataTable_List());
                 AddDataTable(CaptianDataTable_List.NAME, new CaptianDataTable_List());
                 AddDataTable(EnemyDataTable_List.NAME, new EnemyDataTable_List());
                 AddDataTable(EnhancementDataTable_List.NAME, new EnhancementDataTable_List());
                 AddDataTable(GlobalSettingDataTable_List.NAME, new GlobalSettingDataTable_List());
                 AddDataTable(ItemDataTable_List.NAME, new ItemDataTable_List());
+                AddDataTable(LevelUpDataTable_List.NAME, new LevelUpDataTable_List());
                 AddDataTable(ProjectileDataTable_List.NAME, new ProjectileDataTable_List());
                 AddDataTable(StageDataTable_List.NAME, new StageDataTable_List());
                 AddDataTable(UnitDataTable_List.NAME, new UnitDataTable_List());
@@ -251,7 +253,8 @@ namespace CloudBread
             Dictionary<ulong, DataTableBase> captianLIst = GetDataTableList(CaptianDataTable_List.NAME);
             foreach(KeyValuePair<ulong, DataTableBase> kv in captianLIst)
             {
-                _captianLIst.Add((byte)kv.Key);
+                CaptianDataTable captainDataTable = kv.Value as CaptianDataTable;
+                _captianLIst.Add(captainDataTable.Type);
             }
         }
 
@@ -261,8 +264,5 @@ namespace CloudBread
             int index = random.Next(0, _captianLIst.Count);
             return _captianLIst[index];
         }
-
-
-
     }
 }

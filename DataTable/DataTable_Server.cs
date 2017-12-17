@@ -55,6 +55,36 @@ public class BossDataTable : DataTableBase
 	}
 }
 
+public class BuffDataTable_List : DataTableListBase
+{
+	public const string NAME = "Buff";
+	public const string DATAFILENAME = "BuffData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			BuffDataTable data = new BuffDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class BuffDataTable : DataTableBase
+{
+	public byte BuffType;
+	public string Value;
+	public string Description;
+	public void Load(DataRow dataRow)
+	{
+		BuffType = byte.Parse(dataRow[1].ToString());
+		Value = dataRow[2].ToString();
+		Description = dataRow[3].ToString();
+	}
+}
+
 public class CaptianDataTable_List : DataTableListBase
 {
 	public const string NAME = "Captian";
@@ -76,12 +106,20 @@ public class CaptianDataTable : DataTableBase
 {
 	public string Name;
 	public byte Type;
+	public List<ulong> BuffList;
 	public string Description;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
 		Type = byte.Parse(dataRow[2].ToString());
-		Description = dataRow[3].ToString();
+		BuffList = new List<ulong>();
+		string [] BuffList_tempArray = dataRow[3].ToString().Split(',');
+		for( int i = 0; i < BuffList_tempArray.Length; ++i)
+		{
+			ulong temp = ulong.Parse(BuffList_tempArray[i]);
+			BuffList.Add(temp);
+		}
+		Description = dataRow[4].ToString();
 	}
 }
 
@@ -113,6 +151,10 @@ public class EnemyDataTable : DataTableBase
 	public string DamageEffect;
 	public string DieEffect;
 	public string Description;
+	public byte GoldCoinCount;
+	public int GoldCount;
+	public byte GemCoinCount;
+	public int GemCount;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -124,6 +166,10 @@ public class EnemyDataTable : DataTableBase
 		DamageEffect = dataRow[7].ToString();
 		DieEffect = dataRow[8].ToString();
 		Description = dataRow[9].ToString();
+		GoldCoinCount = byte.Parse(dataRow[10].ToString());
+		GoldCount = int.Parse(dataRow[11].ToString());
+		GemCoinCount = byte.Parse(dataRow[12].ToString());
+		GemCount = int.Parse(dataRow[13].ToString());
 	}
 }
 
@@ -241,6 +287,32 @@ public class ItemDataTable : DataTableBase
 	}
 }
 
+public class LevelUpDataTable_List : DataTableListBase
+{
+	public const string NAME = "LevelUp";
+	public const string DATAFILENAME = "LevelUpData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			LevelUpDataTable data = new LevelUpDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class LevelUpDataTable : DataTableBase
+{
+	public int LevelUpGold;
+	public void Load(DataRow dataRow)
+	{
+		LevelUpGold = int.Parse(dataRow[1].ToString());
+	}
+}
+
 public class ProjectileDataTable_List : DataTableListBase
 {
 	public const string NAME = "Projectile";
@@ -333,6 +405,8 @@ public class UnitDataTable : DataTableBase
 	public int AttackCoolTime;
 	public int AttackRange;
 	public int AttackPower;
+	public int AttackPowerF;
+	public int CriticalRate;
 	public int SplashRange;
 	public int Size;
 	public string Description;
@@ -351,21 +425,23 @@ public class UnitDataTable : DataTableBase
 		AttackCoolTime = int.Parse(dataRow[5].ToString());
 		AttackRange = int.Parse(dataRow[6].ToString());
 		AttackPower = int.Parse(dataRow[7].ToString());
-		SplashRange = int.Parse(dataRow[8].ToString());
-		Size = int.Parse(dataRow[9].ToString());
-		Description = dataRow[10].ToString();
-		Projectile = ulong.Parse(dataRow[11].ToString());
+		AttackPowerF = int.Parse(dataRow[8].ToString());
+		CriticalRate = int.Parse(dataRow[9].ToString());
+		SplashRange = int.Parse(dataRow[10].ToString());
+		Size = int.Parse(dataRow[11].ToString());
+		Description = dataRow[12].ToString();
+		Projectile = ulong.Parse(dataRow[13].ToString());
 		AttackType = new List<byte>();
-		string [] AttackType_tempArray = dataRow[12].ToString().Split(',');
+		string [] AttackType_tempArray = dataRow[14].ToString().Split(',');
 		for( int i = 0; i < AttackType_tempArray.Length; ++i)
 		{
 			byte temp = byte.Parse(AttackType_tempArray[i]);
 			AttackType.Add(temp);
 		}
-		UnitStoreMoney = int.Parse(dataRow[13].ToString());
-		FireEffect = dataRow[14].ToString();
-		TargetPosEffect = dataRow[15].ToString();
-		AttackDirectionType = byte.Parse(dataRow[16].ToString());
+		UnitStoreMoney = int.Parse(dataRow[15].ToString());
+		FireEffect = dataRow[16].ToString();
+		TargetPosEffect = dataRow[17].ToString();
+		AttackDirectionType = byte.Parse(dataRow[18].ToString());
 	}
 }
 
