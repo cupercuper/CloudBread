@@ -13,7 +13,8 @@ namespace CloudBread.Models
     public class DWUnitSlotUpgradeModel
     {
         public byte unitSlotIdx;
-        public int gem;
+        public long gem;
+        public long cashGem;
         public byte errorCode;
     }
 

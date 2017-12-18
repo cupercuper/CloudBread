@@ -107,13 +107,14 @@ namespace CloudBread.Controllers
 
             DWUnitSlotUpgradeModel result = new DWUnitSlotUpgradeModel();
 
-            int gem = 0;
+            long gem = 0;
+            long cashGem = 0;
             byte unitSlotIdx = 1;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, UnitSlotIdx FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, UnitSlotIdx FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -133,8 +134,9 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            gem = (int)dreader[0];
-                            unitSlotIdx = (byte)dreader[1];
+                            gem = (long)dreader[0];
+                            cashGem = (long)dreader[1];
+                            unitSlotIdx = (byte)dreader[2];
                         }
                     }
                 }
@@ -142,29 +144,39 @@ namespace CloudBread.Controllers
 
             unitSlotIdx++;
             UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
-            if(unitSlotDataTable == null || gem < unitSlotDataTable.UpgradeMoney)
+            if(unitSlotDataTable == null)
             {
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";
                 logMessage.Logger = "DWUnitSlotUpgradeController";
                 logMessage.Message = string.Format("Unit Slot Error SlotNo = {0}, Gem = {1}", unitSlotIdx, gem);
                 Logging.RunLog(logMessage);
-
-                unitSlotIdx--;
-                result.gem = gem;
-                result.unitSlotIdx = unitSlotIdx;
+                
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
 
-            gem -= unitSlotDataTable.UpgradeMoney;
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWUnitSlotUpgradeController";
+            if(DWMemberData.SubGem(ref gem, ref cashGem, unitSlotDataTable.UpgradeMoney, logMessage) == false)
+            {
+                logMessage.Message = string.Format("Lack Gem SlotNo = {0}, Gem = {1}, CashGem = {2}", unitSlotIdx, gem, cashGem);
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+
+            }
+            Logging.RunLog(logMessage);
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, UnitSlotIdx = @unitSlotIdx WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, CashGem = @cashGem, UnitSlotIdx = @unitSlotIdx WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
+                    command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
                     command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = unitSlotIdx;
 
                     connection.OpenWithRetry(retryPolicy);
@@ -191,6 +203,7 @@ namespace CloudBread.Controllers
             Logging.RunLog(logMessage);
 
             result.gem = gem;
+            result.cashGem = cashGem;
             result.unitSlotIdx = unitSlotIdx;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;

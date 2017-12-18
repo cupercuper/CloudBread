@@ -14,8 +14,8 @@ namespace CloudBread.Models
     public class DWChangeCaptianModel
     {
         public byte captianID;
-        public int enhancedStone;
-        public byte captianChange;
+        public long enhancedStone;
+        public long captianChange;
         public byte errorCode;
     }
 }

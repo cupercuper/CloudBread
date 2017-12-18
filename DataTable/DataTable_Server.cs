@@ -276,13 +276,13 @@ public class ItemDataTable : DataTableBase
 {
 	public string Name;
 	public byte ChangeType;
-	public int Count;
+	public string Value;
 	public string Description;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
 		ChangeType = byte.Parse(dataRow[2].ToString());
-		Count = int.Parse(dataRow[3].ToString());
+		Value = dataRow[3].ToString();
 		Description = dataRow[4].ToString();
 	}
 }
@@ -344,6 +344,52 @@ public class ProjectileDataTable : DataTableBase
 		Speed = int.Parse(dataRow[3].ToString());
 		RotateSpeed = int.Parse(dataRow[4].ToString());
 		DestroyEffect = dataRow[5].ToString();
+	}
+}
+
+public class ShopDataTable_List : DataTableListBase
+{
+	public const string NAME = "Shop";
+	public const string DATAFILENAME = "ShopData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			ShopDataTable data = new ShopDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class ShopDataTable : DataTableBase
+{
+	public string Name;
+	public string Icon;
+	public byte Type;
+	public byte Limit;
+	public byte MoneyType;
+	public int MoneyCount;
+	public List<ulong> ItemList;
+	public string Description;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		Icon = dataRow[2].ToString();
+		Type = byte.Parse(dataRow[3].ToString());
+		Limit = byte.Parse(dataRow[4].ToString());
+		MoneyType = byte.Parse(dataRow[5].ToString());
+		MoneyCount = int.Parse(dataRow[6].ToString());
+		ItemList = new List<ulong>();
+		string [] ItemList_tempArray = dataRow[7].ToString().Split(',');
+		for( int i = 0; i < ItemList_tempArray.Length; ++i)
+		{
+			ulong temp = ulong.Parse(ItemList_tempArray[i]);
+			ItemList.Add(temp);
+		}
+		Description = dataRow[8].ToString();
 	}
 }
 
@@ -589,6 +635,7 @@ public class WorldDataTable : DataTableBase
 	public List<ulong> StageList;
 	public ulong BossSerialNo;
 	public int BossLevel;
+	public int EnhancementStone;
 	public string Description;
 	public void Load(DataRow dataRow)
 	{
@@ -605,7 +652,8 @@ public class WorldDataTable : DataTableBase
 		}
 		BossSerialNo = ulong.Parse(dataRow[6].ToString());
 		BossLevel = int.Parse(dataRow[7].ToString());
-		Description = dataRow[8].ToString();
+		EnhancementStone = int.Parse(dataRow[8].ToString());
+		Description = dataRow[9].ToString();
 	}
 }
 

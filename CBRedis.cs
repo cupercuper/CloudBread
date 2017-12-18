@@ -272,7 +272,7 @@ namespace CloudBreadRedis
                 foreach (DataRow dr in dt.Rows)
                 {
                     string id = (string)dr[0];
-                    byte captianChange = (byte)dr[1];
+                    long captianChange = (long)dr[1];
                     short lastWorld = (short)dr[2];
 
                     // fill rank row to redis struct array

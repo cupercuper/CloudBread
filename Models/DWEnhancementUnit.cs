@@ -16,8 +16,10 @@ namespace CloudBread.Models
     public class DWEnhancementUnitModel
     {
         public ClientUnitData unitData;
-        public int enhancedStone;
-        public int gem;
+        public long enhancedStone;
+        public long cashEnhancedStone;
+        public long gem;
+        public long cashGem;
         public byte success;
         public byte errorCode;
     }

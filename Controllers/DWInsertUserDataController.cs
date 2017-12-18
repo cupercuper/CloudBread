@@ -122,7 +122,9 @@ namespace CloudBread.Controllers
                 canBuyUnitList = DWDataTableManager.GetCanBuyUnitList(),
                 gold = 0,
                 gem = 0,
+                cashGem = 0,
                 enhancedStone = 0,
+                cashEnhancedStone = 0,
                 unitSlotIdx = 1,
                 unitListChangeTime = DateTime.UtcNow.Ticks,
                 unitStore = 0
@@ -142,7 +144,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, EnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @enhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList)";
+                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, Cash, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -150,15 +152,17 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@recommenderID", SqlDbType.NVarChar).Value = result.userData.recommenderID;
                     command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = result.userData.captianLevel;
                     command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = result.userData.captianID;
-                    command.Parameters.Add("@captianChange", SqlDbType.TinyInt).Value = result.userData.captianChange;
+                    command.Parameters.Add("@captianChange", SqlDbType.BigInt).Value = result.userData.captianChange;
                     command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = result.userData.lastWorld;
                     command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = result.userData.curWorld;
                     command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = result.userData.curStage;
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
                     command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.canBuyUnitList);
-                    command.Parameters.Add("@gold", SqlDbType.Int).Value = result.userData.gold;
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = result.userData.gem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = result.userData.enhancedStone;
+                    command.Parameters.Add("@gold", SqlDbType.BigInt).Value = result.userData.gold;
+                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = result.userData.gem;
+                    command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = result.userData.cashGem;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = result.userData.enhancedStone;
+                    command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = result.userData.cashEnhancedStone;
                     command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = 1;
                     command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = new DateTime(result.userData.unitListChangeTime);
                     command.Parameters.Add("@unitStore", SqlDbType.TinyInt).Value = 0;

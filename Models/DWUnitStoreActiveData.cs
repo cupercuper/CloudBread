@@ -12,7 +12,8 @@ namespace CloudBread.Models
     public class DWUnitStoreActiveModel
     {
         public byte unitStore;
-        public int gem;
+        public long gem;
+        public long cashGem;
         public byte errorCode;
     }
 }

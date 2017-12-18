@@ -109,13 +109,15 @@ namespace CloudBread.Controllers
             DWChangeCaptianModel result = new DWChangeCaptianModel();
 
             short lastWorld = 0;
-            int enhancedStone = 0;
-            byte captianChange = 0;
+            long enhancedStone = 0;
+            long cashEnhancedStone = 0;
+            long captianChange = 0;
+            bool allClear = false;
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone, CaptianChange, LastWorld FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT EnhancedStone, CashEnhancedStone, CaptianChange, LastWorld AllClear FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -137,9 +139,11 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            enhancedStone = (int)dreader[0];
-                            captianChange = (byte)dreader[1];
-                            lastWorld = (short)dreader[2];
+                            enhancedStone = (long)dreader[0];
+                            cashEnhancedStone = (long)dreader[1];
+                            captianChange = (long)dreader[2];
+                            lastWorld = (short)dreader[3];
+                            allClear = (bool)dreader[4];
                         }
                     }
                 }
@@ -158,7 +162,33 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            captianChange = 1;
+            WorldDataTable worldDataTable = allClear == true ? DWDataTableManager.GetDataTable(WorldDataTable_List.NAME, (ulong)lastWorld) as WorldDataTable : DWDataTableManager.GetDataTable(WorldDataTable_List.NAME, (ulong)lastWorld - 1) as WorldDataTable;
+            if(worldDataTable == null)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWChangeCaptianController";
+                logMessage.Message = string.Format("WorldDataTable = null MemberID = {0}, LastWorld = {1}, AllClear = {2}", p.memberID, lastWorld, allClear);
+                Logging.RunLog(logMessage);
+
+                return result;
+            }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWChangeCaptianController";
+            
+            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, worldDataTable.EnhancementStone, 0, logMessage);
+
+            Logging.RunLog(logMessage);
+
+            if (captianChange < long.MaxValue)
+            {
+                captianChange++;
+            }
+
             byte captianID = DWDataTableManager.GetCaptianID();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             { 
@@ -167,8 +197,8 @@ namespace CloudBread.Controllers
                 {
                     command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = captianID;
                     command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = 1;
-                    command.Parameters.Add("@captianChange", SqlDbType.TinyInt).Value = captianChange;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
+                    command.Parameters.Add("@captianChange", SqlDbType.BigInt).Value = captianChange;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
                     command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = 1;
                     command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = 1;
 

@@ -14,9 +14,9 @@ namespace CloudBread.Models
     public class DWReadMailModel
     {
         public long index;
-        public int gold;
-        public int gem;
-        public int enhancedStone;
+        public long gold;
+        public long gem;
+        public long enhancedStone;
         public byte errorCode;
     }
 }

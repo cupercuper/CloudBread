@@ -111,14 +111,14 @@ namespace CloudBread.Controllers
             /// Database connection retry policy
             Dictionary<uint, UnitData> unitList = null;
             List<UnitStoreData> unitStoreList = null;
-            int gem = 0;
-            int enhancedStone = 0;
+            long enhancedStone = 0;
+            long cashEnhancedStone = 0;
             byte unitStore = 0;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT UnitList, Gem, EnhancedStone, UnitStore, UnitStoreList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT UnitList, EnhancedStone, CashEnhancedStone, UnitStore, UnitStoreList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -139,8 +139,8 @@ namespace CloudBread.Controllers
                         while (dreader.Read())
                         {
                             unitList = DWMemberData.ConvertUnitDic(dreader[0] as byte[]);
-                            gem = (int)dreader[1];
-                            enhancedStone = (int)dreader[2];
+                            enhancedStone = (long)dreader[1];
+                            cashEnhancedStone = (long)dreader[2];
                             unitStore = (byte)dreader[3];
                             unitStoreList = DWMemberData.ConvertUnitStoreList(dreader[4] as byte[]);
                         }
@@ -160,6 +160,25 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
+
+            UnitDataTable unitDataTable = DWDataTableManager.GetDataTable(UnitDataTable_List.NAME, unitData.SerialNo) as UnitDataTable;
+            if(unitDataTable== null)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWSellUnitController";
+                logMessage.Message = string.Format("Not Found Unit DataTable = {0}", unitData.SerialNo);
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWSellUnitController";
+            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, GetEnhancedStoneCount(unitDataTable, unitData.EnhancementCount), 0, logMessage);
+            Logging.RunLog(logMessage);
 
             unitList.Remove(p.instanceNo);
 
@@ -187,12 +206,11 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, Gem = @gem, EnhancedStone = @enhancedStone, UnitStoreList = @unitStoreList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, UnitStoreList = @unitStoreList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
                     command.Parameters.Add("@unitStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitStoreList);
 
                     connection.OpenWithRetry(retryPolicy);
@@ -215,14 +233,48 @@ namespace CloudBread.Controllers
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";
             logMessage.Logger = "DWSellUnitController";
-            logMessage.Message = string.Format("Instance No = {0}, Gem = {1}, EnhancedStone = {2}", p.instanceNo, gem, enhancedStone);
+            logMessage.Message = string.Format("Instance No = {0}, EnhancedStone = {1} CashEnhancedStone = {2}", p.instanceNo, enhancedStone, cashEnhancedStone);
             Logging.RunLog(logMessage);
 
             result.instanceNo = p.instanceNo;
-            result.gem = gem;
             result.enhancedStone = enhancedStone;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
+        }
+
+        long GetEnhancedStoneCount(UnitDataTable unitDataTable, ushort enhancementCount)
+        {
+            long enhancementStone = unitDataTable.UnitStoreMoney;
+
+            for(int i = 1; i <= enhancementCount; ++i)
+            {
+                EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)i) as EnhancementDataTable;
+                if(enhancementDataTable == null)
+                {
+                    continue;
+                }
+
+                switch(unitDataTable.Grade)
+                {
+                    case 1:
+                        enhancementStone += enhancementDataTable.Grade_1;
+                        break;
+                    case 2:
+                        enhancementStone += enhancementDataTable.Grade_2;
+                        break;
+                    case 3:
+                        enhancementStone += enhancementDataTable.Grade_3;
+                        break;
+                    case 4:
+                        enhancementStone += enhancementDataTable.Grade_4;
+                        break;
+                    case 5:
+                        enhancementStone += enhancementDataTable.Grade_5;
+                        break;
+                }
+            }
+
+            return enhancementStone;
         }
     }
 }

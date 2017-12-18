@@ -108,14 +108,16 @@ namespace CloudBread.Controllers
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
             DWEnhancementUnitModel result = new DWEnhancementUnitModel();
-            int enhancedStone = 0;
-            int gem = 0;
+            long enhancedStone = 0;
+            long cashEnhancedStone = 0;
+            long gem = 0;
+            long cashGem = 0;
             Dictionary<uint, UnitData> unitLIst = null;
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone, Gem, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT EnhancedStone, CashEnhancedStone, Gem, CashGem, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -136,9 +138,11 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            enhancedStone = (int)dreader[0];
-                            gem = (int)dreader[1];
-                            unitLIst = DWMemberData.ConvertUnitDic(dreader[2] as byte[]);
+                            enhancedStone = (long)dreader[0];
+                            cashEnhancedStone = (long)dreader[1];
+                            gem = (long)dreader[2];
+                            cashGem = (long)dreader[3];
+                            unitLIst = DWMemberData.ConvertUnitDic(dreader[4] as byte[]);
                         }
                     }
                 }
@@ -209,30 +213,6 @@ namespace CloudBread.Controllers
                     break;
             }
 
-            if(enhancedStone < necessaryStoneCount)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
-                logMessage.Logger = "DWEnhancementUnitController";
-                logMessage.Message = string.Format("Lack enhancedStone cur stone = {0}, necessaryStoneCount = {1}, UnitSerial = {2}, Enhancement Serial = {3}", enhancedStone, necessaryStoneCount, unitData.SerialNo, (unitData.EnhancementCount + 1));
-                Logging.RunLog(logMessage);
-
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
-            
-            if (p.gemUse == 1 && gem < necessaryGemCount)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
-                logMessage.Logger = "DWEnhancementUnitController";
-                logMessage.Message = string.Format("Lack gem cur Gem = {0}, necessaryGemCount = {1}, UnitSerial = {2}, Enhancement Serial = {3}", gem, necessaryGemCount, unitData.SerialNo, (unitData.EnhancementCount + 1));
-                Logging.RunLog(logMessage);
-
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
-
             GlobalSettingDataTable globalSettingDataTable = DWDataTableManager.GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
             if(globalSettingDataTable == null)
             {
@@ -244,6 +224,33 @@ namespace CloudBread.Controllers
 
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
+            }
+
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWEnhancementUnitController";
+            
+            if (DWMemberData.SubEnhancedStone(ref enhancedStone, ref cashEnhancedStone, necessaryStoneCount, logMessage) == false)
+            {
+                logMessage.Message = string.Format("Lack enhancedStone cur stone = {0}, cur Cash stone = {1}, necessaryStoneCount = {2}, UnitSerial = {3}, Enhancement Serial = {4}", enhancedStone, cashEnhancedStone, necessaryStoneCount, unitData.SerialNo, unitData.EnhancementCount);
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+            Logging.RunLog(logMessage);
+
+            if (p.gemUse == 1)
+            {
+                if (DWMemberData.SubGem(ref gem, ref cashGem, necessaryGemCount, logMessage) == false)
+                {
+                    logMessage.Message = string.Format("Lack gem cur Gem = {0}, cur Cash Gem = {1}, necessaryGemCount = {2}, UnitSerial = {3}, Enhancement Serial = {4}", gem, cashGem, necessaryGemCount, unitData.SerialNo, unitData.EnhancementCount);
+                    Logging.RunLog(logMessage);
+
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                    return result;
+                }
+                Logging.RunLog(logMessage);
             }
 
             Random rand = new Random((int)DateTime.Now.Ticks);
@@ -263,21 +270,17 @@ namespace CloudBread.Controllers
                 }
                 result.success = 0;
             }
-
-            enhancedStone -= necessaryStoneCount;
-            if(p.gemUse == 1)
-            {
-                gem -= necessaryGemCount;
-            }
-            
+ 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, Gem = @gem WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, Gem = @gem, CashGem = @cashGem WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitLIst);
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
+                    command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashEnhancedStone;
+                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
+                    command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -310,7 +313,9 @@ namespace CloudBread.Controllers
                 serialNo = unitData.SerialNo
             };
             result.enhancedStone = enhancedStone;
+            result.cashEnhancedStone = cashEnhancedStone;
             result.gem = gem;
+            result.cashGem = cashGem;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

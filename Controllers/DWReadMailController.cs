@@ -140,13 +140,15 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            int gem = 0;
-            int gold = 0;
-            int enhancedStone = 0;
+            long gem = 0;
+            long cashGem = 0;
+            long gold = 0;
+            long enhancedStone = 0;
+            long cashEnhancedStone = 0;
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gold, Gem, EnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -166,9 +168,11 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            gold = (int)dreader[0];
-                            gem = (int)dreader[1];
-                            enhancedStone = (int)dreader[2];                            
+                            gold = (long)dreader[0];
+                            gem = (long)dreader[1];
+                            cashGem = (long)dreader[2];
+                            enhancedStone = (long)dreader[3];
+                            cashEnhancedStone = (long)dreader[4];
                         }
                     }
                 }
@@ -191,11 +195,20 @@ namespace CloudBread.Controllers
                         break;
 
                     case ITEM_TYPE.GEM_TYPE:
-                        gem += mailData.itemData[0].count;
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWReadMailController";
+                        DWMemberData.AddGem(ref gem, ref cashGem, mailData.itemData[0].count, 0, logMessage);
+                        Logging.RunLog(logMessage);
+
                         break;
 
                     case ITEM_TYPE.ENHANCEDSTONE_TYPE:
-                        enhancedStone += mailData.itemData[0].count;
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "INFO";
+                        logMessage.Logger = "DWReadMailController";
+                        DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, mailData.itemData[0].count, 0, logMessage);
+                        Logging.RunLog(logMessage);
                         break;
                 }
             }
@@ -205,9 +218,9 @@ namespace CloudBread.Controllers
                 string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@gold", SqlDbType.Int).Value = gold;
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
+                    command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
+                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
 
                     connection.OpenWithRetry(retryPolicy);
 

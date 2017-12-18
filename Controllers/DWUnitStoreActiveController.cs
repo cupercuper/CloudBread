@@ -107,14 +107,15 @@ namespace CloudBread.Controllers
 
             DWUnitStoreActiveModel result = new DWUnitStoreActiveModel();
 
-            int gem = 0;
+            long gem = 0;
+            long cashGem = 0;
             byte unitStore = 0;
-            byte captianChange = 0;
+            long captianChange = 0;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, UnitStore, CaptianChange FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, UnitStore, CaptianChange FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -134,9 +135,10 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            gem = (int)dreader[0];
-                            unitStore = (byte)dreader[1];
-                            captianChange = (byte)dreader[2];
+                            gem = (long)dreader[0];
+                            cashGem = (long)dreader[1];
+                            unitStore = (byte)dreader[2];
+                            captianChange = (long)dreader[3];
                         }
                     }
                 }
@@ -178,28 +180,29 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWUnitStoreActiveController";
 
-            if(gem < globalSetting.UnitStoreActiveGem)
+            if (DWMemberData.SubGem(ref gem, ref cashGem, globalSetting.UnitStoreActiveGem, logMessage) == false)
             {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
-                logMessage.Logger = "DWUnitStoreActiveController";
-                logMessage.Message = string.Format("Lack Gem");
+                logMessage.Message = string.Format("Lack Gem gem = {0}, cashGem = {1}, ActiveGem = {2}", gem, cashGem, globalSetting.UnitStoreActiveGem);
                 Logging.RunLog(logMessage);
 
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
+            Logging.RunLog(logMessage);
 
-            gem -= globalSetting.UnitStoreActiveGem;
             unitStore = 1;
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, UnitStore = @unitStore WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, CashGem = @cashGem, UnitStore = @unitStore WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
+                    command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
                     command.Parameters.Add("@unitStore", SqlDbType.TinyInt).Value = unitStore;
 
                     connection.OpenWithRetry(retryPolicy);
@@ -226,6 +229,7 @@ namespace CloudBread.Controllers
             Logging.RunLog(logMessage);
 
             result.gem = gem;
+            result.cashGem = cashGem;
             result.unitStore = 1;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;

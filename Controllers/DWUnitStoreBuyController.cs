@@ -107,7 +107,8 @@ namespace CloudBread.Controllers
 
             DWUnitStoreBuyModel result = new DWUnitStoreBuyModel();
             
-            int enhancedStone = 0;
+            long enhancedStone = 0;
+            long cashenhancedStone = 0;
             byte unitSlotIdx = 0;
             byte unitStore = 0;
             List<UnitStoreData> unitStoreList = null;
@@ -116,7 +117,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone, UnitSlotIdx, UnitStore, UnitStoreList, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitStore, UnitStoreList, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -136,11 +137,12 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            enhancedStone = (int)dreader[0];
-                            unitSlotIdx = (byte)dreader[1];
-                            unitStore = (byte)dreader[2];
-                            unitStoreList = DWMemberData.ConvertUnitStoreList(dreader[3] as byte[]);
-                            unitList = DWMemberData.ConvertUnitDic(dreader[4] as byte[]);
+                            enhancedStone = (long)dreader[0];
+                            cashenhancedStone = (long)dreader[1];
+                            unitSlotIdx = (byte)dreader[2];
+                            unitStore = (byte)dreader[3];
+                            unitStoreList = DWMemberData.ConvertUnitStoreList(dreader[4] as byte[]);
+                            unitList = DWMemberData.ConvertUnitDic(dreader[5] as byte[]);
                         }
                     }
                 }
@@ -203,7 +205,10 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            if(enhancedStone < unitDataTable.UnitStoreMoney)
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWUnitStoreBuyController";
+            if (DWMemberData.SubEnhancedStone(ref enhancedStone, ref cashenhancedStone,  unitDataTable.UnitStoreMoney, logMessage) == false)
             {
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";
@@ -214,8 +219,7 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
-
-            enhancedStone -= unitDataTable.UnitStoreMoney;
+            Logging.RunLog(logMessage);
 
             uint instanceNo = DWMemberData.AddUnitDic(ref unitList, unitSlotData.serialNo);
             UnitData unitData = null;
@@ -233,11 +237,12 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, UnitStoreList = @unitStoreList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, UnitStoreList = @unitStoreList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
-                    command.Parameters.Add("@enhancedStone", SqlDbType.Int).Value = enhancedStone;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
+                    command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashenhancedStone;
                     command.Parameters.Add("@unitStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitStoreList);
 
                     connection.OpenWithRetry(retryPolicy);
@@ -266,12 +271,13 @@ namespace CloudBread.Controllers
             };
 
             result.enhancedStone = enhancedStone;
+            result.cashEnhancedStone = cashenhancedStone;
             result.index = p.index;
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";
             logMessage.Logger = "DWUnitStoreBuyController";
-            logMessage.Message = string.Format("Success Unit SerialNo = {0}, EnhancementStone = {1}", unitData.SerialNo, enhancedStone);
+            logMessage.Message = string.Format("Success Unit SerialNo = {0}, EnhancementStone = {1}, CashEnhancementStone = {2}", unitData.SerialNo, enhancedStone, cashenhancedStone);
             Logging.RunLog(logMessage);
 
             result.errorCode = (byte)DW_ERROR_CODE.OK;

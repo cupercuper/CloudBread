@@ -113,11 +113,12 @@ namespace CloudBread.Controllers
             short lastWorld = 0;
             short curWorld = 0;
             byte captianChange = 0;
+            bool allClear = false;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastWorld, CurWorld, CaptianChange FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT LastWorld, CurWorld, CaptianChange, AllClear FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -140,6 +141,7 @@ namespace CloudBread.Controllers
                             lastWorld = (short)dreader[0];
                             curWorld = (short)dreader[1];
                             captianChange = (byte)dreader[2];
+                            allClear = (bool)dreader[3];
                         }
                     }
                 }
@@ -158,6 +160,22 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            if(p.allClear)
+            {
+                WorldDataTable worldDataTable = DWDataTableManager.GetDataTable(WorldDataTable_List.NAME, (ulong)(lastWorld + 1)) as WorldDataTable;
+                if(worldDataTable != null)
+                {
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "INFO";
+                    logMessage.Logger = "DWUdtStageInfoController";
+                    logMessage.Message = string.Format("All Clear Hack lastWorld = {0}, Input World = {1}", lastWorld, p.worldNo);
+                    Logging.RunLog(logMessage);
+
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                    return result;
+                }
+            }
+
             if(p.worldNo > lastWorld)
             {
                 lastWorld = p.worldNo;
@@ -168,11 +186,12 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET LastWorld = @lastWorld, CurWorld = @curWorld WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET LastWorld = @lastWorld, CurWorld = @curWorld, AllClear = @allClear WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorld;
                     command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = curWorld;
+                    command.Parameters.Add("@allClear", SqlDbType.Bit).Value = p.allClear;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -191,6 +210,7 @@ namespace CloudBread.Controllers
                 }
             }
 
+            result.allClear = p.allClear;
             result.worldNo = p.worldNo;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;

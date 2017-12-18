@@ -16,8 +16,7 @@ namespace CloudBread.Models
     {
         public uint instanceNo;
         public int unitStoreCount;
-        public int gem;
-        public int enhancedStone;
+        public long enhancedStone;
         public byte errorCode;
     }
 }

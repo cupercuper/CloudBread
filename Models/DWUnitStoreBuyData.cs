@@ -14,7 +14,8 @@ namespace CloudBread.Models
     public class DWUnitStoreBuyModel
     {
         public ClientUnitData unitData;
-        public int enhancedStone;
+        public long enhancedStone;
+        public long cashEnhancedStone;
         public byte index;
         public byte errorCode;
     }

@@ -57,6 +57,7 @@ namespace CloudBread
                 AddDataTable(UnitSummonDataTable_List.NAME, new UnitSummonDataTable_List());
                 AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
                 AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
+                AddDataTable(ShopDataTable_List.NAME, new ShopDataTable_List());
 
                 BuildUnitSummonRatioList();
                 BuildCaptianList();

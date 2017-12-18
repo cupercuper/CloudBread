@@ -16,6 +16,8 @@ namespace DW.CommonData
         GOLD_TYPE,
         GEM_TYPE,
         ENHANCEDSTONE_TYPE,
+        ADVERTISING_TYPE,
+        CASH_TYPE,
         MAX_TYPE
     }
 
@@ -72,19 +74,22 @@ namespace DW.CommonData
         public string recommenderID;
         public short captianLevel;
         public byte captianID;
-        public byte captianChange;
+        public long captianChange;
         public short lastWorld;
         public short curWorld;
         public short curStage;
         public List<ClientUnitData> unitList;
         public List<ulong> canBuyUnitList;
-        public int gold;
-        public int gem;
-        public int enhancedStone;
+        public long gold;
+        public long gem;
+        public long cashGem;
+        public long enhancedStone;
+        public long cashEnhancedStone;
         public byte unitSlotIdx;
         public long unitListChangeTime;
         public byte unitStore;
         public List<UnitStoreData> unitStoreList;
+        public bool allClear;
     }
 
     [Serializable]

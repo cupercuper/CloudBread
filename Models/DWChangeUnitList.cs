@@ -14,7 +14,8 @@ namespace CloudBread.Models
     public class DWChangeUnitListModel
     {
         public List<ulong> unitList;
-        public int gem;
+        public long gem;
+        public long cashGem;
         public long unitListChangeTime;
         public byte errorCode;
     }

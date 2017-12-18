@@ -107,14 +107,15 @@ namespace CloudBread.Controllers
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
             DWChangeUnitListModel result = new DWChangeUnitListModel();
-            int gem = 0;
+            long gem = 0;
+            long cashGem = 0;
             DateTime utcTime = DateTime.UtcNow;
             DateTime unitListChangeTime = DateTime.UtcNow;
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, UnitListChangeTime FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, UnitListChangeTime FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -135,8 +136,9 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            gem = (int)dreader[0];
-                            unitListChangeTime = (DateTime)dreader[1];
+                            gem = (long)dreader[0];
+                            cashGem = (long)dreader[1];
+                            unitListChangeTime = (DateTime)dreader[2];
                         }
                     } 
                 }
@@ -159,31 +161,29 @@ namespace CloudBread.Controllers
             DateTime addChangeTime = unitListChangeTime.AddMinutes((double)(globalSetting.UnitListChangeTime - 2));
             if (addChangeTime > utcTime)
             {
-                if(gem < globalSetting.UnitListChangeGem)
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWChangeUnitListController";
+                if (DWMemberData.SubGem(ref gem, ref cashGem, globalSetting.UnitListChangeGem, logMessage) == false)
                 {
-                    logMessage.memberID = p.memberID;
-                    logMessage.Level = "INFO";
-                    logMessage.Logger = "DWChangeUnitListController";
                     logMessage.Message = string.Format("Lack Gem");
                     Logging.RunLog(logMessage);
 
                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                     return result;
                 }
-                else
-                {
-                    gem -= globalSetting.UnitListChangeGem;
-                }
+                Logging.RunLog(logMessage);
             }
 
             List<ulong> unitLIst = DWDataTableManager.GetCanBuyUnitList();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET CanBuyUnitList = @canBuyUnitList, Gem = @gem, UnitListChangeTime = @unitListChangeTime WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET CanBuyUnitList = @canBuyUnitList, Gem = @gem, CashGem = @cashGem, UnitListChangeTime = @unitListChangeTime WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitLIst);
-                    command.Parameters.Add("@gem", SqlDbType.Int).Value = gem;
+                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
+                    command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
                     command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = utcTime;
 
                     connection.OpenWithRetry(retryPolicy);
@@ -206,11 +206,12 @@ namespace CloudBread.Controllers
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";
             logMessage.Logger = "DWChangeUnitListController";
-            logMessage.Message = string.Format("Cur Gem = {0}", gem);
+            logMessage.Message = string.Format("Cur Gem = {0}, Cur CashGem = {1}", gem, cashGem);
             Logging.RunLog(logMessage);
 
             result.unitList = unitLIst;
             result.gem = gem;
+            result.cashGem = cashGem;
             result.unitListChangeTime = utcTime.Ticks;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;

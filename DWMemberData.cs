@@ -4,6 +4,7 @@ using System.Linq;
 using System.Web;
 using System.IO;
 using DW.CommonData;
+using Logger.Logging;
 
 namespace CloudBread
 {
@@ -342,10 +343,100 @@ namespace CloudBread
             return 0;
         }
 
-        public static double GetPoint(short worldNo, int changeCaptianCnt)
+        public static double GetPoint(short worldNo, long changeCaptianCnt)
         {
             double point = worldNo + changeCaptianCnt * 1000;
             return point;
+        }
+
+        public static bool AddEnhancedStone(ref long enhancedStone,ref long cashEnhancedStone, long addFreeEnhancedStone, long addCashEnhancedStone, Logging.CBLoggers logMessage)
+        {            
+            if(long.MaxValue - enhancedStone < addFreeEnhancedStone)
+            {
+                enhancedStone = long.MaxValue;
+            }
+            else
+            {
+                enhancedStone += addFreeEnhancedStone;
+            }
+
+            if (long.MaxValue - cashEnhancedStone < addCashEnhancedStone)
+            {
+                cashEnhancedStone = long.MaxValue;
+            }
+            else
+            {
+                cashEnhancedStone += addCashEnhancedStone;
+            }
+
+            logMessage.Message = string.Format("AddEnhancedStone enhancedStone = {0}, cashEnhancedStone = {1}, addFreeEnhancedStone = {2}, addCashEnhancedStone = {3}", enhancedStone, cashEnhancedStone, addFreeEnhancedStone, addCashEnhancedStone);
+
+            return true;
+        }
+
+        public static bool SubEnhancedStone(ref long enhancedStone, ref long cashEnhancedStone, long subEnhancedStone, Logging.CBLoggers logMessage)
+        {
+            if(enhancedStone + cashEnhancedStone < subEnhancedStone)
+            {
+                return false;
+            }
+
+            enhancedStone -= subEnhancedStone;
+            
+            if (enhancedStone < 0)
+            {
+                cashEnhancedStone += enhancedStone;
+                enhancedStone = 0;
+            }
+
+            logMessage.Message = string.Format("SubEnhancedStone enhancedStone = {0}, cashEnhancedStone = {1}, subEnhancedStone = {2}", enhancedStone, cashEnhancedStone, subEnhancedStone);
+
+            return true;
+        }
+
+        public static bool AddGem(ref long gem, ref long cashGem, long addFreeGem, long addCashGem, Logging.CBLoggers logMessage)
+        {
+            if (long.MaxValue - gem < addFreeGem)
+            {
+                gem = long.MaxValue;
+            }
+            else
+            {
+                gem += addFreeGem;
+            }
+
+            if (long.MaxValue - cashGem < addCashGem)
+            {
+                cashGem = long.MaxValue;
+            }
+            else
+            {
+                cashGem += addCashGem;
+            }
+
+            logMessage.Message = string.Format("AddGem gem = {0}, cashGem = {1}, addFreeGem = {2}, addCashGem = {3}", gem, cashGem, addFreeGem, addCashGem);
+
+            return true;
+        }
+
+        public static bool SubGem(ref long gem, ref long cashGem, long subGem, Logging.CBLoggers logMessage)
+        {
+            if (gem + cashGem < subGem)
+            {
+                return false;
+            }
+
+            gem -= subGem;
+
+            if (gem < 0)
+            {
+                cashGem += gem;
+                gem = 0;
+            }
+
+            logMessage.Message = string.Format("SubGem gem = {0}, cashgem = {1}, subGem = {2}", gem, cashGem, subGem);
+
+            return true;
         }
 
     }
