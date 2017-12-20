@@ -50,6 +50,22 @@ namespace DW.CommonData
         MAX_TYPE
     }
 
+    public enum ACTIVE_ITEM_TYPE
+    {
+        GAME_SPEED_UP_2X,
+        GAME_SPEED_UP_3X,
+        AUTO_GET_ITEM,
+        MAX_TYPE
+    }
+
+    public enum SHOP_TYPE
+    {
+        FREE_TYPE,
+        GEM_TYPE,
+        LIMIT_TYPE,
+        MAX_TYPE
+    }
+
     [Serializable]
     public class ClientUnitData
     {
@@ -90,6 +106,8 @@ namespace DW.CommonData
         public byte unitStore;
         public List<UnitStoreData> unitStoreList;
         public bool allClear;
+        public List<ActiveItemData> activeItemList;
+        public List<LimitShopItemData> limitShopItemDataList;
     }
 
     [Serializable]
@@ -124,5 +142,20 @@ namespace DW.CommonData
         public string nickName;
         public long rank;
         public double score;
+    }
+
+    [Serializable]
+    public class ActiveItemData
+    {
+        public byte itemType;
+        public int limitTime;
+        public long startTime;
+    }
+
+    [Serializable]
+    public class LimitShopItemData
+    {
+        public ulong serialNo;
+        public byte count;
     }
 }

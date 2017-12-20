@@ -157,9 +157,9 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            // 2분을 갭을 준다.
-            DateTime addChangeTime = unitListChangeTime.AddMinutes((double)(globalSetting.UnitListChangeTime - 2));
-            if (addChangeTime > utcTime)
+            TimeSpan subTime = utcTime - unitListChangeTime;
+            // 1분을 갭을 준다.
+            if (subTime.TotalMilliseconds > globalSetting.UnitListChangeTime - 1)
             {
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";

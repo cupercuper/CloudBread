@@ -292,6 +292,98 @@ namespace CloudBread
             return ms.ToArray();
         }
 
+        public static List<ActiveItemData> ConvertActiveItemList(byte[] buffer)
+        {
+            List<ActiveItemData> activeItemList = new List<ActiveItemData>();
+            if (buffer == null)
+            {
+                return activeItemList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                ActiveItemData activeItemData = new ActiveItemData();
+                activeItemData.itemType = br.ReadByte();
+                activeItemData.limitTime = br.ReadInt32();
+                activeItemData.startTime = br.ReadInt64();
+
+                activeItemList.Add(activeItemData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return activeItemList;
+        }
+
+        public static byte[] ConvertByte(List<ActiveItemData> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i].itemType);
+                bw.Write(list[i].limitTime);
+                bw.Write(list[i].startTime);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static List<LimitShopItemData> ConvertLimitShopItemDataList(byte[] buffer)
+        {
+            List<LimitShopItemData> limitShopItemDataList = new List<LimitShopItemData>();
+            if (buffer == null)
+            {
+                return limitShopItemDataList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                LimitShopItemData limitShopItemData = new LimitShopItemData();
+                limitShopItemData.serialNo = br.ReadUInt64();
+                limitShopItemData.count = br.ReadByte();
+
+                limitShopItemDataList.Add(limitShopItemData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return limitShopItemDataList;
+        }
+
+        public static byte[] ConvertByte(List<LimitShopItemData> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i].serialNo);
+                bw.Write(list[i].count);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
         public static uint AddUnitDic(ref Dictionary<uint, UnitData> unitDic, ulong serialNo)
         {
             if(unitDic.Count == 0)
