@@ -251,6 +251,29 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Net;
 
+using System.Linq;
+using System.Net.Http;
+using System.Web.Http;
+using Microsoft.Azure.Mobile.Server;
+using Microsoft.Azure.Mobile.Server.Config;
+
+using System.Threading.Tasks;
+using System.Diagnostics;
+using Logger.Logging;
+using CloudBread.globals;
+using CloudBreadLib.BAL.Crypto;
+using System.Data;
+using System.Data.Sql;
+using System.Data.SqlClient;
+using Newtonsoft.Json;
+using CloudBreadAuth;
+using System.Security.Claims;
+using Microsoft.Practices.TransientFaultHandling;
+using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.SqlAzure;
+using CloudBread.Models;
+using System.IO;
+using DW.CommonData;
+
 
 
 public class GoogleJsonWebToken
@@ -262,11 +285,30 @@ public class GoogleJsonWebToken
     //{
         public static dynamic GetAccessToken(string clientIdEMail, string keyFilePath, string scope)
         {
-            // certificate
-            var certificate = new X509Certificate2(keyFilePath, "notasecret");
 
-            // header
-            var header = new { typ = "JWT", alg = "RS256" };
+        byte[] rawData = null;
+        RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+        using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+        {
+            string strQuery = string.Format("SELECT KeyFileByte FROM DWGoogleKeyFile WHERE [Index] = 1");
+            using (SqlCommand command = new SqlCommand(strQuery, connection))
+            {
+                connection.OpenWithRetry(retryPolicy);
+                using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+                {
+                    while (dreader.Read())
+                    {
+                        rawData = dreader[0] as byte[];
+                    }
+                }
+            }
+        }
+        // certificate
+        //var certificate = new X509Certificate2(keyFilePath, "notasecret");
+        var certificate = new X509Certificate2(rawData, "notasecret");
+
+        // header
+        var header = new { typ = "JWT", alg = "RS256" };
 
             // claimset
             var times = GetExpiryAndIssueDate();
