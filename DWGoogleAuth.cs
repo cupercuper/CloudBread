@@ -339,11 +339,11 @@ public class GoogleJsonWebToken
 
         // signiture
         var rsa = certificate.PrivateKey as RSACryptoServiceProvider;
-        var cspParam = new CspParameters
-        {
-            KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
-            KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2
-        };
+        //var cspParam = new CspParameters
+        //{
+        //    KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
+        //    KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2
+        //};
         //var aescsp = new RSACryptoServiceProvider(cspParam) { PersistKeyInCsp = false };
         //var signatureBytes = aescsp.SignData(inputBytes, "SHA256");
         //var signatureEncoded = Convert.ToBase64String(signatureBytes);
