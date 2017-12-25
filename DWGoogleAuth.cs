@@ -321,7 +321,7 @@ public class GoogleJsonWebToken
                 exp = times[1],
             };
 
-            //JavaScriptSerializer ser = new JavaScriptSerializer();
+            JavaScriptSerializer ser = new JavaScriptSerializer();
 
             //// encoded header
             //var headerSerialized = ser.Serialize(header);
