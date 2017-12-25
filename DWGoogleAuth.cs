@@ -359,12 +359,13 @@ public class GoogleJsonWebToken
             content["assertion"] = jwt;
             content["grant_type"] = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
-            string response = Encoding.UTF8.GetString(client.UploadValues(uri, "POST", content));
+        // string response = Encoding.UTF8.GetString(client.UploadValues(uri, "POST", content));
 
-            var result = ser.Deserialize<dynamic>(response);
+        //var result = ser.Deserialize<dynamic>(response);
 
-            return result;
-        }
+        //return result;
+        return null;
+    }
     //}
 
 
