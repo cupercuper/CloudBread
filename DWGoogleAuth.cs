@@ -321,43 +321,43 @@ public class GoogleJsonWebToken
                 exp = times[1],
             };
 
-            JavaScriptSerializer ser = new JavaScriptSerializer();
+            //JavaScriptSerializer ser = new JavaScriptSerializer();
 
-            // encoded header
-            var headerSerialized = ser.Serialize(header);
-            var headerBytes = Encoding.UTF8.GetBytes(headerSerialized);
-            var headerEncoded = Convert.ToBase64String(headerBytes);
+            //// encoded header
+            //var headerSerialized = ser.Serialize(header);
+            //var headerBytes = Encoding.UTF8.GetBytes(headerSerialized);
+            //var headerEncoded = Convert.ToBase64String(headerBytes);
 
-            // encoded claimset
-            var claimsetSerialized = ser.Serialize(claimset);
-            var claimsetBytes = Encoding.UTF8.GetBytes(claimsetSerialized);
-            var claimsetEncoded = Convert.ToBase64String(claimsetBytes);
+            //// encoded claimset
+            //var claimsetSerialized = ser.Serialize(claimset);
+            //var claimsetBytes = Encoding.UTF8.GetBytes(claimsetSerialized);
+            //var claimsetEncoded = Convert.ToBase64String(claimsetBytes);
 
-            // input
-            var input = headerEncoded + "." + claimsetEncoded;
-            var inputBytes = Encoding.UTF8.GetBytes(input);
+            //// input
+            //var input = headerEncoded + "." + claimsetEncoded;
+            //var inputBytes = Encoding.UTF8.GetBytes(input);
 
-            // signiture
-            var rsa = certificate.PrivateKey as RSACryptoServiceProvider;
-            var cspParam = new CspParameters
-            {
-                KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
-                KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2
-            };
-            var aescsp = new RSACryptoServiceProvider(cspParam) { PersistKeyInCsp = false };
-            var signatureBytes = aescsp.SignData(inputBytes, "SHA256");
-            var signatureEncoded = Convert.ToBase64String(signatureBytes);
+            //// signiture
+            //var rsa = certificate.PrivateKey as RSACryptoServiceProvider;
+            //var cspParam = new CspParameters
+            //{
+            //    KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
+            //    KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2
+            //};
+            //var aescsp = new RSACryptoServiceProvider(cspParam) { PersistKeyInCsp = false };
+            //var signatureBytes = aescsp.SignData(inputBytes, "SHA256");
+            //var signatureEncoded = Convert.ToBase64String(signatureBytes);
 
-            // jwt
-            var jwt = headerEncoded + "." + claimsetEncoded + "." + signatureEncoded;
+            //// jwt
+            //var jwt = headerEncoded + "." + claimsetEncoded + "." + signatureEncoded;
 
-            var client = new WebClient();
-            client.Encoding = Encoding.UTF8;
-            var uri = "https://accounts.google.com/o/oauth2/token";
-            var content = new NameValueCollection();
+            //var client = new WebClient();
+            //client.Encoding = Encoding.UTF8;
+            //var uri = "https://accounts.google.com/o/oauth2/token";
+            //var content = new NameValueCollection();
 
-            content["assertion"] = jwt;
-            content["grant_type"] = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+            //content["assertion"] = jwt;
+            //content["grant_type"] = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 
         // string response = Encoding.UTF8.GetString(client.UploadValues(uri, "POST", content));
 
