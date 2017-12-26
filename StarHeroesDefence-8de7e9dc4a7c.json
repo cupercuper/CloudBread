@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "starheroesdefence-3072171",
+  "private_key_id": "8de7e9dc4a7c0a955b3d2004919c9f2e337d2558",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDG3bX/m1ddDOlQ\n8Ek9pHi8DPKmtldWScgh/pcZC4lOgcAy8Q2oq4SMoQ5EgaAmMBx9SVV+owo10x5y\nFbv/zFHo5S65cPIYjah1eMm3nLPrmgPEEf+/L+hh1cs8Z7WX1IGTyIWBxFC0dSpm\nqgyc+547QdOkDu66ycXPG0uPPAHwMUJAM5oVJZDITG6oh8iUBFUHXc1QbwD8FHA3\nWpEBflJRTTypt2fSAmn9B42dpezlHQhjPVFfqtPzW1sIMMUIh7CXnZMZEHFjkBqY\nqC332woEfv1JzxlQJvv5kCnYKkZnrH3RZmfr2Ty3zZsqDu2fLyuCK7a81NWiW5hr\nb8KPw1URAgMBAAECggEABIy6PxmzWRtEY8AJlu3SPtAnhYmmrCBWQjPYSmAFkUyd\n5HR4IOeiqdJ9+HKEQtdnMXUZ7gKmJ0bYG5lUcqTeq17B78duHIJyLBTaPZeJ1L4y\nb5wPTzUWApYA9zXytUFtAP/tkQNYKtbC5HQnw3gsvbOS914Jl2+qFUPNOd7QNwnp\nIUb5NH2xRU6AkgfVjS9V5ofoRv2OqG2NMAC9s9/b77e6kLF+e2VKPxCV+euKzCSy\nc1FeBToZlLblkKP+ZePCiK+Ymyg2oGgrfL773KtPVUEbHz6hDoasZ3FBosjv6wDU\nqDHTb9DUR1ylsES4z8f0TfE75S9yOsFVeMV2Phy8gQKBgQDs/2/NPeSALAofjjt+\noSorfCFdDtzVHB2NMOhGeAxQr6r21btxF9Dlxrs2yPDwSKofNOX9fjpxZHQGOjyW\n4K+LlUCtAbcO26JF1BowvBctRF3NQN4vNYx3ekXFBNPtfHvKaSV/OTLkfZoWFRzf\nIFX8p5JJBkAinhH+pUIA8xBVUQKBgQDWz5c4Il/83nVsW3jb10EwHmb2r9ppLBlb\nLDETsGJlErK41VGUh3sEJA7S6eAVDxmpumCTOsdCYm4lJBS979C7AvsfdWR6IuMS\nROPv7rYuevLVA7ZHUlTeVAYbUNwba6uwpldLvojgUMBTxjq2lhvR+AYRH4FFY9jf\n/lHzSL4TwQKBgGNTzzy6wujBDGEbUG4LB8x/0s/Yqc8bYHtLUx4ttCOg7EtVWqDU\ndXXH67DTWL+sBLjdh8LNQ5tAmav+fmRRuOEMZbXcsScmAAW6Flv0iNYtAA9FL5mj\nnMJ6WYFwO44eDRfRJ6kBhQXkak70/Eu7lq40YQf/+aNIkowiIN6bAG5xAoGAMy5t\nClvuYPKkKbg1uLO1/YAQ6lAGCy8Nr5J88wMAvrJQ0QdKk8ggAGGTAp/k2z+ozq7w\nmcPUfDW1prXNF2BPbG+OY/V1hkBPuCef46gN0k9LEoP6501vmTWN6u4+M25ZDxLj\nE9IHDONQn+VIUf68DDA7SdMm2uCqaNxQrFW1rEECgYEAoGOXF8yKHra7JkdHhwR7\nqv/m/RTG2tk8Os4VZas0oatQcOLkKtSGzN9e/Ia5xXgVP70GWsPNTqixgN5uwJqq\nKwS/1yAWDqCbTJmrJmS+hr7n+6CS/m72pNaZsbS91GwRiH7ZXnCrc0xTt85P2Vw2\nhvbz01SwkAWR6gEvzUr3e24=\n-----END PRIVATE KEY-----\n",
+  "client_email": "mong-ent@starheroesdefence-3072171.iam.gserviceaccount.com",
+  "client_id": "102663917858358650637",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/mong-ent%40starheroesdefence-3072171.iam.gserviceaccount.com"
+}

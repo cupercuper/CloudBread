@@ -274,6 +274,9 @@ using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
 
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Services;
+using Google.Apis.Analytics.v3;
 
 
 public class GoogleJsonWebToken
@@ -286,87 +289,148 @@ public class GoogleJsonWebToken
         public static dynamic GetAccessToken(string clientIdEMail, string keyFilePath, string scope)
         {
 
-        byte[] rawData = null;
-        RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
-        using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-        {
-            string strQuery = string.Format("SELECT KeyFileByte FROM DWGoogleKeyFile WHERE [Index] = 1");
-            using (SqlCommand command = new SqlCommand(strQuery, connection))
-            {
-                connection.OpenWithRetry(retryPolicy);
-                using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
-                {
-                    while (dreader.Read())
-                    {
-                        rawData = dreader[0] as byte[];
-                    }
-                }
-            }
-        }
-        // certificate
-        //var certificate = new X509Certificate2(keyFilePath, "notasecret");
-        var certificate = new X509Certificate2(rawData, "notasecret");
-
-        // header
-        var header = new { typ = "JWT", alg = "RS256" };
-
-            // claimset
-            var times = GetExpiryAndIssueDate();
-            var claimset = new
-            {
-                iss = clientIdEMail,
-                scope = scope,
-                aud = "https://accounts.google.com/o/oauth2/token",
-                iat = times[0],
-                exp = times[1],
-            };
-
-            JavaScriptSerializer ser = new JavaScriptSerializer();
-
-        // encoded header
-        var headerSerialized = ser.Serialize(header);
-        var headerBytes = Encoding.UTF8.GetBytes(headerSerialized);
-        var headerEncoded = Convert.ToBase64String(headerBytes);
-
-        // encoded claimset
-        var claimsetSerialized = ser.Serialize(claimset);
-        var claimsetBytes = Encoding.UTF8.GetBytes(claimsetSerialized);
-        var claimsetEncoded = Convert.ToBase64String(claimsetBytes);
-
-        // input
-        var input = headerEncoded + "." + claimsetEncoded;
-        var inputBytes = Encoding.UTF8.GetBytes(input);
-
-        // signiture
-        var rsa = certificate.PrivateKey as RSACryptoServiceProvider;
-        //var cspParam = new CspParameters
+        //byte[] rawData = null;
+        //RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+        //using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
         //{
-            //KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
-            //KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2
-        //};
-        //var aescsp = new RSACryptoServiceProvider(cspParam) { PersistKeyInCsp = false };
-        //var signatureBytes = aescsp.SignData(inputBytes, "SHA256");
-        //var signatureEncoded = Convert.ToBase64String(signatureBytes);
+        //    string strQuery = string.Format("SELECT KeyFileByte FROM DWGoogleKeyFile WHERE [Index] = 1");
+        //    using (SqlCommand command = new SqlCommand(strQuery, connection))
+        //    {
+        //        connection.OpenWithRetry(retryPolicy);
+        //        using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+        //        {
+        //            while (dreader.Read())
+        //            {
+        //                rawData = dreader[0] as byte[];
+        //            }
+        //        }
+        //    }
+        //}
+        //// certificate
+        ////var certificate = new X509Certificate2(keyFilePath, "notasecret");
+        //var certificate = new X509Certificate2(rawData, "notasecret");
 
-        //// jwt
-        //var jwt = headerEncoded + "." + claimsetEncoded + "." + signatureEncoded;
+        //// header
+        //var header = new { typ = "JWT", alg = "RS256" };
 
-        //var client = new WebClient();
-        //client.Encoding = Encoding.UTF8;
-        //var uri = "https://accounts.google.com/o/oauth2/token";
-        //var content = new NameValueCollection();
+        //    // claimset
+        //    var times = GetExpiryAndIssueDate();
+        //    var claimset = new
+        //    {
+        //        iss = clientIdEMail,
+        //        scope = scope,
+        //        aud = "https://accounts.google.com/o/oauth2/token",
+        //        iat = times[0],
+        //        exp = times[1],
+        //    };
 
-        //content["assertion"] = jwt;
-        //content["grant_type"] = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+        //    JavaScriptSerializer ser = new JavaScriptSerializer();
 
-        // string response = Encoding.UTF8.GetString(client.UploadValues(uri, "POST", content));
+        //// encoded header
+        //var headerSerialized = ser.Serialize(header);
+        //var headerBytes = Encoding.UTF8.GetBytes(headerSerialized);
+        //var headerEncoded = Convert.ToBase64String(headerBytes);
 
-        //var result = ser.Deserialize<dynamic>(response);
+        //// encoded claimset
+        //var claimsetSerialized = ser.Serialize(claimset);
+        //var claimsetBytes = Encoding.UTF8.GetBytes(claimsetSerialized);
+        //var claimsetEncoded = Convert.ToBase64String(claimsetBytes);
 
-        //return result;
-        return null;
+        //// input
+        //var input = headerEncoded + "." + claimsetEncoded;
+        //var inputBytes = Encoding.UTF8.GetBytes(input);
+
+        //// signiture
+        //var rsa = certificate.PrivateKey as RSACryptoServiceProvider;
+        ////var cspParam = new CspParameters
+        ////{
+        //    //KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
+        //    //KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2
+        ////};
+        ////var aescsp = new RSACryptoServiceProvider(cspParam) { PersistKeyInCsp = false };
+        ////var signatureBytes = aescsp.SignData(inputBytes, "SHA256");
+        ////var signatureEncoded = Convert.ToBase64String(signatureBytes);
+
+        ////// jwt
+        ////var jwt = headerEncoded + "." + claimsetEncoded + "." + signatureEncoded;
+
+        ////var client = new WebClient();
+        ////client.Encoding = Encoding.UTF8;
+        ////var uri = "https://accounts.google.com/o/oauth2/token";
+        ////var content = new NameValueCollection();
+
+        ////content["assertion"] = jwt;
+        ////content["grant_type"] = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+
+        //// string response = Encoding.UTF8.GetString(client.UploadValues(uri, "POST", content));
+
+        ////var result = ser.Deserialize<dynamic>(response);
+
+        ////return result;
+        //return null;
+
+
+        //// Get active credential
+        //string credPath = "F:\\StarHeroesDefence-8de7e9dc4a7c.json";
+        
+        //var json = File.ReadAllText(credPath);
+        ////var cr = JsonConvert.DeserializeObject<PersonalServiceAccountCred>(json); // "personal" service account credential
+        //Newtonsoft.Json.Linq.JObject cr = (Newtonsoft.Json.Linq.JObject)JsonConvert.DeserializeObject(json);
+
+        //// Create an explicit ServiceAccountCredential credential
+        ////var xCred = new ServiceAccountCredential(new ServiceAccountCredential.Initializer(cr.ClientEmail)
+        ////{
+        ////    Scopes = new[] {
+        ////    AnalyticsService.Scope.AnalyticsManageUsersReadonly,
+        ////    AnalyticsService.Scope.AnalyticsReadonly
+        ////}
+        ////}.FromPrivateKey(cr.PrivateKey));
+
+        //string clientEmail = "mong-ent@starheroesdefence-3072171.iam.gserviceaccount.com";
+        //string privateKey = "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDG3bX/m1ddDOlQ\n8Ek9pHi8DPKmtldWScgh/pcZC4lOgcAy8Q2oq4SMoQ5EgaAmMBx9SVV+owo10x5y\nFbv/zFHo5S65cPIYjah1eMm3nLPrmgPEEf+/L+hh1cs8Z7WX1IGTyIWBxFC0dSpm\nqgyc+547QdOkDu66ycXPG0uPPAHwMUJAM5oVJZDITG6oh8iUBFUHXc1QbwD8FHA3\nWpEBflJRTTypt2fSAmn9B42dpezlHQhjPVFfqtPzW1sIMMUIh7CXnZMZEHFjkBqY\nqC332woEfv1JzxlQJvv5kCnYKkZnrH3RZmfr2Ty3zZsqDu2fLyuCK7a81NWiW5hr\nb8KPw1URAgMBAAECggEABIy6PxmzWRtEY8AJlu3SPtAnhYmmrCBWQjPYSmAFkUyd\n5HR4IOeiqdJ9+HKEQtdnMXUZ7gKmJ0bYG5lUcqTeq17B78duHIJyLBTaPZeJ1L4y\nb5wPTzUWApYA9zXytUFtAP/tkQNYKtbC5HQnw3gsvbOS914Jl2+qFUPNOd7QNwnp\nIUb5NH2xRU6AkgfVjS9V5ofoRv2OqG2NMAC9s9/b77e6kLF+e2VKPxCV+euKzCSy\nc1FeBToZlLblkKP+ZePCiK+Ymyg2oGgrfL773KtPVUEbHz6hDoasZ3FBosjv6wDU\nqDHTb9DUR1ylsES4z8f0TfE75S9yOsFVeMV2Phy8gQKBgQDs/2/NPeSALAofjjt+\noSorfCFdDtzVHB2NMOhGeAxQr6r21btxF9Dlxrs2yPDwSKofNOX9fjpxZHQGOjyW\n4K+LlUCtAbcO26JF1BowvBctRF3NQN4vNYx3ekXFBNPtfHvKaSV/OTLkfZoWFRzf\nIFX8p5JJBkAinhH+pUIA8xBVUQKBgQDWz5c4Il/83nVsW3jb10EwHmb2r9ppLBlb\nLDETsGJlErK41VGUh3sEJA7S6eAVDxmpumCTOsdCYm4lJBS979C7AvsfdWR6IuMS\nROPv7rYuevLVA7ZHUlTeVAYbUNwba6uwpldLvojgUMBTxjq2lhvR+AYRH4FFY9jf\n/lHzSL4TwQKBgGNTzzy6wujBDGEbUG4LB8x/0s/Yqc8bYHtLUx4ttCOg7EtVWqDU\ndXXH67DTWL+sBLjdh8LNQ5tAmav+fmRRuOEMZbXcsScmAAW6Flv0iNYtAA9FL5mj\nnMJ6WYFwO44eDRfRJ6kBhQXkak70/Eu7lq40YQf/+aNIkowiIN6bAG5xAoGAMy5t\nClvuYPKkKbg1uLO1/YAQ6lAGCy8Nr5J88wMAvrJQ0QdKk8ggAGGTAp/k2z+ozq7w\nmcPUfDW1prXNF2BPbG+OY/V1hkBPuCef46gN0k9LEoP6501vmTWN6u4+M25ZDxLj\nE9IHDONQn+VIUf68DDA7SdMm2uCqaNxQrFW1rEECgYEAoGOXF8yKHra7JkdHhwR7\nqv/m/RTG2tk8Os4VZas0oatQcOLkKtSGzN9e/Ia5xXgVP70GWsPNTqixgN5uwJqq\nKwS/1yAWDqCbTJmrJmS+hr7n+6CS/m72pNaZsbS91GwRiH7ZXnCrc0xTt85P2Vw2\nhvbz01SwkAWR6gEvzUr3e24=\n-----END PRIVATE KEY-----\n";
+        //var xCred = new ServiceAccountCredential(new ServiceAccountCredential.Initializer(clientEmail)
+        //{
+        //    Scopes = new[] {
+        //    "https://www.googleapis.com/auth/androidpublisher"
+        //}
+        //}.FromPrivateKey(privateKey));
+
+        //// Create the service
+        //AnalyticsService service = new AnalyticsService(
+        //    new BaseClientService.Initializer()
+        //    {
+        //        HttpClientInitializer = xCred,
+        //    }
+        //);
+
+        //// some calls to Google API
+        //var act1 = service.Management.Accounts.List().Execute();
+
+        //var actSum = service.Management.AccountSummaries.List().Execute();
+
+        //var resp1 = service.Management.Profiles.List(actSum.Items[0].Id, actSum.Items[0].WebProperties[0].Id).Execute();
+
+        //return resp1;
+
+        GoogleCredential credential;
+
+        string credPath = "D:\\home\\site\\repository\\StarHeroesDefence-8de7e9dc4a7c.json";
+        using (Stream stream = new FileStream(credPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            credential = GoogleCredential.FromStream(stream);
+        }
+        credential = credential.CreateScoped(new[] {
+       "https://www.googleapis.com/auth/androidpublisher" });
+
+        Task<string> task = ((ITokenAccess)credential).GetAccessTokenForRequestAsync();
+        task.Wait();
+        string token = task.Result;
+
+        return token;
     }
     //}
+
+
 
 
 
@@ -392,3 +456,5 @@ public class GoogleJsonWebToken
         return new[] { iat, exp };
     }
 }
+
+
