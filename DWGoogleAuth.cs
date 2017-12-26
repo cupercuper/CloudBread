@@ -338,7 +338,7 @@ public class GoogleJsonWebToken
         var inputBytes = Encoding.UTF8.GetBytes(input);
 
         // signiture
-        //var rsa = certificate.PrivateKey as RSACryptoServiceProvider;
+        var rsa = certificate.PrivateKey as RSACryptoServiceProvider;
         //var cspParam = new CspParameters
         //{
             //KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
