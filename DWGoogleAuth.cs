@@ -346,8 +346,8 @@ public class GoogleJsonWebToken
 
         var cspParam = new CspParameters
         {
-            KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
-            KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2
+            //KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
+            //KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2
         };
         //var aescsp = new RSACryptoServiceProvider(cspParam) { PersistKeyInCsp = false };
         //var signatureBytes = aescsp.SignData(inputBytes, "SHA256");
