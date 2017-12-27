@@ -317,11 +317,13 @@
     <Compile Include="Controllers\DWGetMailCountController.cs" />
     <Compile Include="Controllers\DWGetUserDataController.cs" />
     <Compile Include="Controllers\DWGoogleAuthController.cs" />
+    <Compile Include="Controllers\DWGooglePurchaseVerifyController.cs" />
     <Compile Include="Controllers\DWInsertUserDataController.cs" />
     <Compile Include="Controllers\DWRankController.cs" />
     <Compile Include="Controllers\DWReadMailController.cs" />
     <Compile Include="Controllers\DWSellUnitController.cs" />
     <Compile Include="Controllers\DWServerCheckController.cs" />
+    <Compile Include="Controllers\DWShopController.cs" />
     <Compile Include="Controllers\DWUdtStageInfoController.cs" />
     <Compile Include="Controllers\DWUnitSlotUpgradeController.cs" />
     <Compile Include="Controllers\DWUnitStoreActiveController.cs" />
@@ -365,11 +367,13 @@
     <Compile Include="Models\DWGetMailCountData.cs" />
     <Compile Include="Models\DWGetMailData.cs" />
     <Compile Include="Models\DWGetUserData.cs" />
+    <Compile Include="Models\DWGooglePurchaseVerify.cs" />
     <Compile Include="Models\DWInsUserData.cs" />
     <Compile Include="Models\DWRankData.cs" />
     <Compile Include="Models\DWReadMailData.cs" />
     <Compile Include="Models\DWSellUnit.cs" />
     <Compile Include="Models\DWServerCheckData.cs" />
+    <Compile Include="Models\DWShop.cs" />
     <Compile Include="Models\DWUdtStageInfoData.cs" />
     <Compile Include="Models\DWUnitSlotUpgradeData.cs" />
     <Compile Include="Models\DWUnitStoreActiveData.cs" />

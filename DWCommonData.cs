@@ -8,7 +8,9 @@ namespace DW.CommonData
         OK = 0,
         NOT_FOUND_USER,
         DB_ERROR,
-        LOGIC_ERROR
+        LOGIC_ERROR,
+        PURCHAESE_ERROR_INTABLE,
+        PURCHAESE_ERROR_VERIFY
     }
 
     public enum MONEY_TYPE
@@ -34,9 +36,14 @@ namespace DW.CommonData
         GOLD_TYPE,
         GEM_TYPE,
         ENHANCEDSTONE_TYPE,
+        UNIT_TYPE,
+        UNIT_RANDOM_TYPE,
+        AUTO_GET_ITEM_TYPE,
+        SPEED_UP_2X_TYPE,
+        UNIT_ATTACK_COOLTIME_TYPE,
         MAX_TYPE
     }
-
+    
     public enum EVENT_TYPE
     {
         LOGIN_TYPE,
@@ -53,8 +60,8 @@ namespace DW.CommonData
     public enum ACTIVE_ITEM_TYPE
     {
         GAME_SPEED_UP_2X,
-        GAME_SPEED_UP_3X,
         AUTO_GET_ITEM,
+        UNIT_ATTACK_COOL_TIME,
         MAX_TYPE
     }
 
@@ -63,6 +70,13 @@ namespace DW.CommonData
         FREE_TYPE,
         GEM_TYPE,
         LIMIT_TYPE,
+        MAX_TYPE
+    }
+
+    public enum UNIT_SUMMON_TICKET_TYPE
+    {
+        FIX_TYPE,
+        RANDOM_TYPE,
         MAX_TYPE
     }
 
@@ -108,6 +122,7 @@ namespace DW.CommonData
         public bool allClear;
         public List<ActiveItemData> activeItemList;
         public List<LimitShopItemData> limitShopItemDataList;
+        public List<DWUnitTicketData> unitTicketList;
     }
 
     [Serializable]
@@ -157,5 +172,20 @@ namespace DW.CommonData
     {
         public ulong serialNo;
         public byte count;
+    }
+
+    [Serializable]
+    public class DWGoogleGooglePurchaseVerifyData
+    {
+        public string productId;
+        public string purchasesToken;
+        public string packageName;
+    }
+
+    [Serializable]
+    public class DWUnitTicketData
+    {
+        public UNIT_SUMMON_TICKET_TYPE ticketType;
+        public ulong serialNo;
     }
 }

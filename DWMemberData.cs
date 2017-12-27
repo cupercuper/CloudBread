@@ -384,6 +384,51 @@ namespace CloudBread
             return ms.ToArray();
         }
 
+        public static List<DWUnitTicketData> ConvertUnitTicketDataList(byte[] buffer)
+        {
+            List<DWUnitTicketData> unitTicketDataList = new List<DWUnitTicketData>();
+            if (buffer == null)
+            {
+                return unitTicketDataList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                DWUnitTicketData unitTicketData = new DWUnitTicketData();
+                unitTicketData.ticketType = (UNIT_SUMMON_TICKET_TYPE)br.ReadByte();
+                unitTicketData.serialNo = br.ReadUInt64();
+
+                unitTicketDataList.Add(unitTicketData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return unitTicketDataList;
+        }
+
+        public static byte[] ConvertByte(List<DWUnitTicketData> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write((byte)list[i].ticketType);
+                bw.Write(list[i].serialNo);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
         public static uint AddUnitDic(ref Dictionary<uint, UnitData> unitDic, ulong serialNo)
         {
             if(unitDic.Count == 0)
@@ -531,5 +576,24 @@ namespace CloudBread
             return true;
         }
 
+        public static void UpdateActiveItem(List<ActiveItemData> activeItemList)
+        {
+            DateTime utcTime = DateTime.UtcNow;
+            for (int i = activeItemList.Count - 1; i >= 0; --i)
+            {
+                ActiveItemData activeItemData = activeItemList[i];
+                if (activeItemData.limitTime < 0)
+                {
+                    continue;
+                }
+
+                DateTime startTIme = new DateTime(activeItemData.startTime);
+                TimeSpan subTime = utcTime - startTIme;
+                if (subTime.TotalMinutes >= activeItemData.limitTime)
+                {
+                    activeItemList.RemoveAt(i);
+                }
+            }
+        }
     }
 }

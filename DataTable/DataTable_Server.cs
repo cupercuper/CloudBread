@@ -373,6 +373,7 @@ public class ShopDataTable : DataTableBase
 	public byte MoneyType;
 	public int MoneyCount;
 	public List<ulong> ItemList;
+	public string ProductId;
 	public string Description;
 	public void Load(DataRow dataRow)
 	{
@@ -389,7 +390,8 @@ public class ShopDataTable : DataTableBase
 			ulong temp = ulong.Parse(ItemList_tempArray[i]);
 			ItemList.Add(temp);
 		}
-		Description = dataRow[8].ToString();
+		ProductId = dataRow[8].ToString();
+		Description = dataRow[9].ToString();
 	}
 }
 
@@ -554,6 +556,36 @@ public class UnitSummonDataTable : DataTableBase
 		GroupID = int.Parse(dataRow[5].ToString());
 		Ratio = int.Parse(dataRow[6].ToString());
 		Description = dataRow[7].ToString();
+	}
+}
+
+public class UnitSummonRandomTicketDataTable_List : DataTableListBase
+{
+	public const string NAME = "UnitSummonRandomTicket";
+	public const string DATAFILENAME = "UnitSummonRandomTicketData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			UnitSummonRandomTicketDataTable data = new UnitSummonRandomTicketDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class UnitSummonRandomTicketDataTable : DataTableBase
+{
+	public string Name;
+	public int GroupID;
+	public string Description;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		GroupID = int.Parse(dataRow[2].ToString());
+		Description = dataRow[3].ToString();
 	}
 }
 

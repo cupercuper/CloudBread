@@ -15,6 +15,11 @@ namespace CloudBread
         {
             NORMAL_GROUP = 0,
             LEGEND_GROUP,
+            TICKET_1_GROUP,
+            TICKET_2_GROUP,
+            TICKET_3_GROUP,
+            TICKET_4_GROUP,
+            TICKET_5_GROUP,
             MAX_GROUP
         };
         
@@ -27,11 +32,17 @@ namespace CloudBread
         static Dictionary<GROUP_ID, List<UnitRatioData>> _unitRatioDataDic = new Dictionary<GROUP_ID, List<UnitRatioData>>();
         static List<int> _cacheList = new List<int>();
         static float[] _unitRatioTotalArray = new float[(int)GROUP_ID.MAX_GROUP];
+        static Dictionary<string, ShopDataTable> _productIDShopList = new Dictionary<string, ShopDataTable>();
 
         static int[] _groupMaxCount = new int[(int)GROUP_ID.MAX_GROUP]
         {
             4, // NORMAL_GROUP
-            1 // LEGEND_GROUP
+            1, // LEGEND_GROUP
+            0,
+            0,
+            0,
+            0,
+            0
         };
 
         static Dictionary<string, DataTableListBase> _dataTableDic = new Dictionary<string, DataTableListBase>();
@@ -196,7 +207,7 @@ namespace CloudBread
         public static List<ulong> GetCanBuyUnitList()
         {
             List<ulong> canBuyUnitList = new List<ulong>();
-            for (int i = 0; i < (int)GROUP_ID.MAX_GROUP; ++i)
+            for (int i = 0; i < (int)GROUP_ID.LEGEND_GROUP + 1; ++i)
             {
                 GetCanBuyUnitList((GROUP_ID)i, ref canBuyUnitList);
             }
@@ -249,6 +260,32 @@ namespace CloudBread
             unitLIst.AddRange(summonUnitList);
         }
 
+        public static ulong GetUnitTicket(GROUP_ID groupID)
+        {
+            List<UnitRatioData> unitRatioList = null;
+            if (_unitRatioDataDic.TryGetValue(groupID, out unitRatioList) == false)
+            {
+                return 0;
+            }
+
+            float maxRatio = _unitRatioTotalArray[(int)groupID];
+
+            Random random = new Random((int)DateTime.Now.Ticks);
+
+            float ratio = (float)random.NextDouble() * maxRatio;
+
+            for (int i = 0; i < unitRatioList.Count; ++i)
+            {
+                if (ratio <= unitRatioList[i].Ratio)
+                {
+                    return unitRatioList[i].SummonSerialNo;       
+                }
+                ratio -= unitRatioList[i].Ratio;
+            }
+
+            return 0;
+        }
+
         static void BuildCaptianList()
         {
             Dictionary<ulong, DataTableBase> captianLIst = GetDataTableList(CaptianDataTable_List.NAME);
@@ -264,6 +301,32 @@ namespace CloudBread
             Random random = new Random((int)DateTime.Now.Ticks);
             int index = random.Next(0, _captianLIst.Count);
             return _captianLIst[index];
+        }
+
+        public static void BuildShopBuild()
+        {
+            Dictionary<ulong, DataTableBase> shopLIst = GetDataTableList(ShopDataTable_List.NAME);
+            foreach (KeyValuePair<ulong, DataTableBase> kv in shopLIst)
+            {
+                ShopDataTable shopDataTable = kv.Value as ShopDataTable;
+                if(shopDataTable.ProductId == "")
+                {
+                    continue;
+                }
+
+                _productIDShopList.Add(shopDataTable.ProductId, shopDataTable);
+            }
+        }
+
+        public static ShopDataTable GetShopTable(string productID)
+        {
+            ShopDataTable shopDataTable = null;
+            if(_productIDShopList.TryGetValue(productID, out shopDataTable) == false)
+            {
+                return null;
+            }
+
+            return shopDataTable;
         }
     }
 }
