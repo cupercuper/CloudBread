@@ -62,13 +62,14 @@ namespace CloudBread
                 AddDataTable(ItemDataTable_List.NAME, new ItemDataTable_List());
                 AddDataTable(LevelUpDataTable_List.NAME, new LevelUpDataTable_List());
                 AddDataTable(ProjectileDataTable_List.NAME, new ProjectileDataTable_List());
+                AddDataTable(ShopDataTable_List.NAME, new ShopDataTable_List());
                 AddDataTable(StageDataTable_List.NAME, new StageDataTable_List());
                 AddDataTable(UnitDataTable_List.NAME, new UnitDataTable_List());
                 AddDataTable(UnitSlotDataTable_List.NAME, new UnitSlotDataTable_List());
                 AddDataTable(UnitSummonDataTable_List.NAME, new UnitSummonDataTable_List());
+                AddDataTable(UnitSummonRandomTicketDataTable_List.NAME, new UnitSummonRandomTicketDataTable_List());
                 AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
                 AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
-                AddDataTable(ShopDataTable_List.NAME, new ShopDataTable_List());
 
                 BuildUnitSummonRatioList();
                 BuildCaptianList();
