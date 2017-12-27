@@ -595,5 +595,33 @@ namespace CloudBread
                 }
             }
         }
+
+        public static void AddActiveItem(List<ActiveItemData> activeItemList, ACTIVE_ITEM_TYPE itemTime, int limitTime)
+        {
+            bool add = true;
+            for(int i = 0; i < activeItemList.Count; ++i)
+            {
+                if((ACTIVE_ITEM_TYPE)activeItemList[i].itemType == itemTime)
+                {
+                    if(activeItemList[i].limitTime > 0)
+                    {
+                        activeItemList[i].limitTime += limitTime;
+                    }
+
+                    add = false;
+                    break;
+                }
+            }
+
+            if(add == true)
+            {
+                ActiveItemData activeItemData = new ActiveItemData();
+                activeItemData.itemType = (byte)itemTime;
+                activeItemData.startTime = DateTime.UtcNow.Ticks;
+                activeItemData.limitTime = limitTime == 0 ? -1 : limitTime;
+
+                activeItemList.Add(activeItemData);
+            }
+        }
     }
 }

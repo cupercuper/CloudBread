@@ -346,39 +346,17 @@ namespace CloudBread.Controllers
                             break;
                         case ITEM_TYPE.AUTO_GET_ITEM_TYPE:
                             {
-                                ActiveItemData activeItemData = new ActiveItemData();
-                                activeItemData.itemType = (byte)ACTIVE_ITEM_TYPE.AUTO_GET_ITEM;
-                                activeItemData.startTime = DateTime.UtcNow.Ticks;
-                                int limitTime = int.Parse(itemDataTable.Value);
-                                activeItemData.limitTime = limitTime == 0 ? -1 : limitTime;
-
-                                result.activeItemList.Add(activeItemData);
-                                activeItemList.Add(activeItemData);
-
+                                DWMemberData.AddActiveItem(activeItemList, ACTIVE_ITEM_TYPE.AUTO_GET_ITEM, int.Parse(itemDataTable.Value));
                             }
                             break;
                         case ITEM_TYPE.SPEED_UP_2X_TYPE:
                             {
-                                ActiveItemData activeItemData = new ActiveItemData();
-                                activeItemData.itemType = (byte)ACTIVE_ITEM_TYPE.GAME_SPEED_UP_2X;
-                                activeItemData.startTime = DateTime.UtcNow.Ticks;
-                                int limitTime = int.Parse(itemDataTable.Value);
-                                activeItemData.limitTime = limitTime == 0 ? -1 : limitTime;
-
-                                result.activeItemList.Add(activeItemData);
-                                activeItemList.Add(activeItemData);
+                                DWMemberData.AddActiveItem(activeItemList, ACTIVE_ITEM_TYPE.GAME_SPEED_UP_2X, int.Parse(itemDataTable.Value));
                             }
                             break;
                         case ITEM_TYPE.UNIT_ATTACK_COOLTIME_TYPE:
                             {
-                                ActiveItemData activeItemData = new ActiveItemData();
-                                activeItemData.itemType = (byte)ACTIVE_ITEM_TYPE.UNIT_ATTACK_COOL_TIME;
-                                activeItemData.startTime = DateTime.UtcNow.Ticks;
-                                int limitTime = int.Parse(itemDataTable.Value);
-                                activeItemData.limitTime = limitTime == 0 ? -1 : limitTime;
-
-                                result.activeItemList.Add(activeItemData);
-                                activeItemList.Add(activeItemData);
+                                DWMemberData.AddActiveItem(activeItemList, ACTIVE_ITEM_TYPE.UNIT_ATTACK_COOL_TIME, int.Parse(itemDataTable.Value));
                             }
                             break;
                     }
@@ -447,6 +425,7 @@ namespace CloudBread.Controllers
             result.cashGem = cashGem;
             result.enhancedStone = enhancedStone;
             result.cashEnhancedStone = cashEnhancedStone;
+            result.activeItemList = activeItemList;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;
