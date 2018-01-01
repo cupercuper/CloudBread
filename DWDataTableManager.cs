@@ -49,10 +49,13 @@ namespace CloudBread
 
         static List<byte> _captianLIst = new List<byte>();
 
+        public static GlobalSettingDataTable GlobalSettingDataTable;
+
         public static bool LoadAllDataTable()
         {
             try
             {
+                AddDataTable(ActiveItemDataTable_List.NAME, new ActiveItemDataTable_List());
                 AddDataTable(BossDataTable_List.NAME, new BossDataTable_List());
                 AddDataTable(BuffDataTable_List.NAME, new BuffDataTable_List());
                 AddDataTable(CaptianDataTable_List.NAME, new CaptianDataTable_List());
@@ -71,8 +74,11 @@ namespace CloudBread
                 AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
                 AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
 
+
                 BuildUnitSummonRatioList();
                 BuildCaptianList();
+
+                GlobalSettingDataTable = GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
 
                 return true;
             }

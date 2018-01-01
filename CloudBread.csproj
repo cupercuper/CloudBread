@@ -313,6 +313,8 @@
     <Compile Include="Controllers\DWChangeUnitListController.cs" />
     <Compile Include="Controllers\DWEnhancementUnitController.cs" />
     <Compile Include="Controllers\DWEventController.cs" />
+    <Compile Include="Controllers\DWGemBoxOpenController.cs" />
+    <Compile Include="Controllers\DWGetGemController.cs" />
     <Compile Include="Controllers\DWGetMailController.cs" />
     <Compile Include="Controllers\DWGetMailCountController.cs" />
     <Compile Include="Controllers\DWGetUserDataController.cs" />
@@ -364,6 +366,8 @@
     <Compile Include="Models\DWChangeUnitList.cs" />
     <Compile Include="Models\DWEnhancementUnit.cs" />
     <Compile Include="Models\DWEventData.cs" />
+    <Compile Include="Models\DWGemBoxOpen.cs" />
+    <Compile Include="Models\DWGetGem.cs" />
     <Compile Include="Models\DWGetMailCountData.cs" />
     <Compile Include="Models\DWGetMailData.cs" />
     <Compile Include="Models\DWGetUserData.cs" />

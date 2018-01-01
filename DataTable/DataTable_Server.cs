@@ -17,6 +17,36 @@ public class DataTableListBase
 	public UInt16 Version = 0;
 }
 
+public class ActiveItemDataTable_List : DataTableListBase
+{
+	public const string NAME = "ActiveItem";
+	public const string DATAFILENAME = "ActiveItemData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			ActiveItemDataTable data = new ActiveItemDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class ActiveItemDataTable : DataTableBase
+{
+	public string Name;
+	public string Icon;
+	public string Effect;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		Icon = dataRow[2].ToString();
+		Effect = dataRow[3].ToString();
+	}
+}
+
 public class BossDataTable_List : DataTableListBase
 {
 	public const string NAME = "Boss";
@@ -107,6 +137,7 @@ public class CaptianDataTable : DataTableBase
 	public string Name;
 	public byte Type;
 	public List<ulong> BuffList;
+	public string Effect;
 	public string Description;
 	public void Load(DataRow dataRow)
 	{
@@ -119,7 +150,8 @@ public class CaptianDataTable : DataTableBase
 			ulong temp = ulong.Parse(BuffList_tempArray[i]);
 			BuffList.Add(temp);
 		}
-		Description = dataRow[4].ToString();
+		Effect = dataRow[4].ToString();
+		Description = dataRow[5].ToString();
 	}
 }
 
@@ -245,6 +277,8 @@ public class GlobalSettingDataTable : DataTableBase
 	public int UnitStoreActiveGem;
 	public int GemUseAddProbability;
 	public int CoinContainMaxCnt;
+	public int GemBoxProbability;
+	public int GemBoxCount;
 	public void Load(DataRow dataRow)
 	{
 		UnitListChangeTime = int.Parse(dataRow[1].ToString());
@@ -252,6 +286,8 @@ public class GlobalSettingDataTable : DataTableBase
 		UnitStoreActiveGem = int.Parse(dataRow[3].ToString());
 		GemUseAddProbability = int.Parse(dataRow[4].ToString());
 		CoinContainMaxCnt = int.Parse(dataRow[5].ToString());
+		GemBoxProbability = int.Parse(dataRow[6].ToString());
+		GemBoxCount = int.Parse(dataRow[7].ToString());
 	}
 }
 
