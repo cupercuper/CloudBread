@@ -165,7 +165,7 @@ namespace CloudBread.Controllers
                 DWGoogleGooglePurchaseVerifyData verifyData = p.purchasesList[i];
                 using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
                 {
-                    string strQuery = string.Format("SELECT [Index] FROM DWGooglePurchasesToken WHERE MemberID = '{0}', Token = '{1}'", p.memberID, verifyData.purchasesToken);
+                    string strQuery = string.Format("SELECT [Index] FROM DWGooglePurchasesToken WHERE MemberID = '{0}' AND Token = '{1}'", p.memberID, verifyData.purchasesToken);
                     using (SqlCommand command = new SqlCommand(strQuery, connection))
                     {
                         connection.OpenWithRetry(retryPolicy);
