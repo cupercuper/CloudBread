@@ -265,7 +265,7 @@ using CloudBreadLib.BAL.Crypto;
 using System.Data;
 using System.Data.Sql;
 using System.Data.SqlClient;
-using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using CloudBreadAuth;
 using System.Security.Claims;
 using Microsoft.Practices.TransientFaultHandling;
@@ -277,6 +277,7 @@ using DW.CommonData;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Analytics.v3;
+
 
 
 public class GoogleJsonWebToken
@@ -310,8 +311,15 @@ public class GoogleJsonWebToken
         StreamReader reader = new StreamReader(res.GetResponseStream(), Encoding.UTF8);
         string result = reader.ReadToEnd();
 
-        bool re = bool.Parse(result);
-        return true;
+        JObject obj = JObject.Parse(result);
+        string state = obj["purchaseState"].ToString();
+
+        if(state == "0")
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public static string GetAccessToken()

@@ -61,13 +61,7 @@ namespace CloudBread
                 }
 
                 DWDataTableManager.LoadAllDataTable();
-
-                //AuthResponse googleAuth = AuthResponse.Exchange("4/-U13qwfutgesj3_gEQowtpIqEeORuR8jd3FTFq30Ur8", "717775335739-1dl9nv860idkollth4r0sba4n2smt4jl.apps.googleusercontent.com", "Ag9qsb5g-ZTiJeR2ZPF_KbDS", "urn:ietf:wg:oauth:2.0:oob");
-
                 string token = GoogleJsonWebToken.instance.Token;
-                //GoogleJsonWebToken.GetAccessToken("mong-ent@starheroesdefence-3072171.iam.gserviceaccount.com", "D:\\home\\site\\repository\\StarHeroesDefence-616e53e73cf5.p12", "https://www.googleapis.com/auth/androidpublisher");
-                //AuthResponse googleAuth = AuthResponse.Exchange("4/062ONOabsFBJ8s8y8VG_i6SWjbZIRjwrLHHqFZR7X1E", "717775335739-1dl9nv860idkollth4r0sba4n2smt4jl.apps.googleusercontent.com", "Ag9qsb5g-ZTiJeR2ZPF_KbDS", "urn:ietf:wg:oauth:2.0:oob");// "http://localhost/oauth2callback");
-
             }
             catch (System.Exception ex)
             {

@@ -188,11 +188,11 @@ namespace CloudBread.Controllers
                 bool verify = GoogleJsonWebToken.instance.RequestVerifyFromGoogleStore(verifyData.productId, verifyData.purchasesToken, verifyData.packageName);
                 if(verify == false)
                 {
-                    result.errorCode = (byte)DW_ERROR_CODE.PURCHAESE_ERROR_VERIFY;
+                    result.errorCode = (byte)DW_ERROR_CODE.PURCHAESE_ERROR_CANCEL;
                     logMessage.memberID = p.memberID;
                     logMessage.Level = "INFO";
                     logMessage.Logger = "DWGooglePurchaseVerifyController";
-                    logMessage.Message = string.Format("DWGooglePurchasesToken verify error Hack memberID = {0}, verifyData.purchasesToken = {1}", p.memberID, verifyData.purchasesToken);
+                    logMessage.Message = string.Format("DWGooglePurchasesToken CANCEL error Hack memberID = {0}, verifyData.purchasesToken = {1}", p.memberID, verifyData.purchasesToken);
                     Logging.RunLog(logMessage);
 
                     return result;

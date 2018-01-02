@@ -10,7 +10,8 @@ namespace DW.CommonData
         DB_ERROR,
         LOGIC_ERROR,
         PURCHAESE_ERROR_INTABLE,
-        PURCHAESE_ERROR_VERIFY
+        PURCHAESE_ERROR_VERIFY,
+        PURCHAESE_ERROR_CANCEL
     }
 
     public enum MONEY_TYPE
