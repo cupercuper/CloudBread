@@ -311,6 +311,7 @@ namespace CloudBread
                 activeItemData.itemType = br.ReadByte();
                 activeItemData.limitTime = br.ReadInt32();
                 activeItemData.startTime = br.ReadInt64();
+                activeItemData.value = br.ReadString();
 
                 activeItemList.Add(activeItemData);
             }
@@ -332,6 +333,7 @@ namespace CloudBread
                 bw.Write(list[i].itemType);
                 bw.Write(list[i].limitTime);
                 bw.Write(list[i].startTime);
+                bw.Write(list[i].value);
             }
 
             bw.Close();
@@ -578,6 +580,11 @@ namespace CloudBread
 
         public static void UpdateActiveItem(List<ActiveItemData> activeItemList)
         {
+            if(activeItemList == null)
+            {
+                return;
+            }
+
             DateTime utcTime = DateTime.UtcNow;
             for (int i = activeItemList.Count - 1; i >= 0; --i)
             {
@@ -596,12 +603,15 @@ namespace CloudBread
             }
         }
 
-        public static void AddActiveItem(List<ActiveItemData> activeItemList, ACTIVE_ITEM_TYPE itemTime, int limitTime)
+        public static void AddActiveItem(List<ActiveItemData> activeItemList, ACTIVE_ITEM_TYPE itemType, string value)
         {
+            string[] values = value.Split(',');
+            int limitTime = int.Parse(values[0]);
+
             bool add = true;
             for(int i = 0; i < activeItemList.Count; ++i)
             {
-                if((ACTIVE_ITEM_TYPE)activeItemList[i].itemType == itemTime)
+                if((ACTIVE_ITEM_TYPE)activeItemList[i].itemType == itemType && activeItemList[i].value == values[1])
                 {
                     if(activeItemList[i].limitTime > 0)
                     {
@@ -616,9 +626,10 @@ namespace CloudBread
             if(add == true)
             {
                 ActiveItemData activeItemData = new ActiveItemData();
-                activeItemData.itemType = (byte)itemTime;
+                activeItemData.itemType = (byte)itemType;
                 activeItemData.startTime = DateTime.UtcNow.Ticks;
                 activeItemData.limitTime = limitTime == 0 ? -1 : limitTime;
+                activeItemData.value = values[1];
 
                 activeItemList.Add(activeItemData);
             }

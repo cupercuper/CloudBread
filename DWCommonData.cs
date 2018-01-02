@@ -39,7 +39,7 @@ namespace DW.CommonData
         UNIT_TYPE,
         UNIT_RANDOM_TYPE,
         AUTO_GET_ITEM_TYPE,
-        SPEED_UP_2X_TYPE,
+        SPEED_UP_TYPE,
         UNIT_ATTACK_COOLTIME_TYPE,
         MAX_TYPE
     }
@@ -59,7 +59,7 @@ namespace DW.CommonData
 
     public enum ACTIVE_ITEM_TYPE
     {
-        GAME_SPEED_UP_2X,
+        GAME_SPEED_UP,
         AUTO_GET_ITEM,
         UNIT_ATTACK_COOL_TIME,
         MAX_TYPE
@@ -165,6 +165,7 @@ namespace DW.CommonData
         public byte itemType;
         public int limitTime;
         public long startTime;
+        public string value;
     }
 
     [Serializable]
