@@ -310,6 +310,7 @@ public class GoogleJsonWebToken
         StreamReader reader = new StreamReader(res.GetResponseStream(), Encoding.UTF8);
         string result = reader.ReadToEnd();
 
+        bool re = bool.Parse(result);
         return true;
     }
 
