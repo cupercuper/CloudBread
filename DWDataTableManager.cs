@@ -77,6 +77,7 @@ namespace CloudBread
 
                 BuildUnitSummonRatioList();
                 BuildCaptianList();
+                BuildShopBuild();
 
                 GlobalSettingDataTable = GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
 
