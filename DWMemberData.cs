@@ -308,10 +308,9 @@ namespace CloudBread
             for (int i = 0; i < count; ++i)
             {
                 ActiveItemData activeItemData = new ActiveItemData();
-                activeItemData.itemType = br.ReadByte();
+                activeItemData.serialNo = br.ReadUInt64();
                 activeItemData.limitTime = br.ReadInt32();
                 activeItemData.startTime = br.ReadInt64();
-                activeItemData.value = br.ReadString();
 
                 activeItemList.Add(activeItemData);
             }
@@ -330,10 +329,9 @@ namespace CloudBread
             bw.Write(list.Count);
             for (int i = 0; i < list.Count; ++i)
             {
-                bw.Write(list[i].itemType);
+                bw.Write(list[i].serialNo);
                 bw.Write(list[i].limitTime);
                 bw.Write(list[i].startTime);
-                bw.Write(list[i].value);
             }
 
             bw.Close();
@@ -603,17 +601,22 @@ namespace CloudBread
             }
         }
 
-        public static void AddActiveItem(List<ActiveItemData> activeItemList, ACTIVE_ITEM_TYPE itemType, string value)
+        public static void AddActiveItem(List<ActiveItemData> activeItemList, string value)
         {
             string[] values = value.Split(',');
-            int limitTime = int.Parse(values[0]);
+            ulong serialNo = ulong.Parse(values[0]);
+            int limitTime = int.Parse(values[1]);
 
             bool add = true;
             for(int i = 0; i < activeItemList.Count; ++i)
             {
-                if((ACTIVE_ITEM_TYPE)activeItemList[i].itemType == itemType && activeItemList[i].value == values[1])
+                if(activeItemList[i].serialNo == serialNo)
                 {
-                    if(activeItemList[i].limitTime > 0)
+                    if(limitTime == 0)
+                    {
+                        activeItemList[i].limitTime = -1;
+                    }
+                    else if(activeItemList[i].limitTime > 0)
                     {
                         activeItemList[i].limitTime += limitTime;
                     }
@@ -626,10 +629,9 @@ namespace CloudBread
             if(add == true)
             {
                 ActiveItemData activeItemData = new ActiveItemData();
-                activeItemData.itemType = (byte)itemType;
+                activeItemData.serialNo =serialNo;
                 activeItemData.startTime = DateTime.UtcNow.Ticks;
                 activeItemData.limitTime = limitTime == 0 ? -1 : limitTime;
-                activeItemData.value = values[1];
 
                 activeItemList.Add(activeItemData);
             }

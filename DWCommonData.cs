@@ -39,9 +39,7 @@ namespace DW.CommonData
         ENHANCEDSTONE_TYPE,
         UNIT_TYPE,
         UNIT_RANDOM_TYPE,
-        AUTO_GET_ITEM_TYPE,
-        SPEED_UP_TYPE,
-        UNIT_ATTACK_COOLTIME_TYPE,
+        ACTIVE_ITEM_TYPE,
         MAX_TYPE
     }
     
@@ -163,10 +161,9 @@ namespace DW.CommonData
     [Serializable]
     public class ActiveItemData
     {
-        public byte itemType;
+        public ulong serialNo;
         public int limitTime;
         public long startTime;
-        public string value;
     }
 
     [Serializable]

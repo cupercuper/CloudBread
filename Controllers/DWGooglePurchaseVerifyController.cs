@@ -344,19 +344,9 @@ namespace CloudBread.Controllers
                                 }
                             }
                             break;
-                        case ITEM_TYPE.AUTO_GET_ITEM_TYPE:
+                        case ITEM_TYPE.ACTIVE_ITEM_TYPE:
                             {
-                                DWMemberData.AddActiveItem(activeItemList, ACTIVE_ITEM_TYPE.AUTO_GET_ITEM, itemDataTable.Value);
-                            }
-                            break;
-                        case ITEM_TYPE.SPEED_UP_TYPE:
-                            {
-                                DWMemberData.AddActiveItem(activeItemList, ACTIVE_ITEM_TYPE.GAME_SPEED_UP, itemDataTable.Value);
-                            }
-                            break;
-                        case ITEM_TYPE.UNIT_ATTACK_COOLTIME_TYPE:
-                            {
-                                DWMemberData.AddActiveItem(activeItemList, ACTIVE_ITEM_TYPE.UNIT_ATTACK_COOL_TIME, itemDataTable.Value);
+                                DWMemberData.AddActiveItem(activeItemList, itemDataTable.Value);
                             }
                             break;
                     }

@@ -36,14 +36,20 @@ public class ActiveItemDataTable_List : DataTableListBase
 
 public class ActiveItemDataTable : DataTableBase
 {
+	public byte Type;
 	public string Name;
 	public string Icon;
+	public string Description;
+	public string Value;
 	public string Effect;
 	public void Load(DataRow dataRow)
 	{
-		Name = dataRow[1].ToString();
-		Icon = dataRow[2].ToString();
-		Effect = dataRow[3].ToString();
+		Type = byte.Parse(dataRow[1].ToString());
+		Name = dataRow[2].ToString();
+		Icon = dataRow[3].ToString();
+		Description = dataRow[4].ToString();
+		Value = dataRow[5].ToString();
+		Effect = dataRow[6].ToString();
 	}
 }
 
@@ -484,6 +490,7 @@ public class UnitDataTable : DataTableBase
 {
 	public string Name;
 	public string PrefabName;
+	public string Icon;
 	public byte Type;
 	public byte Grade;
 	public int AttackCoolTime;
@@ -504,28 +511,29 @@ public class UnitDataTable : DataTableBase
 	{
 		Name = dataRow[1].ToString();
 		PrefabName = dataRow[2].ToString();
-		Type = byte.Parse(dataRow[3].ToString());
-		Grade = byte.Parse(dataRow[4].ToString());
-		AttackCoolTime = int.Parse(dataRow[5].ToString());
-		AttackRange = int.Parse(dataRow[6].ToString());
-		AttackPower = int.Parse(dataRow[7].ToString());
-		AttackPowerF = int.Parse(dataRow[8].ToString());
-		CriticalRate = int.Parse(dataRow[9].ToString());
-		SplashRange = int.Parse(dataRow[10].ToString());
-		Size = int.Parse(dataRow[11].ToString());
-		Description = dataRow[12].ToString();
-		Projectile = ulong.Parse(dataRow[13].ToString());
+		Icon = dataRow[3].ToString();
+		Type = byte.Parse(dataRow[4].ToString());
+		Grade = byte.Parse(dataRow[5].ToString());
+		AttackCoolTime = int.Parse(dataRow[6].ToString());
+		AttackRange = int.Parse(dataRow[7].ToString());
+		AttackPower = int.Parse(dataRow[8].ToString());
+		AttackPowerF = int.Parse(dataRow[9].ToString());
+		CriticalRate = int.Parse(dataRow[10].ToString());
+		SplashRange = int.Parse(dataRow[11].ToString());
+		Size = int.Parse(dataRow[12].ToString());
+		Description = dataRow[13].ToString();
+		Projectile = ulong.Parse(dataRow[14].ToString());
 		AttackType = new List<byte>();
-		string [] AttackType_tempArray = dataRow[14].ToString().Split(',');
+		string [] AttackType_tempArray = dataRow[15].ToString().Split(',');
 		for( int i = 0; i < AttackType_tempArray.Length; ++i)
 		{
 			byte temp = byte.Parse(AttackType_tempArray[i]);
 			AttackType.Add(temp);
 		}
-		UnitStoreMoney = int.Parse(dataRow[15].ToString());
-		FireEffect = dataRow[16].ToString();
-		TargetPosEffect = dataRow[17].ToString();
-		AttackDirectionType = byte.Parse(dataRow[18].ToString());
+		UnitStoreMoney = int.Parse(dataRow[16].ToString());
+		FireEffect = dataRow[17].ToString();
+		TargetPosEffect = dataRow[18].ToString();
+		AttackDirectionType = byte.Parse(dataRow[19].ToString());
 	}
 }
 
@@ -697,6 +705,7 @@ public class WorldDataTable_List : DataTableListBase
 public class WorldDataTable : DataTableBase
 {
 	public string Name;
+	public string Icon;
 	public string MapBackGround;
 	public string MapPlace;
 	public string MapShadow;
@@ -708,20 +717,21 @@ public class WorldDataTable : DataTableBase
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
-		MapBackGround = dataRow[2].ToString();
-		MapPlace = dataRow[3].ToString();
-		MapShadow = dataRow[4].ToString();
+		Icon = dataRow[2].ToString();
+		MapBackGround = dataRow[3].ToString();
+		MapPlace = dataRow[4].ToString();
+		MapShadow = dataRow[5].ToString();
 		StageList = new List<ulong>();
-		string [] StageList_tempArray = dataRow[5].ToString().Split(',');
+		string [] StageList_tempArray = dataRow[6].ToString().Split(',');
 		for( int i = 0; i < StageList_tempArray.Length; ++i)
 		{
 			ulong temp = ulong.Parse(StageList_tempArray[i]);
 			StageList.Add(temp);
 		}
-		BossSerialNo = ulong.Parse(dataRow[6].ToString());
-		BossLevel = int.Parse(dataRow[7].ToString());
-		EnhancementStone = int.Parse(dataRow[8].ToString());
-		Description = dataRow[9].ToString();
+		BossSerialNo = ulong.Parse(dataRow[7].ToString());
+		BossLevel = int.Parse(dataRow[8].ToString());
+		EnhancementStone = int.Parse(dataRow[9].ToString());
+		Description = dataRow[10].ToString();
 	}
 }
 
