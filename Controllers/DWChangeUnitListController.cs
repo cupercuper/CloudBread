@@ -159,7 +159,7 @@ namespace CloudBread.Controllers
 
             TimeSpan subTime = utcTime - unitListChangeTime;
             // 1분을 갭을 준다.
-            if (subTime.TotalMilliseconds > globalSetting.UnitListChangeTime - 1)
+            if (subTime.TotalMinutes < globalSetting.UnitListChangeTime - 1)
             {
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";

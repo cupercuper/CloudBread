@@ -324,10 +324,30 @@ public class GoogleJsonWebToken
 
     public static string GetAccessToken()
     {
+        byte[] readBytes = null;
+
+        RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+        using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+        {
+            string strQuery = string.Format("SELECT KeyFileByte FROM DWGoogleKeyFile WHERE [Index] = 1");
+            using (SqlCommand command = new SqlCommand(strQuery, connection))
+            {
+                connection.OpenWithRetry(retryPolicy);
+                using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+                {
+                    while (dreader.Read())
+                    {
+                        readBytes = dreader[0] as byte[];
+                    }
+                }
+            }
+        }
+
         GoogleCredential credential;
 
-        string credPath = "D:\\home\\site\\repository\\StarHeroesDefence-8de7e9dc4a7c.json";
-        using (Stream stream = new FileStream(credPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        //string credPath = "D:\\home\\site\\repository\\StarHeroesDefence-8de7e9dc4a7c.json";
+        //using (Stream stream = new FileStream(credPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        using (Stream stream = new MemoryStream(readBytes))
         {
             credential = GoogleCredential.FromStream(stream);
         }
