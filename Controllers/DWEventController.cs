@@ -191,6 +191,7 @@ namespace CloudBread.Controllers
             }
 
             DWMailData mailData = new DWMailData();
+            mailData.title = eventData.title;
             mailData.msg = eventData.msg;
             mailData.itemData = new List<DWItemData>();
             for(int i = 0; i < eventData.itemData.Count; ++i)

@@ -177,6 +177,7 @@ namespace CloudBread
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms);
 
+            bw.Write(mailData.title);
             bw.Write(mailData.msg);
 
             bw.Write(mailData.itemData.Count);
@@ -203,7 +204,9 @@ namespace CloudBread
             MemoryStream ms = new MemoryStream(buffer);
             BinaryReader br = new BinaryReader(ms);
 
+            mailData.title = br.ReadString();
             mailData.msg = br.ReadString();
+
             int count = br.ReadInt32();
 
             for (int i = 0; i < count; ++i)
@@ -232,7 +235,8 @@ namespace CloudBread
 
             MemoryStream ms = new MemoryStream(buffer);
             BinaryReader br = new BinaryReader(ms);
-            
+
+            eventData.title = br.ReadString();
             eventData.msg = br.ReadString();
 
             int count = br.ReadInt32();

@@ -112,7 +112,7 @@ namespace CloudBread.Controllers
 
             short lastWorld = 0;
             short curWorld = 0;
-            byte captianChange = 0;
+            long captianChange = 0;
             bool allClear = false;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
@@ -140,7 +140,7 @@ namespace CloudBread.Controllers
                         {
                             lastWorld = (short)dreader[0];
                             curWorld = (short)dreader[1];
-                            captianChange = (byte)dreader[2];
+                            captianChange = (long)dreader[2];
                             allClear = (bool)dreader[3];
                         }
                     }

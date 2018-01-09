@@ -134,9 +134,10 @@ namespace DW.CommonData
     [Serializable]
     public class DWMailData
     {
-        public long index;
+        public long index; 
         public string senderID;
         public string receiveID;
+        public string title;
         public string msg;
         public long createdAt;
         public List<DWItemData> itemData;
@@ -145,6 +146,7 @@ namespace DW.CommonData
     [Serializable]
     public class EventData
     {
+        public string title;
         public string msg;
         public List<DWItemData> itemData;
     }

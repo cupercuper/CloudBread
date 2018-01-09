@@ -113,11 +113,12 @@ namespace CloudBread.Controllers
             long cashEnhancedStone = 0;
             long captianChange = 0;
             bool allClear = false;
+
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone, CashEnhancedStone, CaptianChange, LastWorld AllClear FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT EnhancedStone, CashEnhancedStone, CaptianChange, LastWorld, AllClear FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
