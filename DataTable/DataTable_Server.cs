@@ -706,6 +706,7 @@ public class WorldDataTable : DataTableBase
 {
 	public string Name;
 	public string Icon;
+	public string MapFolder;
 	public string MapBackGround;
 	public string MapPlace;
 	public string MapShadow;
@@ -718,20 +719,21 @@ public class WorldDataTable : DataTableBase
 	{
 		Name = dataRow[1].ToString();
 		Icon = dataRow[2].ToString();
-		MapBackGround = dataRow[3].ToString();
-		MapPlace = dataRow[4].ToString();
-		MapShadow = dataRow[5].ToString();
+		MapFolder = dataRow[3].ToString();
+		MapBackGround = dataRow[4].ToString();
+		MapPlace = dataRow[5].ToString();
+		MapShadow = dataRow[6].ToString();
 		StageList = new List<ulong>();
-		string [] StageList_tempArray = dataRow[6].ToString().Split(',');
+		string [] StageList_tempArray = dataRow[7].ToString().Split(',');
 		for( int i = 0; i < StageList_tempArray.Length; ++i)
 		{
 			ulong temp = ulong.Parse(StageList_tempArray[i]);
 			StageList.Add(temp);
 		}
-		BossSerialNo = ulong.Parse(dataRow[7].ToString());
-		BossLevel = int.Parse(dataRow[8].ToString());
-		EnhancementStone = int.Parse(dataRow[9].ToString());
-		Description = dataRow[10].ToString();
+		BossSerialNo = ulong.Parse(dataRow[8].ToString());
+		BossLevel = int.Parse(dataRow[9].ToString());
+		EnhancementStone = int.Parse(dataRow[10].ToString());
+		Description = dataRow[11].ToString();
 	}
 }
 
