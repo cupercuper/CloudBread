@@ -30,8 +30,12 @@ namespace CloudBread
         }
 
         static Dictionary<GROUP_ID, List<UnitRatioData>> _unitRatioDataDic = new Dictionary<GROUP_ID, List<UnitRatioData>>();
+        static Dictionary<GROUP_ID, List<UnitRatioData>> _firstUserUnitRatioDataDic = new Dictionary<GROUP_ID, List<UnitRatioData>>();
+
         static List<int> _cacheList = new List<int>();
         static float[] _unitRatioTotalArray = new float[(int)GROUP_ID.MAX_GROUP];
+        static float[] _firstUnitRatioTotalArray = new float[(int)GROUP_ID.MAX_GROUP];
+
         static Dictionary<string, ShopDataTable> _productIDShopList = new Dictionary<string, ShopDataTable>();
 
         static int[] _groupMaxCount = new int[(int)GROUP_ID.MAX_GROUP]
@@ -210,6 +214,51 @@ namespace CloudBread
                 }
                 );
             }
+
+            foreach (KeyValuePair<ulong, DataTableBase> kv in unitSummomnList)
+            {
+                UnitSummonDataTable unitSummonDataTable = kv.Value as UnitSummonDataTable;
+                if (unitSummonDataTable.GroupID > (int)GROUP_ID.LEGEND_GROUP)
+                {
+                    continue;
+                }
+
+                UnitDataTable unitDataTable = DWDataTableManager.GetDataTable(UnitDataTable_List.NAME, unitSummonDataTable.ChangeSerialNo) as UnitDataTable;
+                if (unitDataTable == null || unitDataTable.Grade > 4)
+                {
+                    continue;
+                }
+
+                GROUP_ID groupID = (GROUP_ID)unitSummonDataTable.GroupID;
+                List<UnitRatioData> unitRatioList = null;
+                if (_firstUserUnitRatioDataDic.TryGetValue((GROUP_ID)groupID, out unitRatioList) == false)
+                {
+                    unitRatioList = new List<UnitRatioData>();
+                    _firstUserUnitRatioDataDic.Add(groupID, unitRatioList);
+                }
+
+                UnitRatioData unitRatioData = new UnitRatioData();
+                unitRatioData.SummonSerialNo = kv.Key;
+                unitRatioData.Ratio = unitSummonDataTable.Ratio / 1000.0f;
+                unitRatioList.Add(unitRatioData);
+
+                _firstUnitRatioTotalArray[(int)groupID] += unitRatioData.Ratio;
+            }
+
+            foreach (KeyValuePair<GROUP_ID, List<UnitRatioData>> kv in _firstUserUnitRatioDataDic)
+            {
+                kv.Value.Sort(delegate (UnitRatioData a, UnitRatioData b)
+                {
+                    if (a.Ratio > b.Ratio)
+                        return -1;
+                    else if (a.Ratio > b.Ratio)
+                        return 1;
+                    else
+                        return 0;
+                }
+                );
+            }
+
         }
 
         public static List<ulong> GetCanBuyUnitList()
@@ -255,6 +304,62 @@ namespace CloudBread
                     }
 
                     if(ratio <= unitRatioList[i].Ratio)
+                    {
+                        summonUnitList.Add(unitRatioList[i].SummonSerialNo);
+                        maxRatio -= unitRatioList[i].Ratio;
+                        inputList.Add(i);
+                        break;
+                    }
+                    ratio -= unitRatioList[i].Ratio;
+                }
+            }
+
+            unitLIst.AddRange(summonUnitList);
+        }
+
+        public static List<ulong> GetCanBuyFirstUserUnitList()
+        {
+            List<ulong> canBuyUnitList = new List<ulong>();
+            for (int i = 0; i < (int)GROUP_ID.LEGEND_GROUP + 1; ++i)
+            {
+                GetCanBuyFirstUserUnitList((GROUP_ID)i, ref canBuyUnitList);
+            }
+
+            return canBuyUnitList;
+        }
+
+        static void GetCanBuyFirstUserUnitList(GROUP_ID groupID, ref List<ulong> unitLIst)
+        {
+            List<ulong> summonUnitList = new List<ulong>();
+
+            List<UnitRatioData> unitRatioList = null;
+            if (_firstUserUnitRatioDataDic.TryGetValue(groupID, out unitRatioList) == false)
+            {
+                return;
+            }
+
+            float maxRatio = _firstUnitRatioTotalArray[(int)groupID];
+            List<int> inputList = new List<int>();
+
+            Random random = new Random((int)DateTime.Now.Ticks);
+
+            while (true)
+            {
+                if (summonUnitList.Count == _groupMaxCount[(int)groupID])
+                {
+                    break;
+                }
+
+                float ratio = (float)random.NextDouble() * maxRatio;
+
+                for (int i = 0; i < unitRatioList.Count; ++i)
+                {
+                    if (inputList.Contains(i))
+                    {
+                        continue;
+                    }
+
+                    if (ratio <= unitRatioList[i].Ratio)
                     {
                         summonUnitList.Add(unitRatioList[i].SummonSerialNo);
                         maxRatio -= unitRatioList[i].Ratio;
