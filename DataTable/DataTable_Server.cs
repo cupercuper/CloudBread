@@ -285,6 +285,8 @@ public class GlobalSettingDataTable : DataTableBase
 	public int CoinContainMaxCnt;
 	public int GemBoxProbability;
 	public int GemBoxCount;
+	public int GemProbability;
+	public int GemCount;
 	public void Load(DataRow dataRow)
 	{
 		UnitListChangeTime = int.Parse(dataRow[1].ToString());
@@ -294,6 +296,8 @@ public class GlobalSettingDataTable : DataTableBase
 		CoinContainMaxCnt = int.Parse(dataRow[5].ToString());
 		GemBoxProbability = int.Parse(dataRow[6].ToString());
 		GemBoxCount = int.Parse(dataRow[7].ToString());
+		GemProbability = int.Parse(dataRow[8].ToString());
+		GemCount = int.Parse(dataRow[9].ToString());
 	}
 }
 
