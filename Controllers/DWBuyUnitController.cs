@@ -388,6 +388,7 @@ namespace CloudBread.Controllers
                 Logging.RunLog(logMessage);
             }
 
+            result.index = p.index;
             result.gem = gem;
             result.cashGem = cashGem;
             result.enhancedStone = enhancedStone;

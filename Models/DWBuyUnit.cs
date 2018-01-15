@@ -18,6 +18,7 @@ namespace CloudBread.Models
     {
         public List<UnitStoreData> unitStoreDataList;
         public List<ClientUnitData> unitDataList;
+        public byte index;
         public long gem;
         public long cashGem;
         public long enhancedStone;
