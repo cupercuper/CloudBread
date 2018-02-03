@@ -605,24 +605,22 @@ namespace CloudBread
             }
         }
 
-        public static void AddActiveItem(List<ActiveItemData> activeItemList, string value)
+        public static void AddActiveItem(List<ActiveItemData> activeItemList, ulong serialNo)
         {
-            string[] values = value.Split(',');
-            ulong serialNo = ulong.Parse(values[0]);
-            int limitTime = int.Parse(values[1]);
+            ActiveItemDataTable activeItemDataTable = DWDataTableManager.GetDataTable(ActiveItemDataTable_List.NAME, serialNo) as ActiveItemDataTable;
 
             bool add = true;
             for(int i = 0; i < activeItemList.Count; ++i)
             {
                 if(activeItemList[i].serialNo == serialNo)
                 {
-                    if(limitTime == 0)
+                    if(activeItemDataTable.Time <= 0)
                     {
                         activeItemList[i].limitTime = -1;
                     }
                     else if(activeItemList[i].limitTime > 0)
                     {
-                        activeItemList[i].limitTime += limitTime;
+                        activeItemList[i].limitTime += activeItemDataTable.Time;
                     }
 
                     add = false;
@@ -633,9 +631,9 @@ namespace CloudBread
             if(add == true)
             {
                 ActiveItemData activeItemData = new ActiveItemData();
-                activeItemData.serialNo =serialNo;
+                activeItemData.serialNo = serialNo;
                 activeItemData.startTime = DateTime.UtcNow.Ticks;
-                activeItemData.limitTime = limitTime == 0 ? -1 : limitTime;
+                activeItemData.limitTime = activeItemDataTable.Time <= 0 ? -1 : activeItemDataTable.Time;
 
                 activeItemList.Add(activeItemData);
             }

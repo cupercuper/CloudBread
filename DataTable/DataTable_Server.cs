@@ -41,7 +41,11 @@ public class ActiveItemDataTable : DataTableBase
 	public string Icon;
 	public string Description;
 	public string Value;
-	public string Effect;
+	public int Time;
+	public byte Overlap;
+	public byte Visible;
+	public byte MoneyType;
+	public int MoneyCount;
 	public void Load(DataRow dataRow)
 	{
 		Type = byte.Parse(dataRow[1].ToString());
@@ -49,7 +53,11 @@ public class ActiveItemDataTable : DataTableBase
 		Icon = dataRow[3].ToString();
 		Description = dataRow[4].ToString();
 		Value = dataRow[5].ToString();
-		Effect = dataRow[6].ToString();
+		Time = int.Parse(dataRow[6].ToString());
+		Overlap = byte.Parse(dataRow[7].ToString());
+		Visible = byte.Parse(dataRow[8].ToString());
+		MoneyType = byte.Parse(dataRow[9].ToString());
+		MoneyCount = int.Parse(dataRow[10].ToString());
 	}
 }
 

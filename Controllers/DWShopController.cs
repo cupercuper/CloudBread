@@ -92,7 +92,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGooglePurchaseVerifyController";
+                logMessage.Logger = "DWShopController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -158,7 +158,7 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";
-                logMessage.Logger = "DWGooglePurchaseVerifyController";
+                logMessage.Logger = "DWShopController";
                 logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
                 Logging.RunLog(logMessage);
                 return result;
@@ -171,7 +171,7 @@ namespace CloudBread.Controllers
 
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";
-                logMessage.Logger = "DWGooglePurchaseVerifyController";
+                logMessage.Logger = "DWShopController";
                 logMessage.Message = string.Format("Not Fount ShopDataTable serialNp = {0}", p.serialNo);
                 Logging.RunLog(logMessage);
 
@@ -184,7 +184,7 @@ namespace CloudBread.Controllers
 
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "INFO";
-                logMessage.Logger = "DWGooglePurchaseVerifyController";
+                logMessage.Logger = "DWShopController";
                 logMessage.Message = string.Format("Not Fount ShopDataTable serialNp = {0}", p.serialNo);
                 Logging.RunLog(logMessage);
 
@@ -200,9 +200,11 @@ namespace CloudBread.Controllers
 
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "INFO";
-                        logMessage.Logger = "DWGooglePurchaseVerifyController";
-                        logMessage.Message = string.Format("Not Fount ShopDataTable serialNp = {0}", p.serialNo);
+                        logMessage.Logger = "DWShopController";
+                        logMessage.Message = string.Format("lack gold");
                         Logging.RunLog(logMessage);
+
+                        return result;
                     }
 
                     gold -= shopDataTable.MoneyCount;
@@ -214,9 +216,11 @@ namespace CloudBread.Controllers
 
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "INFO";
-                        logMessage.Logger = "DWGooglePurchaseVerifyController";
-                        logMessage.Message = string.Format("Not Fount ShopDataTable serialNp = {0}", p.serialNo);
+                        logMessage.Logger = "DWShopController";
+                        logMessage.Message = string.Format("lack gem ({0},{1}) shop serialNo = {2} moneyCount = {3}", gem, cashGem, p.serialNo, shopDataTable.MoneyCount);
                         Logging.RunLog(logMessage);
+
+                        return result;
                     }
                     break;
                 case MONEY_TYPE.ENHANCEDSTONE_TYPE:
@@ -226,9 +230,11 @@ namespace CloudBread.Controllers
 
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "INFO";
-                        logMessage.Logger = "DWGooglePurchaseVerifyController";
-                        logMessage.Message = string.Format("Not Fount ShopDataTable serialNp = {0}", p.serialNo);
+                        logMessage.Logger = "DWShopController";
+                        logMessage.Message = string.Format("lack enhancedStone ({0},{1}) shop serialNo = {2} moneyCount = {3}", enhancedStone, cashEnhancedStone, p.serialNo, shopDataTable.MoneyCount);
                         Logging.RunLog(logMessage);
+
+                        return result;
                     }
                     break;
             }
@@ -280,7 +286,7 @@ namespace CloudBread.Controllers
 
                                     logMessage.memberID = p.memberID;
                                     logMessage.Level = "INFO";
-                                    logMessage.Logger = "DWGooglePurchaseVerifyController";
+                                    logMessage.Logger = "DWShopController";
                                     logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
                                     Logging.RunLog(logMessage);
 
@@ -331,7 +337,7 @@ namespace CloudBread.Controllers
                                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                                     logMessage.memberID = p.memberID;
                                     logMessage.Level = "INFO";
-                                    logMessage.Logger = "DWGooglePurchaseVerifyController";
+                                    logMessage.Logger = "DWShopController";
                                     logMessage.Message = string.Format("Not Found UnitSummonDataTable SerialNo = {0}", serialNo);
                                     Logging.RunLog(logMessage);
                                     return result;
@@ -346,7 +352,7 @@ namespace CloudBread.Controllers
 
                                     logMessage.memberID = p.memberID;
                                     logMessage.Level = "INFO";
-                                    logMessage.Logger = "DWGooglePurchaseVerifyController";
+                                    logMessage.Logger = "DWShopController";
                                     logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
                                     Logging.RunLog(logMessage);
 
@@ -367,7 +373,7 @@ namespace CloudBread.Controllers
                         break;
                     case ITEM_TYPE.ACTIVE_ITEM_TYPE:
                         {
-                            DWMemberData.AddActiveItem(activeItemList, itemDataTable.Value);
+                            DWMemberData.AddActiveItem(activeItemList, ulong.Parse(itemDataTable.Value));
                         }
                         break;
                 }
@@ -393,7 +399,7 @@ namespace CloudBread.Controllers
                         {
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "INFO";
-                            logMessage.Logger = "DWGooglePurchaseVerifyController";
+                            logMessage.Logger = "DWShopController";
                             logMessage.Message = string.Format("DWMembers Udpate Failed");
                             Logging.RunLog(logMessage);
 

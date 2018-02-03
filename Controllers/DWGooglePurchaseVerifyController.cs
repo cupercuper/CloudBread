@@ -206,7 +206,7 @@ namespace CloudBread.Controllers
                     logMessage.memberID = p.memberID;
                     logMessage.Level = "INFO";
                     logMessage.Logger = "DWGooglePurchaseVerifyController";
-                    logMessage.Message = string.Format("Not Fount ShopDataTable productId = {0}", p.productId);
+                    logMessage.Message = string.Format("Not Found ShopDataTable productId = {0}", p.productId);
                     Logging.RunLog(logMessage);
 
                     return result;
@@ -346,7 +346,7 @@ namespace CloudBread.Controllers
                             break;
                         case ITEM_TYPE.ACTIVE_ITEM_TYPE:
                             {
-                                DWMemberData.AddActiveItem(activeItemList, itemDataTable.Value);
+                                DWMemberData.AddActiveItem(activeItemList, ulong.Parse(itemDataTable.Value));
                             }
                             break;
                     }

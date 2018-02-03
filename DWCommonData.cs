@@ -60,13 +60,12 @@ namespace DW.CommonData
     {
         GAME_SPEED_UP,
         AUTO_GET_ITEM,
-        UNIT_ATTACK_COOL_TIME,
+        GOLD_UP,
         MAX_TYPE
     }
 
     public enum SHOP_TYPE
     {
-        FREE_TYPE,
         GEM_TYPE,
         LIMIT_TYPE,
         MAX_TYPE
