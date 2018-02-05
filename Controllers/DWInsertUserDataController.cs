@@ -135,9 +135,9 @@ namespace CloudBread.Controllers
 
             // Init Unit
             Dictionary<uint, UnitData> unitDic = new Dictionary<uint, UnitData>();
-            DWMemberData.AddUnitDic(ref unitDic, 1);
-            DWMemberData.AddUnitDic(ref unitDic, 3);
-            DWMemberData.AddUnitDic(ref unitDic, 4);
+            DWMemberData.AddUnitDic(ref unitDic, 10001); // 1성 마린
+            DWMemberData.AddUnitDic(ref unitDic, 30005); // 3성 골리앗
+            DWMemberData.AddUnitDic(ref unitDic, 50002); // 5성 파이어뱃
             result.userData.unitList = DWMemberData.ConvertClientUnitData(unitDic);
             //---------------------------------------------------------
      
