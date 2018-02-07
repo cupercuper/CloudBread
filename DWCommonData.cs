@@ -32,6 +32,13 @@ namespace DW.CommonData
         MAX_TYPE
     }
 
+    public enum APP_VERSION_CHECK_TYPE
+    {
+        DIFFERENT_TYPE,
+        SAME_TYPE,
+        MAX_TYPE,
+    }
+
     public enum ITEM_TYPE
     {
         GOLD_TYPE,
