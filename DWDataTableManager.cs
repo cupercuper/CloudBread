@@ -55,6 +55,8 @@ namespace CloudBread
 
         public static GlobalSettingDataTable GlobalSettingDataTable;
 
+        static List<ulong> _gemBoxNoList = new List<ulong>();
+
         public static bool LoadAllDataTable()
         {
             try
@@ -77,11 +79,14 @@ namespace CloudBread
                 AddDataTable(UnitSummonRandomTicketDataTable_List.NAME, new UnitSummonRandomTicketDataTable_List());
                 AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
                 AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
+                AddDataTable(GemBoxDataTable_List.NAME, new GemBoxDataTable_List());
 
 
                 BuildUnitSummonRatioList();
                 BuildCaptianList();
                 BuildShopBuild();
+                BuildGemBoxNoList();
+
 
                 GlobalSettingDataTable = GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
 
@@ -440,6 +445,21 @@ namespace CloudBread
             }
 
             return shopDataTable;
+        }
+
+        static void BuildGemBoxNoList()
+        {
+            Dictionary<ulong, DataTableBase> shopLIst = GetDataTableList(GemBoxDataTable_List.NAME);
+            foreach (KeyValuePair<ulong, DataTableBase> kv in shopLIst)
+            {
+                _gemBoxNoList.Add(kv.Key);
+            }
+        }
+
+        public static ulong GetGemBoxNo()
+        {
+            Random random = new Random((int)DateTime.Now.Ticks);
+            return _gemBoxNoList[random.Next(0, _gemBoxNoList.Count)];
         }
     }
 }

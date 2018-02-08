@@ -267,6 +267,34 @@ public class EnhancementDataTable : DataTableBase
 	}
 }
 
+public class GemBoxDataTable_List : DataTableListBase
+{
+	public const string NAME = "GemBox";
+	public const string DATAFILENAME = "GemBoxData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			GemBoxDataTable data = new GemBoxDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class GemBoxDataTable : DataTableBase
+{
+	public int GemCount;
+	public bool Advertising;
+	public void Load(DataRow dataRow)
+	{
+		GemCount = int.Parse(dataRow[1].ToString());
+		Advertising = bool.Parse(dataRow[2].ToString());
+	}
+}
+
 public class GlobalSettingDataTable_List : DataTableListBase
 {
 	public const string NAME = "GlobalSetting";
@@ -295,6 +323,7 @@ public class GlobalSettingDataTable : DataTableBase
 	public int GemBoxCount;
 	public int GemProbability;
 	public int GemCount;
+	public int GemBoxDelay;
 	public void Load(DataRow dataRow)
 	{
 		UnitListChangeTime = int.Parse(dataRow[1].ToString());
@@ -306,6 +335,7 @@ public class GlobalSettingDataTable : DataTableBase
 		GemBoxCount = int.Parse(dataRow[7].ToString());
 		GemProbability = int.Parse(dataRow[8].ToString());
 		GemCount = int.Parse(dataRow[9].ToString());
+		GemBoxDelay = int.Parse(dataRow[10].ToString());
 	}
 }
 

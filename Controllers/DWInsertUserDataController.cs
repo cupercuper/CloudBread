@@ -118,6 +118,7 @@ namespace CloudBread.Controllers
                 lastWorld = 1,
                 curWorld = 1,
                 curStage = 1,
+                lastStage = 1,
                 unitList = null,
                 canBuyUnitList = DWDataTableManager.GetCanBuyFirstUserUnitList(),
                 gold = 0,
@@ -147,7 +148,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, ActiveItemList, LimitShopItemDataList, UnitTicketList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList, @activeItemList, @limitShopItemDataList, @unitTicketList)";
+                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, ActiveItemList, LimitShopItemDataList, UnitTicketList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList, @activeItemList, @limitShopItemDataList, @unitTicketList)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -159,6 +160,7 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = result.userData.lastWorld;
                     command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = result.userData.curWorld;
                     command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = result.userData.curStage;
+                    command.Parameters.Add("@lastStage", SqlDbType.SmallInt).Value = result.userData.curStage;
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
                     command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.canBuyUnitList);
                     command.Parameters.Add("@gold", SqlDbType.BigInt).Value = result.userData.gold;

@@ -6,6 +6,7 @@ namespace CloudBread.Models
     public class DWGemBoxOpenInputParam
     {
         public string memberID;
+        public ulong serialNo;
         public string token;
     }
 

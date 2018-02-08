@@ -310,6 +310,7 @@
     <Compile Include="Controllers\DefaultController.cs" />
     <Compile Include="Controllers\DWBuyUnitController.cs" />
     <Compile Include="Controllers\DWChangeCaptianController.cs" />
+    <Compile Include="Controllers\DWChangeStageController.cs" />
     <Compile Include="Controllers\DWChangeUnitListController.cs" />
     <Compile Include="Controllers\DWEnhancementUnitController.cs" />
     <Compile Include="Controllers\DWEventController.cs" />
@@ -364,6 +365,7 @@
     <Compile Include="Models\ComUdtMemberItemPurchase.cs" />
     <Compile Include="Models\DWBuyUnit.cs" />
     <Compile Include="Models\DWChangeCaptian.cs" />
+    <Compile Include="Models\DWChangeStageData.cs" />
     <Compile Include="Models\DWChangeUnitList.cs" />
     <Compile Include="Models\DWEnhancementUnit.cs" />
     <Compile Include="Models\DWEventData.cs" />

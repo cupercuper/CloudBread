@@ -113,6 +113,7 @@ namespace DW.CommonData
         public short lastWorld;
         public short curWorld;
         public short curStage;
+        public short lastStage;
         public List<ClientUnitData> unitList;
         public List<ulong> canBuyUnitList;
         public long gold;

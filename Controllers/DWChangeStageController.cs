@@ -23,19 +23,20 @@ using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.
 using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
+using CloudBreadRedis;
 
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWGemBoxOpenController : ApiController
+    public class DWChangeStageController : ApiController
     {
-        // GET api/DWGemBoxOpen
+        // GET api/DWChangeStage
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWGemBoxOpenInputParam p)
+        public HttpResponseMessage Post(DWChangeStageInputParam p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -43,7 +44,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWGemBoxOpenInputParam>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWChangeStageInputParam>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -65,8 +66,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                /// Database connection retry policy
-                DWGemBoxOpenModel result = GetResult(p);
+                DWChangeStageModel result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -87,13 +87,12 @@ namespace CloudBread.Controllers
                 response = Request.CreateResponse(HttpStatusCode.OK, result);
                 return response;
             }
-
             catch (Exception ex)
             {
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGemBoxOpenController";
+                logMessage.Logger = "DWChangeCaptianController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -102,79 +101,121 @@ namespace CloudBread.Controllers
             }
         }
 
-        DWGemBoxOpenModel GetResult(DWGemBoxOpenInputParam p)
+        DWChangeStageModel GetResult(DWChangeStageInputParam p)
         {
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
-            DWGemBoxOpenModel result = new DWGemBoxOpenModel();
-
-            /// Database connection retry policy
-            long gem = 0;
-            long cashGem = 0;
+            DWChangeStageModel result = new DWChangeStageModel();
+            
+            short lastStageNo = 0;
+            short lastWorldNo = 0;
+            bool allClear = false;
+            long accStageCnt = 0;
+            DateTime utcTime = DateTime.UtcNow;
+            DateTime gemBoxCreateTime = DateTime.UtcNow;
             bool gemBoxGet = false;
             long curGemBoxNo = 0;
+            
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, CashGem, GemBoxGet, GemBoxNo FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT LastStage, LastWorld, AllClear, AccStageCnt, GemBoxCreateTime, GemBoxGet, GemBoxNo FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
+
                     using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
                     {
                         if (dreader.HasRows == false)
                         {
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "INFO";
-                            logMessage.Logger = "DWGemBoxOpenController";
-                            logMessage.Message = string.Format("Not Found User");
+                            logMessage.Logger = "DWChangeCaptianController";
+                            logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
                             Logging.RunLog(logMessage);
 
-                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                             return result;
                         }
 
                         while (dreader.Read())
                         {
-                            gem = (long)dreader[0];
-                            cashGem = (long)dreader[1];
-                            gemBoxGet = (bool)dreader[2];
-                            curGemBoxNo = (long)dreader[3];
+                            lastStageNo = (short)dreader[0];
+                            lastWorldNo = (short)dreader[1];
+                            allClear = (bool)dreader[2];
+                            accStageCnt = (long)dreader[3];
+                            gemBoxCreateTime = (DateTime)dreader[4];
+                            gemBoxGet = (bool)dreader[5];
+                            curGemBoxNo = (long)dreader[6];
                         }
                     }
                 }
             }
 
-            if(curGemBoxNo != (long)p.serialNo)
+            short worldNo = (short)(p.stageIdx / 10);
+
+            if(p.stageIdx % 10 == 0)
+            {
+                worldNo = (short)(worldNo - 1);
+            }
+
+            short curStageNo = (short)(p.stageIdx - (worldNo * 10));
+
+            if(lastWorldNo + 1 < worldNo)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
 
-            if(gemBoxGet == true)
+            if (p.allClear == true)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
+                WorldDataTable worldDataTable = DWDataTableManager.GetDataTable(WorldDataTable_List.NAME, (ulong)(lastWorldNo + 1)) as WorldDataTable;
+                if(worldDataTable != null || lastStageNo % 10 != 0)
+                {
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                    return result;
+                }
             }
 
-            GemBoxDataTable gemBoxDataTable = DWDataTableManager.GetDataTable(GemBoxDataTable_List.NAME, (ulong)curGemBoxNo) as GemBoxDataTable;
-            if(gemBoxDataTable == null)
+            if (lastWorldNo < worldNo)
             {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
+                lastWorldNo = worldNo;
+                lastStageNo = 0;
             }
 
-            DWMemberData.AddGem(ref gem, ref cashGem, gemBoxDataTable.GemCount, 0, logMessage);
+            if (lastStageNo < curStageNo && lastWorldNo <= worldNo)
+            {
+                lastStageNo = curStageNo;
+                accStageCnt++;
+            }
+
+            ulong gemBoxNo = 0;
+
+            TimeSpan subTime = utcTime - gemBoxCreateTime;
+            if (gemBoxGet == true && subTime.TotalMinutes >= DWDataTableManager.GlobalSettingDataTable.GemBoxDelay)
+            {
+                gemBoxGet = false;
+                gemBoxCreateTime = utcTime;
+                gemBoxNo = DWDataTableManager.GetGemBoxNo();
+                curGemBoxNo = (long)gemBoxNo;
+            }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, GemBoxGet = @gemBoxGet, GemBoxNo = @gemBoxNo WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET CurStage = @curStage, LastStage = @lastStage, CurWorld = @curWorld, LastWorld = @lastWorld, AllClear = @allClear, AccStageCnt = @accStageCnt, GemBoxCreateTime = @gemBoxCreateTime, GemBoxGet = @gemBoxGet, GemBoxNo = @gemBoxNo WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
-                    command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = true;
-                    command.Parameters.Add("@gemBoxNo", SqlDbType.BigInt).Value = 0;
+                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = worldNo;
+                    command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = curStageNo;
+                    command.Parameters.Add("@lastStage", SqlDbType.SmallInt).Value = lastStageNo;
+                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorldNo;
+                    command.Parameters.Add("@allClear", SqlDbType.Bit).Value = p.allClear;
+                    command.Parameters.Add("@accStageCnt", SqlDbType.BigInt).Value = accStageCnt;
+                    command.Parameters.Add("@gemBoxCreateTime", SqlDbType.DateTime).Value = gemBoxCreateTime;
+                    command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = gemBoxGet;
+                    command.Parameters.Add("@gemBoxNo", SqlDbType.BigInt).Value = curGemBoxNo;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -183,8 +224,8 @@ namespace CloudBread.Controllers
                     {
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "INFO";
-                        logMessage.Logger = "DWGemBoxOpenController";
-                        logMessage.Message = string.Format("Update Failed");
+                        logMessage.Logger = "DWChangeCaptianController";
+                        logMessage.Message = string.Format("Update Failed MemberID = {0}", p.memberID);
                         Logging.RunLog(logMessage);
 
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
@@ -193,15 +234,10 @@ namespace CloudBread.Controllers
                 }
             }
 
-            logMessage.memberID = p.memberID;
-            logMessage.Level = "INFO";
-            logMessage.Logger = "DWGemBoxOpenController";
-            logMessage.Message = string.Format("gem = {0}", gem);
-            Logging.RunLog(logMessage);
-
-            result.gem = gem;
+            result.gemBoxNo = gemBoxNo;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
     }
+
 }
