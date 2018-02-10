@@ -322,6 +322,7 @@
     <Compile Include="Controllers\DWGoogleAuthController.cs" />
     <Compile Include="Controllers\DWGooglePurchaseVerifyController.cs" />
     <Compile Include="Controllers\DWInsertUserDataController.cs" />
+    <Compile Include="Controllers\DWNickNameCheckController.cs" />
     <Compile Include="Controllers\DWRankController.cs" />
     <Compile Include="Controllers\DWReadMailController.cs" />
     <Compile Include="Controllers\DWSellUnitController.cs" />
@@ -376,6 +377,7 @@
     <Compile Include="Models\DWGetUserData.cs" />
     <Compile Include="Models\DWGooglePurchaseVerify.cs" />
     <Compile Include="Models\DWInsUserData.cs" />
+    <Compile Include="Models\DWNickNameCheckData.cs" />
     <Compile Include="Models\DWRankData.cs" />
     <Compile Include="Models\DWReadMailData.cs" />
     <Compile Include="Models\DWSellUnit.cs" />

@@ -85,6 +85,13 @@ namespace DW.CommonData
         MAX_TYPE
     }
 
+    public enum NICK_NAME_CHECK_TYPE
+    {
+        USE_TYPE = 0,
+        SAME_TYPE,
+        MAX_TYPE
+    }
+
     [Serializable]
     public class ClientUnitData
     {
