@@ -183,7 +183,7 @@ namespace CloudBread
             bw.Write(mailData.itemData.Count);
             for (int i = 0; i < mailData.itemData.Count; ++i)
             {
-                bw.Write(mailData.itemData[i].itemNo);
+                bw.Write(mailData.itemData[i].itemType);
                 bw.Write(mailData.itemData[i].count);
             }
 
@@ -212,7 +212,7 @@ namespace CloudBread
             for (int i = 0; i < count; ++i)
             {
                 DWItemData itemData = new DWItemData();
-                itemData.itemNo = br.ReadUInt64();
+                itemData.itemType = br.ReadByte();
                 itemData.count = br.ReadInt32();
 
                 mailData.itemData.Add(itemData);
@@ -244,7 +244,7 @@ namespace CloudBread
             for(int i = 0; i <count; ++i)
             {
                 DWItemData itemData = new DWItemData();
-                itemData.itemNo = br.ReadUInt64();
+                itemData.itemType = br.ReadByte();
                 itemData.count = br.ReadInt32();
 
                 eventData.itemData.Add(itemData);

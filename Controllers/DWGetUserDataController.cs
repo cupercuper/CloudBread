@@ -110,7 +110,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, AllClear, ActiveItemList, LimitShopItemDataList, UnitTicketList, LastStage FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, AllClear, ActiveItemList, LimitShopItemDataList, UnitTicketList, LastStage, AccStageCnt FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -151,7 +151,8 @@ namespace CloudBread.Controllers
                                 activeItemList = DWMemberData.ConvertActiveItemList(dreader[21] as byte[]),
                                 limitShopItemDataList = DWMemberData.ConvertLimitShopItemDataList(dreader[22] as byte[]),
                                 unitTicketList = DWMemberData.ConvertUnitTicketDataList(dreader[23] as byte[]),
-                                lastStage = (short)dreader[24]
+                                lastStage = (short)dreader[24],
+                                accStage = (long)dreader[25]
                             };
 
                             result.userDataList.Add(workItem);

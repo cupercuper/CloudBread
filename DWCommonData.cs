@@ -92,6 +92,15 @@ namespace DW.CommonData
         MAX_TYPE
     }
 
+    public enum MAIL_ITEM_TYPE
+    {
+        ITEM_DATA_TYPE = 0,
+        GOLD_TYPE,
+        GEM_TYPE,
+        ENHANCEDSTONE_TYPE,
+        MAX_TYPE
+    }
+
     [Serializable]
     public class ClientUnitData
     {
@@ -136,12 +145,13 @@ namespace DW.CommonData
         public List<ActiveItemData> activeItemList;
         public List<LimitShopItemData> limitShopItemDataList;
         public List<DWUnitTicketData> unitTicketList;
+        public long accStage;
     }
 
     [Serializable]
     public class DWItemData
     {
-        public ulong itemNo;
+        public byte itemType;
         public int count;
     }
 

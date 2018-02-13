@@ -153,6 +153,7 @@ public class CaptianDataTable : DataTableBase
 	public List<ulong> BuffList;
 	public string Effect;
 	public string Description;
+	public string UITitle;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -166,6 +167,7 @@ public class CaptianDataTable : DataTableBase
 		}
 		Effect = dataRow[4].ToString();
 		Description = dataRow[5].ToString();
+		UITitle = dataRow[6].ToString();
 	}
 }
 
@@ -238,7 +240,11 @@ public class EnhancementDataTable_List : DataTableListBase
 
 public class EnhancementDataTable : DataTableBase
 {
-	public int Probability;
+	public int Probability_1;
+	public int Probability_2;
+	public int Probability_3;
+	public int Probability_4;
+	public int Probability_5;
 	public int Grade_1;
 	public int Grade_2;
 	public int Grade_3;
@@ -249,21 +255,33 @@ public class EnhancementDataTable : DataTableBase
 	public int ProbabilityUp_Grade_3;
 	public int ProbabilityUp_Grade_4;
 	public int ProbabilityUp_Grade_5;
-	public int FailSub;
+	public int FailSub_1;
+	public int FailSub_2;
+	public int FailSub_3;
+	public int FailSub_4;
+	public int FailSub_5;
 	public void Load(DataRow dataRow)
 	{
-		Probability = int.Parse(dataRow[1].ToString());
-		Grade_1 = int.Parse(dataRow[2].ToString());
-		Grade_2 = int.Parse(dataRow[3].ToString());
-		Grade_3 = int.Parse(dataRow[4].ToString());
-		Grade_4 = int.Parse(dataRow[5].ToString());
-		Grade_5 = int.Parse(dataRow[6].ToString());
-		ProbabilityUp_Grade_1 = int.Parse(dataRow[7].ToString());
-		ProbabilityUp_Grade_2 = int.Parse(dataRow[8].ToString());
-		ProbabilityUp_Grade_3 = int.Parse(dataRow[9].ToString());
-		ProbabilityUp_Grade_4 = int.Parse(dataRow[10].ToString());
-		ProbabilityUp_Grade_5 = int.Parse(dataRow[11].ToString());
-		FailSub = int.Parse(dataRow[12].ToString());
+		Probability_1 = int.Parse(dataRow[1].ToString());
+		Probability_2 = int.Parse(dataRow[2].ToString());
+		Probability_3 = int.Parse(dataRow[3].ToString());
+		Probability_4 = int.Parse(dataRow[4].ToString());
+		Probability_5 = int.Parse(dataRow[5].ToString());
+		Grade_1 = int.Parse(dataRow[6].ToString());
+		Grade_2 = int.Parse(dataRow[7].ToString());
+		Grade_3 = int.Parse(dataRow[8].ToString());
+		Grade_4 = int.Parse(dataRow[9].ToString());
+		Grade_5 = int.Parse(dataRow[10].ToString());
+		ProbabilityUp_Grade_1 = int.Parse(dataRow[11].ToString());
+		ProbabilityUp_Grade_2 = int.Parse(dataRow[12].ToString());
+		ProbabilityUp_Grade_3 = int.Parse(dataRow[13].ToString());
+		ProbabilityUp_Grade_4 = int.Parse(dataRow[14].ToString());
+		ProbabilityUp_Grade_5 = int.Parse(dataRow[15].ToString());
+		FailSub_1 = int.Parse(dataRow[16].ToString());
+		FailSub_2 = int.Parse(dataRow[17].ToString());
+		FailSub_3 = int.Parse(dataRow[18].ToString());
+		FailSub_4 = int.Parse(dataRow[19].ToString());
+		FailSub_5 = int.Parse(dataRow[20].ToString());
 	}
 }
 
@@ -511,6 +529,38 @@ public class StageDataTable : DataTableBase
 	}
 }
 
+public class TutorialDataTable_List : DataTableListBase
+{
+	public const string NAME = "Tutorial";
+	public const string DATAFILENAME = "TutorialData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			TutorialDataTable data = new TutorialDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class TutorialDataTable : DataTableBase
+{
+	public List<string> TutorialList;
+	public void Load(DataRow dataRow)
+	{
+		TutorialList = new List<string>();
+		string [] TutorialList_tempArray = dataRow[1].ToString().Split(',');
+		for( int i = 0; i < TutorialList_tempArray.Length; ++i)
+		{
+			string temp = TutorialList_tempArray[i];
+			TutorialList.Add(temp);
+		}
+	}
+}
+
 public class UnitDataTable_List : DataTableListBase
 {
 	public const string NAME = "Unit";
@@ -549,6 +599,7 @@ public class UnitDataTable : DataTableBase
 	public string FireEffect;
 	public string TargetPosEffect;
 	public byte AttackDirectionType;
+	public string FireSound;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -576,6 +627,7 @@ public class UnitDataTable : DataTableBase
 		FireEffect = dataRow[17].ToString();
 		TargetPosEffect = dataRow[18].ToString();
 		AttackDirectionType = byte.Parse(dataRow[19].ToString());
+		FireSound = dataRow[20].ToString();
 	}
 }
 
@@ -757,6 +809,7 @@ public class WorldDataTable : DataTableBase
 	public int BossLevel;
 	public int EnhancementStone;
 	public string Description;
+	public int BossFailTime;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -776,6 +829,7 @@ public class WorldDataTable : DataTableBase
 		BossLevel = int.Parse(dataRow[9].ToString());
 		EnhancementStone = int.Parse(dataRow[10].ToString());
 		Description = dataRow[11].ToString();
+		BossFailTime = int.Parse(dataRow[12].ToString());
 	}
 }
 

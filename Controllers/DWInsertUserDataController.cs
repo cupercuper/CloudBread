@@ -131,7 +131,8 @@ namespace CloudBread.Controllers
                 unitStore = 0,
                 activeItemList = new List<ActiveItemData>(),
                 limitShopItemDataList = new List<LimitShopItemData>(),
-                unitTicketList = new List<DWUnitTicketData>()
+                unitTicketList = new List<DWUnitTicketData>(),
+                accStage = 1
             };
 
             // Init Unit

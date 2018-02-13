@@ -189,27 +189,39 @@ namespace CloudBread.Controllers
 
             int necessaryStoneCount = 0;
             int necessaryGemCount = 0;
+            int probability = 0;
+            int failSub = 0;
             switch (unitDataTable.Grade)
             {
                 case 1:
                     necessaryStoneCount = enhancementDataTable.Grade_1;
                     necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_1;
+                    probability = enhancementDataTable.Probability_1;
+                    failSub = enhancementDataTable.FailSub_1;
                     break;
                 case 2:
                     necessaryStoneCount = enhancementDataTable.Grade_2;
                     necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_2;
+                    probability = enhancementDataTable.Probability_2;
+                    failSub = enhancementDataTable.FailSub_2;
                     break;
                 case 3:
                     necessaryStoneCount = enhancementDataTable.Grade_3;
                     necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_3;
+                    probability = enhancementDataTable.Probability_3;
+                    failSub = enhancementDataTable.FailSub_3;
                     break;
                 case 4:
                     necessaryStoneCount = enhancementDataTable.Grade_4;
                     necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_4;
+                    probability = enhancementDataTable.Probability_4;
+                    failSub = enhancementDataTable.FailSub_4;
                     break;
                 case 5:
                     necessaryStoneCount = enhancementDataTable.Grade_5;
                     necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_5;
+                    probability = enhancementDataTable.Probability_5;
+                    failSub = enhancementDataTable.FailSub_5;
                     break;
             }
 
@@ -254,10 +266,10 @@ namespace CloudBread.Controllers
             }
 
             Random rand = new Random((int)DateTime.Now.Ticks);
-            int probability = rand.Next(0, 101);
+            int randProbability = rand.Next(0, 101);
             int addProbability = p.gemUse == 1 ? globalSettingDataTable.GemUseAddProbability : 0;
 
-            if (probability <= enhancementDataTable.Probability + addProbability)
+            if (randProbability <= probability + addProbability)
             {
                 result.success = 1;
                 unitData.EnhancementCount++;
@@ -266,7 +278,7 @@ namespace CloudBread.Controllers
             {
                 if(p.gemUse == 0)
                 {
-                    unitData.EnhancementCount = (ushort)(unitData.EnhancementCount - enhancementDataTable.FailSub);
+                    unitData.EnhancementCount = (ushort)(unitData.EnhancementCount - failSub);
                 }
                 result.success = 0;
             }

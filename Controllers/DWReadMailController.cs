@@ -181,24 +181,18 @@ namespace CloudBread.Controllers
             int addGold = 0;
             for (int i = 0; i < mailData.itemData.Count; ++i)
             {
-                ItemDataTable itemDataTable = DWDataTableManager.GetDataTable(ItemDataTable_List.NAME, mailData.itemData[0].itemNo) as ItemDataTable;
-                if(itemDataTable == null)
-                {
-                    continue;
-                }
-
-                switch((ITEM_TYPE)itemDataTable.ChangeType)
+                switch ((ITEM_TYPE)mailData.itemData[i].itemType)
                 {
                     case ITEM_TYPE.GOLD_TYPE:
-                        gold += mailData.itemData[0].count;
-                        addGold = mailData.itemData[0].count;
+                        gold += mailData.itemData[i].count;
+                        addGold = mailData.itemData[i].count;
                         break;
 
                     case ITEM_TYPE.GEM_TYPE:
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "INFO";
                         logMessage.Logger = "DWReadMailController";
-                        DWMemberData.AddGem(ref gem, ref cashGem, mailData.itemData[0].count, 0, logMessage);
+                        DWMemberData.AddGem(ref gem, ref cashGem, mailData.itemData[i].count, 0, logMessage);
                         Logging.RunLog(logMessage);
 
                         break;
@@ -207,7 +201,7 @@ namespace CloudBread.Controllers
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "INFO";
                         logMessage.Logger = "DWReadMailController";
-                        DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, mailData.itemData[0].count, 0, logMessage);
+                        DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, mailData.itemData[i].count, 0, logMessage);
                         Logging.RunLog(logMessage);
                         break;
                 }
