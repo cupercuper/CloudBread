@@ -24,6 +24,7 @@ namespace CloudBread.Models
         public List<ActiveItemData> activeItemList;
         public List<ClientUnitData> unitDataList;
         public List<DWUnitTicketData> unitTicketList;
+        public List<LimitShopItemData> limitShopItemDataList;
         public byte errorCode;
     }
 }

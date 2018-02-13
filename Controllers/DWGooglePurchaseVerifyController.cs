@@ -114,11 +114,12 @@ namespace CloudBread.Controllers
             Dictionary<uint, UnitData> unitDic = null;
             List<DWUnitTicketData> unitTicketList = null;
             List<ActiveItemData> activeItemList = null;
+            List<LimitShopItemData> limitShopItemDataList = null;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitList, UnitTicketList, ActiveItemList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitList, UnitTicketList, ActiveItemList, LimitShopItemDataList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -141,6 +142,7 @@ namespace CloudBread.Controllers
                             unitDic = DWMemberData.ConvertUnitDic(dreader[6] as byte[]);
                             unitTicketList = DWMemberData.ConvertUnitTicketDataList(dreader[7] as byte[]);
                             activeItemList = DWMemberData.ConvertActiveItemList(dreader[8] as byte[]);
+                            limitShopItemDataList = DWMemberData.ConvertLimitShopItemDataList(dreader[9] as byte[]);
                         }
                     }
                 }
@@ -212,7 +214,45 @@ namespace CloudBread.Controllers
                     return result;
                 }
 
-                for(int k = 0; k < shopDataTable.ItemList.Count; ++k)
+                if(shopDataTable.Limit > 0)
+                {
+                    ulong serialNo = DWDataTableManager.GetShopSerialNo(p.productId);
+                    bool addItem = true;
+                    for(int k = 0; k < limitShopItemDataList.Count; ++k)
+                    {
+                        if(limitShopItemDataList[k].serialNo == serialNo)
+                        {
+                            addItem = false;
+                            if (shopDataTable.Limit <= limitShopItemDataList[k].count)
+                            {
+                                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                                logMessage.memberID = p.memberID;
+                                logMessage.Level = "Error";
+                                logMessage.Logger = "DWGooglePurchaseVerifyController";
+                                logMessage.Message = string.Format("limitItem Error Cur Count = {0} ShopDataTable productId = {1}", limitShopItemDataList[k].count, p.productId);
+                                Logging.RunLog(logMessage);
+
+                                return result;
+                            }
+                            else
+                            {
+                                limitShopItemDataList[k].count++;
+                            }
+                        }
+                    }
+
+                    if(addItem)
+                    {
+                        LimitShopItemData limitShopItemData = new LimitShopItemData();
+                        limitShopItemData.serialNo = serialNo;
+                        limitShopItemData.count = 1;
+                        limitShopItemDataList.Add(limitShopItemData);
+                    }
+                }
+                
+
+                for (int k = 0; k < shopDataTable.ItemList.Count; ++k)
                 {
                     ItemDataTable itemDataTable = DWDataTableManager.GetDataTable(ItemDataTable_List.NAME, shopDataTable.ItemList[k]) as ItemDataTable;
                     if(itemDataTable == null)
@@ -379,7 +419,7 @@ namespace CloudBread.Controllers
 
                     using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
                     {
-                        string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, CashGem = @cashGem, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, UnitList = @unitList, UnitTicketList = @unitTicketList, ActiveItemList = @activeItemList WHERE MemberID = '{0}'", p.memberID);
+                        string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, CashGem = @cashGem, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, UnitList = @unitList, UnitTicketList = @unitTicketList, ActiveItemList = @activeItemList, LimitShopItemDataList = @limitShopItemDataList WHERE MemberID = '{0}'", p.memberID);
                         using (SqlCommand command = new SqlCommand(strQuery, connection))
                         {
                             command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
@@ -390,7 +430,9 @@ namespace CloudBread.Controllers
                             command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
                             command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitTicketList);
                             command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(activeItemList);
+                            command.Parameters.Add("@limitShopItemDataList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(limitShopItemDataList);
 
+                            
                             connection.OpenWithRetry(retryPolicy);
 
                             int rowCount = command.ExecuteNonQuery();
@@ -416,6 +458,7 @@ namespace CloudBread.Controllers
             result.enhancedStone = enhancedStone;
             result.cashEnhancedStone = cashEnhancedStone;
             result.activeItemList = activeItemList;
+            result.limitShopItemDataList = limitShopItemDataList;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;

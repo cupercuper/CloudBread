@@ -37,6 +37,7 @@ namespace CloudBread
         static float[] _firstUnitRatioTotalArray = new float[(int)GROUP_ID.MAX_GROUP];
 
         static Dictionary<string, ShopDataTable> _productIDShopList = new Dictionary<string, ShopDataTable>();
+        static Dictionary<string, ulong> _productIDSerialList = new Dictionary<string, ulong>();
 
         static int[] _groupMaxCount = new int[(int)GROUP_ID.MAX_GROUP]
         {
@@ -433,6 +434,7 @@ namespace CloudBread
                 }
 
                 _productIDShopList.Add(shopDataTable.ProductId, shopDataTable);
+                _productIDSerialList.Add(shopDataTable.ProductId, kv.Key);
             }
         }
 
@@ -446,6 +448,18 @@ namespace CloudBread
 
             return shopDataTable;
         }
+
+        public static ulong GetShopSerialNo(string productID)
+        {
+            ulong serialNo = 0;
+            if (_productIDSerialList.TryGetValue(productID, out serialNo) == false)
+            {
+                return 0;
+            }
+
+            return serialNo;
+        }
+
 
         static void BuildGemBoxNoList()
         {
