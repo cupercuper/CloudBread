@@ -144,6 +144,11 @@ namespace CloudBread.Controllers
 
             DWMemberData.AddGem(ref gem, ref cashGem, p.gem, 0, logMessage);
 
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWGetGemController";
+            Logging.RunLog(logMessage);
+
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
                 string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem WHERE MemberID = '{0}'", p.memberID);

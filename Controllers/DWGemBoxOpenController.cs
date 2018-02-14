@@ -167,6 +167,11 @@ namespace CloudBread.Controllers
 
             DWMemberData.AddGem(ref gem, ref cashGem, gemBoxDataTable.GemCount, 0, logMessage);
 
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "INFO";
+            logMessage.Logger = "DWGemBoxOpenController";
+            Logging.RunLog(logMessage);
+
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
                 string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, GemBoxGet = @gemBoxGet, GemBoxNo = @gemBoxNo WHERE MemberID = '{0}'", p.memberID);

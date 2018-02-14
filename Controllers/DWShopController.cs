@@ -257,11 +257,19 @@ namespace CloudBread.Controllers
                     case ITEM_TYPE.GEM_TYPE:
                         {
                             DWMemberData.AddGem(ref gem, ref cashGem, 0, long.Parse(itemDataTable.Value), logMessage);
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWShopController";
+                            Logging.RunLog(logMessage);
                         }
                         break;
                     case ITEM_TYPE.ENHANCEDSTONE_TYPE:
                         {
                             DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, 0, long.Parse(itemDataTable.Value), logMessage);
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "INFO";
+                            logMessage.Logger = "DWShopController";
+                            Logging.RunLog(logMessage);
                         }
                         break;
                     case ITEM_TYPE.UNIT_TYPE:
