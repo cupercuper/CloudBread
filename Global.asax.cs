@@ -53,12 +53,12 @@ namespace CloudBread
                     queue.CreateIfNotExists();
                 }
 
-                // Regarding to configuration, check startup fill or not
-                if (globalVal.CloudBreadFillRedisRankSetOnStartup)
-                {
-                    // execute redis rank fill task
-                    CBRedis.FillAllRankFromDB();
-                }
+                //// Regarding to configuration, check startup fill or not
+                //if (globalVal.CloudBreadFillRedisRankSetOnStartup)
+                //{
+                //    // execute redis rank fill task
+                //    CBRedis.FillAllRankFromDB();
+                //}
 
                 DWDataTableManager.LoadAllDataTable();
                 string token = GoogleJsonWebToken.instance.Token;

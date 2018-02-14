@@ -220,7 +220,7 @@ namespace CloudBread.Controllers
                 }
             }
 
-            CBRedis.SetSortedSetRank(p.memberID, DWMemberData.GetPoint(lastWorld, captianChange));
+            //CBRedis.SetSortedSetRank(p.memberID, DWMemberData.GetPoint(lastWorld, captianChange));
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";

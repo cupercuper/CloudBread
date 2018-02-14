@@ -179,7 +179,7 @@ namespace CloudBread.Controllers
             if(p.worldNo > lastWorld)
             {
                 lastWorld = p.worldNo;
-                CBRedis.SetSortedSetRank(p.memberID, DWMemberData.GetPoint(lastWorld, captianChange));
+                //CBRedis.SetSortedSetRank(p.memberID, DWMemberData.GetPoint(lastWorld, captianChange));
             }
 
             curWorld = p.worldNo;
