@@ -129,7 +129,7 @@ namespace CloudBread.Controllers
                         if (dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWBuyUnitController";
                             logMessage.Message = string.Format("Not Found User = {0}", p.memberID);
                             Logging.RunLog(logMessage);
@@ -159,7 +159,7 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWBuyUnitController";
                 logMessage.Message = string.Format("Not Found unitList OR canBuyUnitList = {0}", p.memberID);
                 Logging.RunLog(logMessage);
@@ -172,7 +172,7 @@ namespace CloudBread.Controllers
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWBuyUnitController";
                 logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
                 Logging.RunLog(logMessage);
@@ -183,7 +183,7 @@ namespace CloudBread.Controllers
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWBuyUnitController";
                 logMessage.Message = string.Format("UnitSlotDataTable MaxCount SerialNo = {0}, Cur Unit Count = {1}", unitSlotIdx, unitList.Count);
                 Logging.RunLog(logMessage);
@@ -194,7 +194,7 @@ namespace CloudBread.Controllers
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWBuyUnitController";
                 logMessage.Message = string.Format("CanBuyUnitList Error Cur Index = {0}", p.index);
                 Logging.RunLog(logMessage);
@@ -205,7 +205,7 @@ namespace CloudBread.Controllers
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWBuyUnitController";
                 logMessage.Message = string.Format("Not Open Unit Store", p.index);
                 Logging.RunLog(logMessage);
@@ -218,7 +218,7 @@ namespace CloudBread.Controllers
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWBuyUnitController";
                 logMessage.Message = string.Format("Not Found UnitSummonDataTable SerialNo = {0}", serialNo);
                 Logging.RunLog(logMessage);
@@ -236,7 +236,7 @@ namespace CloudBread.Controllers
                     if (DWMemberData.SubEnhancedStone(ref enhancedStone, ref cashEnhancedStone, unitSummonDataTable.BuyCount, logMessage) == false)
                     {
                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-
+                        logMessage.Level = "Error";
                         logMessage.Message = string.Format("Lack EnhancedStone Cur EnhancedStone = {0}", enhancedStone);
                         Logging.RunLog(logMessage);
 
@@ -250,7 +250,7 @@ namespace CloudBread.Controllers
                     if (DWMemberData.SubGem(ref gem, ref cashGem, unitSummonDataTable.BuyCount, logMessage) == false)
                     {
                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                
+                        logMessage.Level = "Error";
                         logMessage.Message = string.Format("Lack Gem Cur Gem = {0}", gem);
                         Logging.RunLog(logMessage);
 
@@ -275,7 +275,7 @@ namespace CloudBread.Controllers
                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                     logMessage.memberID = p.memberID;
-                    logMessage.Level = "INFO";
+                    logMessage.Level = "Error";
                     logMessage.Logger = "DWBuyUnitController";
                     logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
                     Logging.RunLog(logMessage);
@@ -303,7 +303,7 @@ namespace CloudBread.Controllers
                             result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
 
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWBuyUnitController";
                             logMessage.Message = string.Format("Unit List Update Failed");
                             Logging.RunLog(logMessage);
@@ -369,7 +369,7 @@ namespace CloudBread.Controllers
                             result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
 
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWBuyUnitController";
                             logMessage.Message = string.Format("Unit Store Update Failed");
                             Logging.RunLog(logMessage);

@@ -92,7 +92,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWChangeCaptianController";
+                logMessage.Logger = "DWChangeStageController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -132,8 +132,8 @@ namespace CloudBread.Controllers
                             result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
 
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
-                            logMessage.Logger = "DWChangeCaptianController";
+                            logMessage.Level = "Error";
+                            logMessage.Logger = "DWChangeStageController";
                             logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
                             Logging.RunLog(logMessage);
 
@@ -165,6 +165,12 @@ namespace CloudBread.Controllers
 
             if(lastWorldNo + 1 < worldNo)
             {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "Error";
+                logMessage.Logger = "DWChangeStageController";
+                logMessage.Message = string.Format("World Error lastWorldNo = {0}", lastWorldNo);
+                Logging.RunLog(logMessage);
+
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
@@ -174,6 +180,12 @@ namespace CloudBread.Controllers
                 WorldDataTable worldDataTable = DWDataTableManager.GetDataTable(WorldDataTable_List.NAME, (ulong)(lastWorldNo + 1)) as WorldDataTable;
                 if(worldDataTable != null || lastStageNo % 10 != 0)
                 {
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "Error";
+                    logMessage.Logger = "DWChangeStageController";
+                    logMessage.Message = string.Format("World Error lastWorldNo = {0}, lastStageNo = {1}", lastWorldNo, lastStageNo);
+                    Logging.RunLog(logMessage);
+
                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                     return result;
                 }
@@ -223,8 +235,8 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
-                        logMessage.Logger = "DWChangeCaptianController";
+                        logMessage.Level = "Error";
+                        logMessage.Logger = "DWChangeStageController";
                         logMessage.Message = string.Format("Update Failed MemberID = {0}", p.memberID);
                         Logging.RunLog(logMessage);
 

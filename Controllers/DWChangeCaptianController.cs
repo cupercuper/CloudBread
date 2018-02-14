@@ -130,7 +130,7 @@ namespace CloudBread.Controllers
                             result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
 
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWChangeCaptianController";
                             logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
                             Logging.RunLog(logMessage);
@@ -155,7 +155,7 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWChangeCaptianController";
                 logMessage.Message = string.Format("Dont CaptainChange MemberID = {0}, LastWorld = {1}", p.memberID, lastWorld);
                 Logging.RunLog(logMessage);
@@ -169,7 +169,7 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWChangeCaptianController";
                 logMessage.Message = string.Format("WorldDataTable = null MemberID = {0}, LastWorld = {1}, AllClear = {2}", p.memberID, lastWorld, allClear);
                 Logging.RunLog(logMessage);
@@ -209,7 +209,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWChangeCaptianController";
                         logMessage.Message = string.Format("Update Failed MemberID = {0}", p.memberID);
                         Logging.RunLog(logMessage);

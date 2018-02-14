@@ -144,7 +144,7 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWUseActiveItemController";
                 logMessage.Message = string.Format("Not Fount ActiveItemDataTable serialNp = {0}", p.serialNo);
                 Logging.RunLog(logMessage);
@@ -154,18 +154,22 @@ namespace CloudBread.Controllers
 
             if((MONEY_TYPE)activeItemDataTable.MoneyType == MONEY_TYPE.GEM_TYPE)
             {
+                logMessage.memberID = p.memberID;
                 if (DWMemberData.SubGem(ref gem, ref cashGem, activeItemDataTable.MoneyCount, logMessage) == false)
                 {
                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                     logMessage.memberID = p.memberID;
-                    logMessage.Level = "INFO";
+                    logMessage.Level = "Error";
                     logMessage.Logger = "DWUseActiveItemController";
                     logMessage.Message = string.Format("gem lack");
                     Logging.RunLog(logMessage);
 
                     return result;
                 }
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWUseActiveItemController";
+                Logging.RunLog(logMessage);
             }
 
             DWMemberData.AddActiveItem(activeItemList, p.serialNo);
@@ -185,7 +189,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWUseActiveItemController";
                         logMessage.Message = string.Format("DWMembers Udpate Failed");
                         Logging.RunLog(logMessage);

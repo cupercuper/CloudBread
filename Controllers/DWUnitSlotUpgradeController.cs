@@ -123,7 +123,7 @@ namespace CloudBread.Controllers
                         if (dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWUnitSlotUpgradeController";
                             logMessage.Message = string.Format("Not Found User");
                             Logging.RunLog(logMessage);
@@ -147,7 +147,7 @@ namespace CloudBread.Controllers
             if(unitSlotDataTable == null)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWUnitSlotUpgradeController";
                 logMessage.Message = string.Format("Unit Slot Error SlotNo = {0}, Gem = {1}", unitSlotIdx, gem);
                 Logging.RunLog(logMessage);
@@ -161,6 +161,7 @@ namespace CloudBread.Controllers
             logMessage.Logger = "DWUnitSlotUpgradeController";
             if(DWMemberData.SubGem(ref gem, ref cashGem, unitSlotDataTable.UpgradeMoney, logMessage) == false)
             {
+                logMessage.Level = "Error";
                 logMessage.Message = string.Format("Lack Gem SlotNo = {0}, Gem = {1}, CashGem = {2}", unitSlotIdx, gem, cashGem);
                 Logging.RunLog(logMessage);
 
@@ -185,7 +186,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWUnitSlotUpgradeController";
                         logMessage.Message = string.Format("UpdateFailed");
                         Logging.RunLog(logMessage);

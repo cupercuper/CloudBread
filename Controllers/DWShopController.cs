@@ -157,7 +157,7 @@ namespace CloudBread.Controllers
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWShopController";
                 logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
                 Logging.RunLog(logMessage);
@@ -170,7 +170,7 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWShopController";
                 logMessage.Message = string.Format("Not Fount ShopDataTable serialNp = {0}", p.serialNo);
                 Logging.RunLog(logMessage);
@@ -183,7 +183,7 @@ namespace CloudBread.Controllers
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWShopController";
                 logMessage.Message = string.Format("Not Fount ShopDataTable serialNp = {0}", p.serialNo);
                 Logging.RunLog(logMessage);
@@ -215,13 +215,17 @@ namespace CloudBread.Controllers
                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWShopController";
                         logMessage.Message = string.Format("lack gem ({0},{1}) shop serialNo = {2} moneyCount = {3}", gem, cashGem, p.serialNo, shopDataTable.MoneyCount);
                         Logging.RunLog(logMessage);
 
                         return result;
                     }
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "INFO";
+                    logMessage.Logger = "DWShopController";
+                    Logging.RunLog(logMessage);
                     break;
                 case MONEY_TYPE.ENHANCEDSTONE_TYPE:
                     if (DWMemberData.SubEnhancedStone(ref enhancedStone, ref cashEnhancedStone, shopDataTable.MoneyCount, logMessage) == false)
@@ -229,13 +233,19 @@ namespace CloudBread.Controllers
                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWShopController";
                         logMessage.Message = string.Format("lack enhancedStone ({0},{1}) shop serialNo = {2} moneyCount = {3}", enhancedStone, cashEnhancedStone, p.serialNo, shopDataTable.MoneyCount);
                         Logging.RunLog(logMessage);
 
                         return result;
                     }
+
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "INFO";
+                    logMessage.Logger = "DWShopController";
+                    Logging.RunLog(logMessage);
+
                     break;
             }
 
@@ -293,7 +303,7 @@ namespace CloudBread.Controllers
                                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                                     logMessage.memberID = p.memberID;
-                                    logMessage.Level = "INFO";
+                                    logMessage.Level = "Error";
                                     logMessage.Logger = "DWShopController";
                                     logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
                                     Logging.RunLog(logMessage);
@@ -344,7 +354,7 @@ namespace CloudBread.Controllers
                                 {
                                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                                     logMessage.memberID = p.memberID;
-                                    logMessage.Level = "INFO";
+                                    logMessage.Level = "Error";
                                     logMessage.Logger = "DWShopController";
                                     logMessage.Message = string.Format("Not Found UnitSummonDataTable SerialNo = {0}", serialNo);
                                     Logging.RunLog(logMessage);
@@ -359,7 +369,7 @@ namespace CloudBread.Controllers
                                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                                     logMessage.memberID = p.memberID;
-                                    logMessage.Level = "INFO";
+                                    logMessage.Level = "Error";
                                     logMessage.Logger = "DWShopController";
                                     logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
                                     Logging.RunLog(logMessage);
@@ -406,7 +416,7 @@ namespace CloudBread.Controllers
                         if (rowCount <= 0)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWShopController";
                             logMessage.Message = string.Format("DWMembers Udpate Failed");
                             Logging.RunLog(logMessage);

@@ -155,7 +155,7 @@ namespace CloudBread.Controllers
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWGooglePurchaseVerifyController";
                 logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
                 Logging.RunLog(logMessage);
@@ -177,7 +177,7 @@ namespace CloudBread.Controllers
                             {
                                 result.errorCode = (byte)DW_ERROR_CODE.PURCHAESE_ERROR_INTABLE;
                                 logMessage.memberID = p.memberID;
-                                logMessage.Level = "INFO";
+                                logMessage.Level = "Error";
                                 logMessage.Logger = "DWGooglePurchaseVerifyController";
                                 logMessage.Message = string.Format("DWGooglePurchasesToken in  verifyData.purchasesToken memberID = {0}, verifyData.purchasesToken = {1}", p.memberID, verifyData.purchasesToken);
                                 Logging.RunLog(logMessage);
@@ -192,7 +192,7 @@ namespace CloudBread.Controllers
                 {
                     result.errorCode = (byte)DW_ERROR_CODE.PURCHAESE_ERROR_CANCEL;
                     logMessage.memberID = p.memberID;
-                    logMessage.Level = "INFO";
+                    logMessage.Level = "Error";
                     logMessage.Logger = "DWGooglePurchaseVerifyController";
                     logMessage.Message = string.Format("DWGooglePurchasesToken CANCEL error Hack memberID = {0}, verifyData.purchasesToken = {1}", p.memberID, verifyData.purchasesToken);
                     Logging.RunLog(logMessage);
@@ -206,7 +206,7 @@ namespace CloudBread.Controllers
                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                     logMessage.memberID = p.memberID;
-                    logMessage.Level = "INFO";
+                    logMessage.Level = "Error";
                     logMessage.Logger = "DWGooglePurchaseVerifyController";
                     logMessage.Message = string.Format("Not Found ShopDataTable productId = {0}", p.productId);
                     Logging.RunLog(logMessage);
@@ -309,7 +309,7 @@ namespace CloudBread.Controllers
                                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                                         logMessage.memberID = p.memberID;
-                                        logMessage.Level = "INFO";
+                                        logMessage.Level = "Error";
                                         logMessage.Logger = "DWGooglePurchaseVerifyController";
                                         logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
                                         Logging.RunLog(logMessage);
@@ -360,7 +360,7 @@ namespace CloudBread.Controllers
                                     {
                                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                                         logMessage.memberID = p.memberID;
-                                        logMessage.Level = "INFO";
+                                        logMessage.Level = "Error";
                                         logMessage.Logger = "DWGooglePurchaseVerifyController";
                                         logMessage.Message = string.Format("Not Found UnitSummonDataTable SerialNo = {0}", serialNo);
                                         Logging.RunLog(logMessage);
@@ -375,7 +375,7 @@ namespace CloudBread.Controllers
                                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                                         logMessage.memberID = p.memberID;
-                                        logMessage.Level = "INFO";
+                                        logMessage.Level = "Error";
                                         logMessage.Logger = "DWGooglePurchaseVerifyController";
                                         logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
                                         Logging.RunLog(logMessage);
@@ -417,7 +417,7 @@ namespace CloudBread.Controllers
                             if (rowCount <= 0)
                             {
                                 logMessage.memberID = p.memberID;
-                                logMessage.Level = "INFO";
+                                logMessage.Level = "Error";
                                 logMessage.Logger = "DWGooglePurchaseVerifyController";
                                 logMessage.Message = string.Format("Insert Failed DWGooglePurchasesToken");
                                 Logging.RunLog(logMessage);
@@ -450,7 +450,7 @@ namespace CloudBread.Controllers
                             if (rowCount <= 0)
                             {
                                 logMessage.memberID = p.memberID;
-                                logMessage.Level = "INFO";
+                                logMessage.Level = "Error";
                                 logMessage.Logger = "DWGooglePurchaseVerifyController";
                                 logMessage.Message = string.Format("DWMembers Udpate Failed");
                                 Logging.RunLog(logMessage);

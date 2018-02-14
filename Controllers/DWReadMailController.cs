@@ -131,7 +131,7 @@ namespace CloudBread.Controllers
             if(mailData == null)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWReadMailController";
                 logMessage.Message = string.Format("MailData null Index = {0}", p.index);
                 Logging.RunLog(logMessage);
@@ -157,7 +157,7 @@ namespace CloudBread.Controllers
                         if (dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWReadMailController";
                             logMessage.Message = string.Format("Not Found User");
                             Logging.RunLog(logMessage);
@@ -222,7 +222,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWReadMailController";
                         logMessage.Message = string.Format("Update Failed DWMembers");
                         Logging.RunLog(logMessage);
@@ -247,7 +247,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWReadMailController";
                         logMessage.Message = string.Format("Update Failed DWMail");
                         Logging.RunLog(logMessage);

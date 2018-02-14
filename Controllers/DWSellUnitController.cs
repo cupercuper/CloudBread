@@ -127,7 +127,7 @@ namespace CloudBread.Controllers
                         if(dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWSellUnitController";
                             logMessage.Message = string.Format("Not Found User");
                             Logging.RunLog(logMessage);
@@ -152,7 +152,7 @@ namespace CloudBread.Controllers
             if (unitList.TryGetValue(p.instanceNo, out unitData) == false)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWSellUnitController";
                 logMessage.Message = string.Format("Not Found Unit Instance = {0}", p.instanceNo);
                 Logging.RunLog(logMessage);
@@ -165,7 +165,7 @@ namespace CloudBread.Controllers
             if(unitDataTable== null)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWSellUnitController";
                 logMessage.Message = string.Format("Not Found Unit DataTable = {0}", unitData.SerialNo);
                 Logging.RunLog(logMessage);
@@ -175,7 +175,7 @@ namespace CloudBread.Controllers
             }
 
             logMessage.memberID = p.memberID;
-            logMessage.Level = "INFO";
+            logMessage.Level = "Error";
             logMessage.Logger = "DWSellUnitController";
             DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, GetEnhancedStoneCount(unitDataTable, unitData.EnhancementCount), 0, logMessage);
             Logging.RunLog(logMessage);
@@ -219,7 +219,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWSellUnitController";
                         logMessage.Message = string.Format("Update Failed");
                         Logging.RunLog(logMessage);

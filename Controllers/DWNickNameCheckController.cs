@@ -89,7 +89,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = "NickNameCheck";
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWGetMailCountController";
+                logMessage.Logger = "DWNickNameCheckController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);

@@ -183,7 +183,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWInsertUserDataController";
                         logMessage.Message = string.Format("Insert Failed DWMembers");
                         Logging.RunLog(logMessage);
@@ -209,7 +209,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWInsertUserDataController";
                         logMessage.Message = string.Format("Insert Failed DWMembersInputEvent");
                         Logging.RunLog(logMessage);

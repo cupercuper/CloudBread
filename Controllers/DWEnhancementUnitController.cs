@@ -127,7 +127,7 @@ namespace CloudBread.Controllers
                         if(dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWEnhancementUnitController";
                             logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
                             Logging.RunLog(logMessage);
@@ -152,7 +152,7 @@ namespace CloudBread.Controllers
             if (unitLIst.TryGetValue(p.InstanceNo, out unitData) == false)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWEnhancementUnitController";
                 logMessage.Message = string.Format("Not Found Unit InstanceNo = {0}", p.InstanceNo);
                 Logging.RunLog(logMessage);
@@ -165,7 +165,7 @@ namespace CloudBread.Controllers
             if(enhancementDataTable == null)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWEnhancementUnitController";
                 logMessage.Message = string.Format("Not Found EnhancementDataTable SerialNo = {0}", (unitData.EnhancementCount + 1));
                 Logging.RunLog(logMessage);
@@ -178,7 +178,7 @@ namespace CloudBread.Controllers
             if(unitDataTable == null)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWEnhancementUnitController";
                 logMessage.Message = string.Format("Not Found UnitDataTable SerialNo = {0}", unitData.SerialNo);
                 Logging.RunLog(logMessage);
@@ -229,7 +229,7 @@ namespace CloudBread.Controllers
             if(globalSettingDataTable == null)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWEnhancementUnitController";
                 logMessage.Message = string.Format("Not Found GlobalSettingDataTable");
                 Logging.RunLog(logMessage);
@@ -244,6 +244,7 @@ namespace CloudBread.Controllers
             
             if (DWMemberData.SubEnhancedStone(ref enhancedStone, ref cashEnhancedStone, necessaryStoneCount, logMessage) == false)
             {
+                logMessage.Level = "Error";
                 logMessage.Message = string.Format("Lack enhancedStone cur stone = {0}, cur Cash stone = {1}, necessaryStoneCount = {2}, UnitSerial = {3}, Enhancement Serial = {4}", enhancedStone, cashEnhancedStone, necessaryStoneCount, unitData.SerialNo, unitData.EnhancementCount);
                 Logging.RunLog(logMessage);
 
@@ -256,6 +257,7 @@ namespace CloudBread.Controllers
             {
                 if (DWMemberData.SubGem(ref gem, ref cashGem, necessaryGemCount, logMessage) == false)
                 {
+                    logMessage.Level = "Error";
                     logMessage.Message = string.Format("Lack gem cur Gem = {0}, cur Cash Gem = {1}, necessaryGemCount = {2}, UnitSerial = {3}, Enhancement Serial = {4}", gem, cashGem, necessaryGemCount, unitData.SerialNo, unitData.EnhancementCount);
                     Logging.RunLog(logMessage);
 
@@ -300,7 +302,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWEnhancementUnitController";
                         logMessage.Message = string.Format("Update Failed");
                         Logging.RunLog(logMessage);

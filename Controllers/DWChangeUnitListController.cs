@@ -125,7 +125,7 @@ namespace CloudBread.Controllers
                         if(dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWChangeUnitListController";
                             logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
                             Logging.RunLog(logMessage);
@@ -148,7 +148,7 @@ namespace CloudBread.Controllers
             if(globalSetting == null)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWChangeUnitListController";
                 logMessage.Message = string.Format("Not Found GlobalSettingDataTable SerialNo = 1");
                 Logging.RunLog(logMessage);
@@ -166,6 +166,7 @@ namespace CloudBread.Controllers
                 logMessage.Logger = "DWChangeUnitListController";
                 if (DWMemberData.SubGem(ref gem, ref cashGem, globalSetting.UnitListChangeGem, logMessage) == false)
                 {
+                    logMessage.Level = "Error";
                     logMessage.Message = string.Format("Lack Gem");
                     Logging.RunLog(logMessage);
 
@@ -192,7 +193,7 @@ namespace CloudBread.Controllers
                     if (rowCount <= 0)
                     {
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWChangeUnitListController";
                         logMessage.Message = string.Format("Update failed");
                         Logging.RunLog(logMessage);

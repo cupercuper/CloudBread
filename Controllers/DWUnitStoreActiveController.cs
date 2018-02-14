@@ -124,7 +124,7 @@ namespace CloudBread.Controllers
                         if (dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
+                            logMessage.Level = "Error";
                             logMessage.Logger = "DWUnitStoreActiveController";
                             logMessage.Message = string.Format("Not Found User");
                             Logging.RunLog(logMessage);
@@ -147,7 +147,7 @@ namespace CloudBread.Controllers
             if(unitStore == 1)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Erroe";
                 logMessage.Logger = "DWUnitStoreActiveController";
                 logMessage.Message = string.Format("Opend Unit Store");
                 Logging.RunLog(logMessage);
@@ -159,7 +159,7 @@ namespace CloudBread.Controllers
             if (captianChange == 0)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWUnitStoreActiveController";
                 logMessage.Message = string.Format("Not Captian Change");
                 Logging.RunLog(logMessage);
@@ -172,7 +172,7 @@ namespace CloudBread.Controllers
             if(globalSetting == null)
             {
                 logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
+                logMessage.Level = "Error";
                 logMessage.Logger = "DWUnitStoreActiveController";
                 logMessage.Message = string.Format("Not Found Global Setting");
                 Logging.RunLog(logMessage);
@@ -186,6 +186,7 @@ namespace CloudBread.Controllers
 
             if (DWMemberData.SubGem(ref gem, ref cashGem, globalSetting.UnitStoreActiveGem, logMessage) == false)
             {
+                logMessage.Level = "Error";
                 logMessage.Message = string.Format("Lack Gem gem = {0}, cashGem = {1}, ActiveGem = {2}", gem, cashGem, globalSetting.UnitStoreActiveGem);
                 Logging.RunLog(logMessage);
 
@@ -213,7 +214,7 @@ namespace CloudBread.Controllers
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
 
                         logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
+                        logMessage.Level = "Error";
                         logMessage.Logger = "DWUnitStoreActiveController";
                         logMessage.Message = string.Format("Update Failed");
                         Logging.RunLog(logMessage);
