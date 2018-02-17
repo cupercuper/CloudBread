@@ -175,7 +175,7 @@ namespace CloudBread.Controllers
             }
 
             logMessage.memberID = p.memberID;
-            logMessage.Level = "Error";
+            logMessage.Level = "Info";
             logMessage.Logger = "DWSellUnitController";
             DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, GetEnhancedStoneCount(unitDataTable, unitData.EnhancementCount), 0, logMessage);
             Logging.RunLog(logMessage);
