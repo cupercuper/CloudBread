@@ -249,6 +249,8 @@ namespace CloudBread.Controllers
                     break;
             }
 
+            long addGold = 0;
+
             for (int k = 0; k < shopDataTable.ItemList.Count; ++k)
             {
                 ItemDataTable itemDataTable = DWDataTableManager.GetDataTable(ItemDataTable_List.NAME, shopDataTable.ItemList[k]) as ItemDataTable;
@@ -262,6 +264,7 @@ namespace CloudBread.Controllers
                     case ITEM_TYPE.GOLD_TYPE:
                         {
                             gold += long.Parse(itemDataTable.Value);
+                            addGold += long.Parse(itemDataTable.Value);
                         }
                         break;
                     case ITEM_TYPE.GEM_TYPE:
@@ -395,40 +398,40 @@ namespace CloudBread.Controllers
                         }
                         break;
                 }
-
-                using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-                {
-                    string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, CashGem = @cashGem, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, UnitList = @unitList, UnitTicketList = @unitTicketList, ActiveItemList = @activeItemList WHERE MemberID = '{0}'", p.memberID);
-                    using (SqlCommand command = new SqlCommand(strQuery, connection))
-                    {
-                        command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
-                        command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
-                        command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
-                        command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
-                        command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashEnhancedStone;
-                        command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
-                        command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitTicketList);
-                        command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(activeItemList);
-
-                        connection.OpenWithRetry(retryPolicy);
-
-                        int rowCount = command.ExecuteNonQuery();
-                        if (rowCount <= 0)
-                        {
-                            logMessage.memberID = p.memberID;
-                            logMessage.Level = "Error";
-                            logMessage.Logger = "DWShopController";
-                            logMessage.Message = string.Format("DWMembers Udpate Failed");
-                            Logging.RunLog(logMessage);
-
-                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                            return result;
-                        }
-                    }
-                } 
             }
 
-            result.gold = gold;
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, CashGem = @cashGem, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, UnitList = @unitList, UnitTicketList = @unitTicketList, ActiveItemList = @activeItemList WHERE MemberID = '{0}'", p.memberID);
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
+                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
+                    command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
+                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
+                    command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashEnhancedStone;
+                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
+                    command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitTicketList);
+                    command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(activeItemList);
+
+                    connection.OpenWithRetry(retryPolicy);
+
+                    int rowCount = command.ExecuteNonQuery();
+                    if (rowCount <= 0)
+                    {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "Error";
+                        logMessage.Logger = "DWShopController";
+                        logMessage.Message = string.Format("DWMembers Udpate Failed");
+                        Logging.RunLog(logMessage);
+
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                        return result;
+                    }
+                }
+            }
+
+            result.gold = addGold;
             result.gem = gem;
             result.cashGem = cashGem;
             result.enhancedStone = enhancedStone;

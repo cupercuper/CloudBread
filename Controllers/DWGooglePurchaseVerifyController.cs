@@ -162,6 +162,8 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            long addGold = 0;
+
             for (int i = 0; i < p.purchasesList.Count; ++i)
             {
                 DWGoogleGooglePurchaseVerifyData verifyData = p.purchasesList[i];
@@ -250,7 +252,6 @@ namespace CloudBread.Controllers
                         limitShopItemDataList.Add(limitShopItemData);
                     }
                 }
-                
 
                 for (int k = 0; k < shopDataTable.ItemList.Count; ++k)
                 {
@@ -265,6 +266,7 @@ namespace CloudBread.Controllers
                         case ITEM_TYPE.GOLD_TYPE:
                             {
                                 gold += long.Parse(itemDataTable.Value);
+                                addGold += long.Parse(itemDataTable.Value);
                             }
                             break;
                         case ITEM_TYPE.GEM_TYPE:
@@ -400,70 +402,70 @@ namespace CloudBread.Controllers
                                 DWMemberData.AddActiveItem(activeItemList, ulong.Parse(itemDataTable.Value));
                             }
                             break;
-                    }
+                    } 
+                }
 
-                    using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+                using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+                {
+                    string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, CashGem = @cashGem, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, UnitList = @unitList, UnitTicketList = @unitTicketList, ActiveItemList = @activeItemList, LimitShopItemDataList = @limitShopItemDataList WHERE MemberID = '{0}'", p.memberID);
+                    using (SqlCommand command = new SqlCommand(strQuery, connection))
                     {
-                        string strQuery = "Insert into DWGooglePurchasesToken (MemberID, Token, ProductId) VALUES (@memberID, @token, @productId)";
-                        using (SqlCommand command = new SqlCommand(strQuery, connection))
+                        command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
+                        command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
+                        command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
+                        command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
+                        command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashEnhancedStone;
+                        command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
+                        command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitTicketList);
+                        command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(activeItemList);
+                        command.Parameters.Add("@limitShopItemDataList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(limitShopItemDataList);
+
+
+                        connection.OpenWithRetry(retryPolicy);
+
+                        int rowCount = command.ExecuteNonQuery();
+                        if (rowCount <= 0)
                         {
-                            command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = p.memberID;
-                            command.Parameters.Add("@token", SqlDbType.NVarChar).Value = verifyData.purchasesToken;
-                            command.Parameters.Add("@productId", SqlDbType.NVarChar).Value = verifyData.productId;
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "Error";
+                            logMessage.Logger = "DWGooglePurchaseVerifyController";
+                            logMessage.Message = string.Format("DWMembers Udpate Failed");
+                            Logging.RunLog(logMessage);
 
-                            connection.OpenWithRetry(retryPolicy);
-
-                            int rowCount = command.ExecuteNonQuery();
-                            if (rowCount <= 0)
-                            {
-                                logMessage.memberID = p.memberID;
-                                logMessage.Level = "Error";
-                                logMessage.Logger = "DWGooglePurchaseVerifyController";
-                                logMessage.Message = string.Format("Insert Failed DWGooglePurchasesToken");
-                                Logging.RunLog(logMessage);
-
-                                result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                                return result;
-                            }
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                            return result;
                         }
                     }
+                }
 
-                    using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+                using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+                {
+                    string strQuery = "Insert into DWGooglePurchasesToken (MemberID, Token, ProductId) VALUES (@memberID, @token, @productId)";
+                    using (SqlCommand command = new SqlCommand(strQuery, connection))
                     {
-                        string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, CashGem = @cashGem, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, UnitList = @unitList, UnitTicketList = @unitTicketList, ActiveItemList = @activeItemList, LimitShopItemDataList = @limitShopItemDataList WHERE MemberID = '{0}'", p.memberID);
-                        using (SqlCommand command = new SqlCommand(strQuery, connection))
+                        command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = p.memberID;
+                        command.Parameters.Add("@token", SqlDbType.NVarChar).Value = verifyData.purchasesToken;
+                        command.Parameters.Add("@productId", SqlDbType.NVarChar).Value = verifyData.productId;
+
+                        connection.OpenWithRetry(retryPolicy);
+
+                        int rowCount = command.ExecuteNonQuery();
+                        if (rowCount <= 0)
                         {
-                            command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
-                            command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
-                            command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
-                            command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
-                            command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashEnhancedStone;
-                            command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
-                            command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitTicketList);
-                            command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(activeItemList);
-                            command.Parameters.Add("@limitShopItemDataList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(limitShopItemDataList);
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "Error";
+                            logMessage.Logger = "DWGooglePurchaseVerifyController";
+                            logMessage.Message = string.Format("Insert Failed DWGooglePurchasesToken");
+                            Logging.RunLog(logMessage);
 
-                            
-                            connection.OpenWithRetry(retryPolicy);
-
-                            int rowCount = command.ExecuteNonQuery();
-                            if (rowCount <= 0)
-                            {
-                                logMessage.memberID = p.memberID;
-                                logMessage.Level = "Error";
-                                logMessage.Logger = "DWGooglePurchaseVerifyController";
-                                logMessage.Message = string.Format("DWMembers Udpate Failed");
-                                Logging.RunLog(logMessage);
-
-                                result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                                return result;
-                            }
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                            return result;
                         }
                     }
                 }
             }
 
-            result.gold = gold;
+            result.gold = addGold;
             result.gem = gem;
             result.cashGem = cashGem;
             result.enhancedStone = enhancedStone;
