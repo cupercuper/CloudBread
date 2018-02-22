@@ -3,21 +3,24 @@
 namespace CloudBread.Models
 {
     [Serializable]
-    public class DWReadMailInputParams
+    public class DWBossDungeonExitInputParam
     {
         public string memberID;
-        public long index;
+        public short curBossDungeonNo;
+        public byte clear;
         public string token;
     }
 
     [Serializable]
-    public class DWReadMailModel
+    public class DWBossDungeonExitModel
     {
-        public long index;
-        public long gold;
+        public long addGold;
         public long gem;
+        public long cashGem;
         public long enhancedStone;
+        public short lastBossDungeonNo;
         public int bossDungeonTicket;
         public byte errorCode;
     }
+
 }

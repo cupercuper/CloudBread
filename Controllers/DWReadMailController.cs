@@ -145,10 +145,11 @@ namespace CloudBread.Controllers
             long gold = 0;
             long enhancedStone = 0;
             long cashEnhancedStone = 0;
+            int bossDungeonTicket = 0;
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, BossDungeonTicket FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -173,6 +174,7 @@ namespace CloudBread.Controllers
                             cashGem = (long)dreader[2];
                             enhancedStone = (long)dreader[3];
                             cashEnhancedStone = (long)dreader[4];
+                            bossDungeonTicket = (int)dreader[5];
                         }
                     }
                 }
@@ -204,17 +206,22 @@ namespace CloudBread.Controllers
                         DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, mailData.itemData[i].count, 0, logMessage);
                         Logging.RunLog(logMessage);
                         break;
+
+                    case ITEM_TYPE.BOSS_DUNGEON_TICKET_TYPE:
+                        bossDungeonTicket += mailData.itemData[i].count;
+                        break;
                 }
             }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, EnhancedStone = @enhancedStone, BossDungeonTicket = @bossDungeonTicket WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
                     command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
                     command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
+                    command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = bossDungeonTicket;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -268,6 +275,7 @@ namespace CloudBread.Controllers
             result.gold = addGold;
             result.gem = gem;
             result.enhancedStone = enhancedStone;
+            result.bossDungeonTicket = bossDungeonTicket;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;

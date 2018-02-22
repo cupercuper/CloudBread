@@ -47,6 +47,7 @@ namespace DW.CommonData
         UNIT_TYPE,
         UNIT_RANDOM_TYPE,
         ACTIVE_ITEM_TYPE,
+        BOSS_DUNGEON_TICKET_TYPE,
         MAX_TYPE
     }
     
@@ -56,10 +57,17 @@ namespace DW.CommonData
         MAX_TYPE
     }
 
-    public enum RANK_TYPE
+    public enum RANK_SORT_TYPE
     {
         TOP_RANK_TYPE,
         MY_CENTER_TYPE,
+        MAX_TYPE
+    }
+
+    public enum RANK_TYPE
+    {
+        CUR_STAGE_TYPE,
+        ACC_STAGE_TYPE,
         MAX_TYPE
     }
 
@@ -98,6 +106,13 @@ namespace DW.CommonData
         GOLD_TYPE,
         GEM_TYPE,
         ENHANCEDSTONE_TYPE,
+        MAX_TYPE
+    }
+
+    public enum BOSS_DUNGEON_ENTER_TYPE
+    {
+        NORMAL_ENTER_TYPE = 0,
+        GEM_ENTER_TYPE,
         MAX_TYPE
     }
 
@@ -146,6 +161,9 @@ namespace DW.CommonData
         public List<LimitShopItemData> limitShopItemDataList;
         public List<DWUnitTicketData> unitTicketList;
         public long accStage;
+        public int bossDungeonTicket;
+        public short curBossDungeonNo;
+        public short lastBossDungeonNo;
     }
 
     [Serializable]

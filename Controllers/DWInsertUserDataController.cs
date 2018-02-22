@@ -23,6 +23,7 @@ using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.
 using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
+using CloudBreadRedis;
 
 namespace CloudBread.Controllers
 {
@@ -107,6 +108,20 @@ namespace CloudBread.Controllers
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
             DWInsUserDataModel result = new DWInsUserDataModel();
+
+            GlobalSettingDataTable globalSettingDataTable = DWDataTableManager.GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
+            if(globalSettingDataTable == null)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "Error";
+                logMessage.Logger = "DWInsertUserDataController";
+                logMessage.Message = string.Format("not found GlobalSettingDataTable");
+                Logging.RunLog(logMessage);
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+
             result.userData = new DWUserData()
             {
                 memberID = p.memberID,
@@ -132,7 +147,10 @@ namespace CloudBread.Controllers
                 activeItemList = new List<ActiveItemData>(),
                 limitShopItemDataList = new List<LimitShopItemData>(),
                 unitTicketList = new List<DWUnitTicketData>(),
-                accStage = 1
+                accStage = 1,
+                bossDungeonTicket = globalSettingDataTable.BossDugeonTicketCount,
+                curBossDungeonNo = 1,
+                lastBossDungeonNo = 1
             };
 
             // Init Unit
@@ -149,7 +167,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, ActiveItemList, LimitShopItemDataList, UnitTicketList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList, @activeItemList, @limitShopItemDataList, @unitTicketList)";
+                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, ActiveItemList, LimitShopItemDataList, UnitTicketList, BossDungeonTicket, LastBossDungeonNo) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList, @activeItemList, @limitShopItemDataList, @unitTicketList, @bossDungeonTicket, @lastBossDungeonNo)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -176,7 +194,9 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.activeItemList);
                     command.Parameters.Add("@limitShopItemDataList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.limitShopItemDataList);
                     command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitTicketList);
-                    
+                    command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = result.userData.bossDungeonTicket;
+                    command.Parameters.Add("@lastBossDungeonNo", SqlDbType.SmallInt).Value = result.userData.lastBossDungeonNo;
+
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
@@ -219,6 +239,9 @@ namespace CloudBread.Controllers
                     }
                 }
             }
+
+            CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, 1);
+            CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, 1);
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";

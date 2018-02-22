@@ -57,7 +57,7 @@ namespace CloudBread.Controllers
             try
             {
                 /// fetch redis value by member sid
-                result.rank = CBRedis.GetSortedSetRank(sid);
+                result.rank = CBRedis.GetSortedSetRank(0, sid);
 
                 return result;
             }
@@ -92,7 +92,7 @@ namespace CloudBread.Controllers
             try
             {
                 /// fetch redis list by rank range 
-                SortedSetEntry[] se = CBRedis.GetSortedSetRankByRange(startRank, endRank);
+                SortedSetEntry[] se = CBRedis.GetSortedSetRankByRange(0, startRank, endRank);
                 return se; 
             }
 
@@ -162,8 +162,8 @@ namespace CloudBread.Controllers
             try
             {
                 /// set redis point and return 
-                CBRedis.SetSortedSetRank(p.sid, p.point);
-                result.rank = CBRedis.GetSortedSetRank(p.sid);
+                CBRedis.SetSortedSetRank(0, p.sid, p.point);
+                result.rank = CBRedis.GetSortedSetRank(0, p.sid);
                 return result;
             }
 

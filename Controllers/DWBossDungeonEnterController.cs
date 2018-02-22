@@ -23,20 +23,19 @@ using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.
 using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
-using CloudBreadRedis;
 
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWChangeStageController : ApiController
+    public class DWBossDungeonEnterController : ApiController
     {
-        // GET api/DWChangeStage
+        // GET api/DWBossDungeonEnter
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWChangeStageInputParam p)
+        public HttpResponseMessage Post(DWBossDungeonEnterInputParam p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -44,7 +43,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWChangeStageInputParam>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWBossDungeonEnterInputParam>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -66,7 +65,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                DWChangeStageModel result = GetResult(p);
+                DWBossDungeonEnterModel result = result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -87,12 +86,13 @@ namespace CloudBread.Controllers
                 response = Request.CreateResponse(HttpStatusCode.OK, result);
                 return response;
             }
+
             catch (Exception ex)
             {
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWChangeStageController";
+                logMessage.Logger = "DWBossDungeonEnterController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -101,137 +101,126 @@ namespace CloudBread.Controllers
             }
         }
 
-        DWChangeStageModel GetResult(DWChangeStageInputParam p)
+        DWBossDungeonEnterModel GetResult(DWBossDungeonEnterInputParam p)
         {
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
+            logMessage.memberID = p.memberID;
 
-            DWChangeStageModel result = new DWChangeStageModel();
-            
-            short lastStageNo = 0;
-            short lastWorldNo = 0;
-            bool allClear = false;
-            long accStageCnt = 0;
-            DateTime utcTime = DateTime.UtcNow;
-            DateTime gemBoxCreateTime = DateTime.UtcNow;
-            bool gemBoxGet = false;
-            long curGemBoxNo = 0;
-            
+            DWBossDungeonEnterModel result = new DWBossDungeonEnterModel();
+
+            long gem = 0;
+            long cashGem = 0;
+            int bossDungeonTicket = 0;
+            short lastBossDungeonNo = 0;
+            DateTime bossDungeonTicketRefreshTime = DateTime.UtcNow;
+            byte bossDungeonEnterType = 0;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastStage, LastWorld, AllClear, AccStageCnt, GemBoxCreateTime, GemBoxGet, GemBoxNo FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime, BossDungeonEnterType FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
-
                     using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
                     {
                         if (dreader.HasRows == false)
                         {
-                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "Error";
-                            logMessage.Logger = "DWChangeStageController";
-                            logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
+                            logMessage.Logger = "DWBossDungeonEnterController";
+                            logMessage.Message = string.Format("Not Found User");
                             Logging.RunLog(logMessage);
 
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                             return result;
                         }
 
                         while (dreader.Read())
                         {
-                            lastStageNo = (short)dreader[0];
-                            lastWorldNo = (short)dreader[1];
-                            allClear = (bool)dreader[2];
-                            accStageCnt = (long)dreader[3];
-                            gemBoxCreateTime = (DateTime)dreader[4];
-                            gemBoxGet = (bool)dreader[5];
-                            curGemBoxNo = (long)dreader[6];
+                            gem = (long)dreader[0];
+                            cashGem = (long)dreader[1];
+                            bossDungeonTicket = (int)dreader[2];
+                            lastBossDungeonNo = (short)dreader[3];
+                            bossDungeonTicketRefreshTime = (DateTime)dreader[4];
+                            bossDungeonEnterType = (byte)dreader[5];
+
                         }
                     }
                 }
             }
 
-            short worldNo = (short)(p.stageIdx / 10);
-
-            if(p.stageIdx % 10 == 0)
+            if((BOSS_DUNGEON_ENTER_TYPE)bossDungeonEnterType != BOSS_DUNGEON_ENTER_TYPE.MAX_TYPE)
             {
-                worldNo = (short)(worldNo - 1);
-            }
-
-            short curStageNo = (short)(p.stageIdx - (worldNo * 10));
-
-            if(lastWorldNo + 1 < worldNo)
-            {
-                logMessage.memberID = p.memberID;
                 logMessage.Level = "Error";
-                logMessage.Logger = "DWChangeStageController";
-                logMessage.Message = string.Format("World Error lastWorldNo = {0}", lastWorldNo);
+                logMessage.Logger = "DWBossDungeonEnterController";
+                logMessage.Message = string.Format("Boss Dungeon Enter Type Error Type = {0}", bossDungeonEnterType);
                 Logging.RunLog(logMessage);
 
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
 
-            if (p.allClear == true)
+            int KOREA_TIME_ZONE = 9;
+            DWMemberData.BossDungeonTicketRefresh(ref bossDungeonTicketRefreshTime, ref bossDungeonTicket, KOREA_TIME_ZONE, DWDataTableManager.GlobalSettingDataTable.BossDugeonTicketCount);
+
+            if (p.gemUse == 1)
             {
-                WorldDataTable worldDataTable = DWDataTableManager.GetDataTable(WorldDataTable_List.NAME, (ulong)(lastWorldNo + 1)) as WorldDataTable;
-                if(worldDataTable != null || lastStageNo % 10 != 0)
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "Info";
+                logMessage.Logger = "DWBossDungeonEnterController";
+
+                if (gem + cashGem < DWDataTableManager.GlobalSettingDataTable.BossDugeonAddMoney)
                 {
-                    logMessage.memberID = p.memberID;
                     logMessage.Level = "Error";
-                    logMessage.Logger = "DWChangeStageController";
-                    logMessage.Message = string.Format("World Error lastWorldNo = {0}, lastStageNo = {1}", lastWorldNo, lastStageNo);
+                    logMessage.Logger = "DWBossDungeonEnterController";
+                    logMessage.Message = string.Format("lack gem gem = {0}, cashGem = {1}, subGem = {2}", gem, cashGem, DWDataTableManager.GlobalSettingDataTable.BossDugeonAddMoney);
                     Logging.RunLog(logMessage);
 
                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                     return result;
                 }
+
+                Logging.RunLog(logMessage);
+
+                bossDungeonEnterType = (byte)BOSS_DUNGEON_ENTER_TYPE.GEM_ENTER_TYPE;
+            }
+            else if (bossDungeonTicket == 0 && p.gemUse == 0)
+            {
+                logMessage.Level = "Error";
+                logMessage.Logger = "DWBossDungeonEnterController";
+                logMessage.Message = string.Format("lack boss dungeon ticket");
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+            else
+            {
+                bossDungeonEnterType = (byte)BOSS_DUNGEON_ENTER_TYPE.NORMAL_ENTER_TYPE;
             }
 
-            if (lastWorldNo < worldNo)
+            if (p.curBossDungeonNo > lastBossDungeonNo)
             {
-                lastWorldNo = worldNo;
-                lastStageNo = 0;
-            }
+                logMessage.Level = "Error";
+                logMessage.Logger = "DWBossDungeonEnterController";
+                logMessage.Message = string.Format("Boss Dungeon No Over CurNo = {0}, LastNo = {1}", p.curBossDungeonNo, lastBossDungeonNo);
+                Logging.RunLog(logMessage);
 
-            if (lastStageNo < curStageNo && lastWorldNo <= worldNo)
-            {
-                lastStageNo = curStageNo;
-                accStageCnt++;
-
-                CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, accStageCnt);
-                CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, (((worldNo - 1) * 10) + lastStageNo));
-            }
-
-            ulong gemBoxNo = 0;
-
-            TimeSpan subTime = utcTime - gemBoxCreateTime;
-            if (gemBoxGet == true && subTime.TotalMinutes >= DWDataTableManager.GlobalSettingDataTable.GemBoxDelay)
-            {
-                gemBoxGet = false;
-                gemBoxCreateTime = utcTime;
-                gemBoxNo = DWDataTableManager.GetGemBoxNo();
-                curGemBoxNo = (long)gemBoxNo;
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
             }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET CurStage = @curStage, LastStage = @lastStage, CurWorld = @curWorld, LastWorld = @lastWorld, AllClear = @allClear, AccStageCnt = @accStageCnt, GemBoxCreateTime = @gemBoxCreateTime, GemBoxGet = @gemBoxGet, GemBoxNo = @gemBoxNo WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET BossDungeonTicket = @bossDungeonTicket, BossDungeonTicketRefreshTime = @bossDungeonTicketRefreshTime, BossDungeonEnterType = @bossDungeonEnterType, GemBoxGet = @gemBoxGet WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = worldNo;
-                    command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = curStageNo;
-                    command.Parameters.Add("@lastStage", SqlDbType.SmallInt).Value = lastStageNo;
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorldNo;
-                    command.Parameters.Add("@allClear", SqlDbType.Bit).Value = p.allClear;
-                    command.Parameters.Add("@accStageCnt", SqlDbType.BigInt).Value = accStageCnt;
-                    command.Parameters.Add("@gemBoxCreateTime", SqlDbType.DateTime).Value = gemBoxCreateTime;
-                    command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = gemBoxGet;
-                    command.Parameters.Add("@gemBoxNo", SqlDbType.BigInt).Value = curGemBoxNo;
-
+                    command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = bossDungeonTicket;
+                    command.Parameters.Add("@bossDungeonTicketRefreshTime", SqlDbType.DateTime).Value = bossDungeonTicketRefreshTime;
+                    command.Parameters.Add("@bossDungeonEnterType", SqlDbType.TinyInt).Value = bossDungeonEnterType;
+                    command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = true;
+                    
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
@@ -239,8 +228,8 @@ namespace CloudBread.Controllers
                     {
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "Error";
-                        logMessage.Logger = "DWChangeStageController";
-                        logMessage.Message = string.Format("Update Failed MemberID = {0}", p.memberID);
+                        logMessage.Logger = "DWBossDungeonEnterController";
+                        logMessage.Message = string.Format("Update Failed");
                         Logging.RunLog(logMessage);
 
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
@@ -249,10 +238,15 @@ namespace CloudBread.Controllers
                 }
             }
 
-            result.gemBoxNo = gemBoxNo;
+            logMessage.memberID = p.memberID;
+            logMessage.Level = "Info";
+            logMessage.Logger = "DWBossDungeonEnterController";
+            logMessage.Message = string.Format("BossDungeon Enter GemUse = {0}, DungeonNo = {1}", p.gemUse, p.curBossDungeonNo);
+            Logging.RunLog(logMessage);
+            
+            result.curBossDungeonNo = p.curBossDungeonNo;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
     }
-
 }

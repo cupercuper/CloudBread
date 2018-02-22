@@ -106,11 +106,13 @@ namespace CloudBread.Controllers
         DWGetUserDataModel GetResult(DWGetUserDataInputParams p)
         {
             DWGetUserDataModel result = new DWGetUserDataModel();
+            DateTime bossDungeonTicketRefreshTime = DateTime.UtcNow;
+
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, AllClear, ActiveItemList, LimitShopItemDataList, UnitTicketList, LastStage, AccStageCnt FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, AllClear, ActiveItemList, LimitShopItemDataList, UnitTicketList, LastStage, AccStageCnt, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -152,8 +154,12 @@ namespace CloudBread.Controllers
                                 limitShopItemDataList = DWMemberData.ConvertLimitShopItemDataList(dreader[22] as byte[]),
                                 unitTicketList = DWMemberData.ConvertUnitTicketDataList(dreader[23] as byte[]),
                                 lastStage = (short)dreader[24],
-                                accStage = (long)dreader[25]
+                                accStage = (long)dreader[25],
+                                bossDungeonTicket = (int)dreader[26],
+                                lastBossDungeonNo = (short)dreader[27]
                             };
+
+                            bossDungeonTicketRefreshTime = (DateTime)dreader[28];
 
                             result.userDataList.Add(workItem);
                             result.errorCode = (byte)DW_ERROR_CODE.OK;
@@ -162,12 +168,18 @@ namespace CloudBread.Controllers
                 }
             }
 
+            int KOREA_TIME_ZONE = 9;
+            DWMemberData.BossDungeonTicketRefresh(ref bossDungeonTicketRefreshTime, ref result.userDataList[0].bossDungeonTicket, KOREA_TIME_ZONE, DWDataTableManager.GlobalSettingDataTable.BossDugeonTicketCount);
+
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET GemBoxGet = @gemBoxGet WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET GemBoxGet = @gemBoxGet, BossDungeonTicketRefreshTime = @bossDungeonTicketRefreshTime, BossDungeonTicket = @bossDungeonTicket, BossDungeonEnterType = @bossDungeonEnterType WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = true;
+                    command.Parameters.Add("@bossDungeonTicketRefreshTime", SqlDbType.DateTime).Value = bossDungeonTicketRefreshTime;
+                    command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = result.userDataList[0].bossDungeonTicket;
+                    command.Parameters.Add("@bossDungeonEnterType", SqlDbType.TinyInt).Value = (byte)BOSS_DUNGEON_ENTER_TYPE.MAX_TYPE;
 
                     connection.OpenWithRetry(retryPolicy);
 

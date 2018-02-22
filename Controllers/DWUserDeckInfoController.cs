@@ -23,21 +23,20 @@ using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.
 using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
-using StackExchange.Redis;
-using CloudBreadRedis;
+
 
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWRankController : ApiController
+    public class DWUserDeckInfoController : ApiController
     {
-        // GET api/DWRank
+        // GET api/DWUserDeckInfo
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWRankInputParams p)
+        public HttpResponseMessage Post(DWUserDeckInfoInputParams p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -45,7 +44,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWRankInputParams>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWUserDeckInfoInputParams>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -67,7 +66,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                DWRankModel result = result = GetResult(p);
+                DWUserDeckInfoModel result = result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -94,7 +93,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWRankController";
+                logMessage.Logger = "DWUserDeckInfoController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -103,83 +102,16 @@ namespace CloudBread.Controllers
             }
         }
 
-        const int MAX_COUNT = 20;
-        DWRankModel GetResult(DWRankInputParams p)
+        DWUserDeckInfoModel GetResult(DWUserDeckInfoInputParams p)
         {
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
+            DWUserDeckInfoModel result = new DWUserDeckInfoModel();
 
-            DWRankModel result = new DWRankModel();
-            result.rankList = new List<DWRankData>();
-
-            result.rankCnt = CBRedis.GetRankCount((int)p.rankType);
-            // rank는 0 부터 시작한다.
-            long myRank = CBRedis.GetSortedSetRank((int)p.rankType, p.memberID);
-            double myScore = CBRedis.GetSortedSetScore((int)p.rankType, p.memberID);
-
-            result.myRankData = new DWRankData()
-            {
-                memberID = p.memberID,
-                rank = myRank + 1,
-                score = myScore
-            };
-
-            long firstIndex = 0;
-            long lastIndex = 0;
-
-            if(p.rankSortType == (byte)RANK_SORT_TYPE.TOP_RANK_TYPE || result.rankCnt <= 20)
-            {
-                lastIndex = 19;
-            }
-            else
-            {
-                firstIndex = myRank - 9;
-                lastIndex = myRank + 10;
-
-                long firstGap = 0;
-                if (firstIndex < 0)
-                {
-                    firstGap = -firstIndex;
-                    firstIndex = 0;
-                }
-
-                long lastGap = 0;
-                if (lastIndex > result.rankCnt - 1)
-                {
-                    lastGap = lastIndex - (result.rankCnt - 1);
-                    lastIndex = result.rankCnt - 1;
-                }
-
-                if (firstGap > 0)
-                {
-                    lastIndex = lastIndex + firstGap;
-                }
-                else if (lastGap > 0)
-                {
-                    firstIndex = firstIndex - lastGap;
-                }
-            }
-
-
-            SortedSetEntry[] sortedSetRank = CBRedis.GetSortedSetRankByRange((int)p.rankType, firstIndex, lastIndex);
-            Dictionary<string, string> userNickNameDic = new Dictionary<string, string>();
-            string strQuery = string.Format("SELECT MemberID, NickName FROM[dbo].[DWMembers] Where MemberID IN (");
-            for(int i = 0; i < sortedSetRank.Length; ++i)
-            {
-                if (i == sortedSetRank.Length - 1)
-                {
-                    strQuery += string.Format("'{0}'", sortedSetRank[i].Element);
-                }
-                else
-                {
-                    strQuery += string.Format("'{0}',", sortedSetRank[i].Element);
-                }
-            }
-
-            strQuery += ")";
-
+            /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
+                string strQuery = string.Format("SELECT NickName, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.userMemberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -188,45 +120,28 @@ namespace CloudBread.Controllers
                         if (dreader.HasRows == false)
                         {
                             logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
-                            logMessage.Logger = "DWRankController";
-                            logMessage.Message = string.Format("Not Found User strQuery = {0}", strQuery);
+                            logMessage.Level = "ERROR";
+                            logMessage.Logger = "DWUserDeckInfoController";
+                            logMessage.Message = string.Format("Not Found User = {0}", p.memberID);
                             Logging.RunLog(logMessage);
 
-                            result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
+                            result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                             return result;
                         }
 
                         while (dreader.Read())
                         {
-                            string memberID = (string)dreader[0];
-                            string nickName = (string)dreader[1];
+                            result.nickName = dreader[0].ToString();
 
-                            userNickNameDic.Add(memberID, nickName);
+                            Dictionary<uint, UnitData> unitDic = DWMemberData.ConvertUnitDic(dreader[1] as byte[]);
+                            result.unitList = DWMemberData.ConvertClientUnitData(unitDic);
+
+                            result.errorCode = (byte)DW_ERROR_CODE.OK;
                         }
                     }
                 }
             }
 
-            for(int i = 0; i < sortedSetRank.Length; ++i)
-            {
-                string nickName = string.Empty;
-                if (userNickNameDic.TryGetValue(sortedSetRank[i].Element, out nickName) == false)
-                {
-                    continue;
-                }
-
-                DWRankData rankData = new DWRankData()
-                {
-                    memberID = sortedSetRank[i].Element,
-                    nickName = nickName,
-                    rank = (firstIndex + 1) + i,
-                    score = sortedSetRank[i].Score
-                };
-                result.rankList.Add(rankData);
-            }
-
-            result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
     }

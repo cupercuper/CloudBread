@@ -81,15 +81,13 @@ namespace CloudBread
                 AddDataTable(WaveDataTable_List.NAME, new WaveDataTable_List());
                 AddDataTable(WorldDataTable_List.NAME, new WorldDataTable_List());
                 AddDataTable(GemBoxDataTable_List.NAME, new GemBoxDataTable_List());
-
+                AddDataTable(BossDungeonDataTable_List.NAME, new BossDungeonDataTable_List());
+                AddDataTable(ToolTipDataTable_List.NAME, new ToolTipDataTable_List());
 
                 BuildUnitSummonRatioList();
                 BuildCaptianList();
                 BuildShopBuild();
                 BuildGemBoxNoList();
-
-
-                GlobalSettingDataTable = GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
 
                 return true;
             }

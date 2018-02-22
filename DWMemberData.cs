@@ -638,5 +638,31 @@ namespace CloudBread
                 activeItemList.Add(activeItemData);
             }
         }
+
+        public static void BossDungeonTicketRefresh(ref DateTime refreshTime, ref int bossDungeonTicket, int timeZone, int ticketMaxCnt)
+        {
+            bool refresh = false;
+            DateTime timeZoneRefreshTime = refreshTime.AddHours(timeZone);
+            DateTime currentTime = DateTime.UtcNow.AddHours(timeZone);
+
+            if(timeZoneRefreshTime.Month != currentTime.Month)
+            {
+                refresh = true;
+               
+            }
+            else if (timeZoneRefreshTime.Day != currentTime.Day)
+            {
+                refresh = true;
+            }
+
+            if (refresh)
+            {
+                refreshTime = DateTime.UtcNow;
+                if (bossDungeonTicket < ticketMaxCnt)
+                {
+                    bossDungeonTicket = ticketMaxCnt;
+                }
+            }
+        }
     }
 }

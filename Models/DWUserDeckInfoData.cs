@@ -5,20 +5,18 @@ using DW.CommonData;
 namespace CloudBread.Models
 {
     [Serializable]
-    public class DWRankInputParams
+    public class DWUserDeckInfoInputParams
     {
         public string memberID;
-        public byte rankSortType;
-        public byte rankType;
+        public string userMemberID;
         public string token;
     }
 
     [Serializable]
-    public class DWRankModel
+    public class DWUserDeckInfoModel
     {
-        public long rankCnt;
-        public List<DWRankData> rankList;
-        public DWRankData myRankData;
+        public string nickName;
+        public List<ClientUnitData> unitList;
         public byte errorCode;
     }
 }

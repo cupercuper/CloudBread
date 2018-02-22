@@ -99,6 +99,56 @@ public class BossDataTable : DataTableBase
 	}
 }
 
+public class BossDungeonDataTable_List : DataTableListBase
+{
+	public const string NAME = "BossDungeon";
+	public const string DATAFILENAME = "BossDungeonData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			BossDungeonDataTable data = new BossDungeonDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class BossDungeonDataTable : DataTableBase
+{
+	public string Name;
+	public string Icon;
+	public string MapFolder;
+	public string MapBackGround;
+	public string MapPlace;
+	public string MapShadow;
+	public ulong BossSerialNo;
+	public int BossLevel;
+	public string BossIcon;
+	public int Gold;
+	public int EnhancementStone;
+	public string Description;
+	public int BossFailTime;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		Icon = dataRow[2].ToString();
+		MapFolder = dataRow[3].ToString();
+		MapBackGround = dataRow[4].ToString();
+		MapPlace = dataRow[5].ToString();
+		MapShadow = dataRow[6].ToString();
+		BossSerialNo = ulong.Parse(dataRow[7].ToString());
+		BossLevel = int.Parse(dataRow[8].ToString());
+		BossIcon = dataRow[9].ToString();
+		Gold = int.Parse(dataRow[10].ToString());
+		EnhancementStone = int.Parse(dataRow[11].ToString());
+		Description = dataRow[12].ToString();
+		BossFailTime = int.Parse(dataRow[13].ToString());
+	}
+}
+
 public class BuffDataTable_List : DataTableListBase
 {
 	public const string NAME = "Buff";
@@ -200,9 +250,9 @@ public class EnemyDataTable : DataTableBase
 	public string DieEffect;
 	public string Description;
 	public byte GoldCoinCount;
-	public int GoldCount;
+	public int GoldValue;
 	public byte GemCoinCount;
-	public int GemCount;
+	public int GemValue;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -215,9 +265,9 @@ public class EnemyDataTable : DataTableBase
 		DieEffect = dataRow[8].ToString();
 		Description = dataRow[9].ToString();
 		GoldCoinCount = byte.Parse(dataRow[10].ToString());
-		GoldCount = int.Parse(dataRow[11].ToString());
+		GoldValue = int.Parse(dataRow[11].ToString());
 		GemCoinCount = byte.Parse(dataRow[12].ToString());
-		GemCount = int.Parse(dataRow[13].ToString());
+		GemValue = int.Parse(dataRow[13].ToString());
 	}
 }
 
@@ -342,6 +392,11 @@ public class GlobalSettingDataTable : DataTableBase
 	public int GemProbability;
 	public int GemCount;
 	public int GemBoxDelay;
+	public byte BossDugeonTicketCount;
+	public byte BossDugeonAddMoney;
+	public int CaptainChangeGoldRate;
+	public int CaptainChangeGoldMaxRate;
+	public int CaptainChangeGoldAuto;
 	public void Load(DataRow dataRow)
 	{
 		UnitListChangeTime = int.Parse(dataRow[1].ToString());
@@ -354,6 +409,11 @@ public class GlobalSettingDataTable : DataTableBase
 		GemProbability = int.Parse(dataRow[8].ToString());
 		GemCount = int.Parse(dataRow[9].ToString());
 		GemBoxDelay = int.Parse(dataRow[10].ToString());
+		BossDugeonTicketCount = byte.Parse(dataRow[11].ToString());
+		BossDugeonAddMoney = byte.Parse(dataRow[12].ToString());
+		CaptainChangeGoldRate = int.Parse(dataRow[13].ToString());
+		CaptainChangeGoldMaxRate = int.Parse(dataRow[14].ToString());
+		CaptainChangeGoldAuto = int.Parse(dataRow[15].ToString());
 	}
 }
 
@@ -526,6 +586,32 @@ public class StageDataTable : DataTableBase
 		Description = dataRow[2].ToString();
 		WaveStartSerialNo = ulong.Parse(dataRow[3].ToString());
 		WaveCoolTime = int.Parse(dataRow[4].ToString());
+	}
+}
+
+public class ToolTipDataTable_List : DataTableListBase
+{
+	public const string NAME = "ToolTip";
+	public const string DATAFILENAME = "ToolTipData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			ToolTipDataTable data = new ToolTipDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class ToolTipDataTable : DataTableBase
+{
+	public string ToolTip;
+	public void Load(DataRow dataRow)
+	{
+		ToolTip = dataRow[1].ToString();
 	}
 }
 

@@ -89,13 +89,13 @@ namespace CloudBreadRedis
         }
 
         /// @brief Set point value at Redis sorted set
-        public static bool SetSortedSetRank(string sid, double point)
+        public static bool SetSortedSetRank(int rankIdx, string sid, double point)
         {
             ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase(rankIdx);
                 cache.SortedSetAdd(globalVal.CloudBreadRankSortedSet, sid, point);
 
                 connection.Close();
@@ -112,14 +112,14 @@ namespace CloudBreadRedis
         }
 
         /// @brief Get rank value from Redis sorted set
-        public static long GetSortedSetRank(string sid)
+        public static long GetSortedSetRank(int rankIdx, string sid)
         {
             long rank = 0;
             ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase(rankIdx);
                 rank = cache.SortedSetRank(globalVal.CloudBreadRankSortedSet, sid, Order.Descending) ?? 0;
 
                 connection.Close();
@@ -136,14 +136,14 @@ namespace CloudBreadRedis
         }
 
         /// @brief Get rank value from Redis sorted set
-        public static double GetSortedSetScore(string sid)
+        public static double GetSortedSetScore(int rankIdx, string sid)
         {
             double score = 0;
             ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase(rankIdx);
                 score = cache.SortedSetScore(globalVal.CloudBreadRankSortedSet, sid) ?? 0;
 
                 connection.Close();
@@ -162,14 +162,14 @@ namespace CloudBreadRedis
 
         /// @brief Get selected rank range members. 
         /// Get my rank and then call this method to fetch +-10 rank(total 20) rank
-        public static SortedSetEntry[] GetSortedSetRankByRange(long startRank, long endRank)
+        public static SortedSetEntry[] GetSortedSetRankByRange(int rankIdx, long startRank, long endRank)
         {
 
             ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
 
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase(rankIdx);
                 //SortedSetEntry[] rank = cache.SortedSetRangeByScoreWithScores(globalVal.CloudBreadRankSortedSet, startRank, endRank, Exclude.None, Order.Descending);
                 SortedSetEntry[] se = cache.SortedSetRangeByRankWithScores(globalVal.CloudBreadRankSortedSet, startRank, endRank, Order.Descending);
                 //return JsonConvert.SerializeObject(se);
@@ -212,14 +212,14 @@ namespace CloudBreadRedis
 
         }
 
-        public static long GetRankCount()
+        public static long GetRankCount(int rankIdx)
         {
             ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
             
             long count = 0;
             try
             {
-                IDatabase cache = connection.GetDatabase(1);
+                IDatabase cache = connection.GetDatabase(rankIdx);
                 count = cache.SortedSetRank(globalVal.CloudBreadRankSortedSet, EMPTY_USER, Order.Descending) ?? 0;
 
                 connection.Close();
