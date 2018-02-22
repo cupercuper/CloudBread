@@ -89,6 +89,7 @@ namespace CloudBread
                 BuildShopBuild();
                 BuildGemBoxNoList();
 
+                GlobalSettingDataTable = DWDataTableManager.GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
                 return true;
             }
             catch(Exception)
