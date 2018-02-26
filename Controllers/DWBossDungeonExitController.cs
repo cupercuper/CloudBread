@@ -182,7 +182,7 @@ namespace CloudBread.Controllers
             else if((BOSS_DUNGEON_ENTER_TYPE)bossDungeonEnterType == BOSS_DUNGEON_ENTER_TYPE.GEM_ENTER_TYPE)
             {
                 logMessage.memberID = p.memberID;
-                if (DWMemberData.SubGem(ref gem, ref cashGem, DWDataTableManager.GlobalSettingDataTable.BossDugeonAddMoney, logMessage))
+                if (DWMemberData.SubGem(ref gem, ref cashGem, DWDataTableManager.GlobalSettingDataTable.BossDugeonAddMoney, logMessage) == false)
                 {
                     logMessage.Level = "Error";
                     logMessage.Logger = "DWBossDungeonExitController";
