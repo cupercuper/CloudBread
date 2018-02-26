@@ -168,7 +168,7 @@ namespace CloudBread.Controllers
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "Error";
                 logMessage.Logger = "DWChangeStageController";
-                logMessage.Message = string.Format("World Error lastWorldNo = {0}", lastWorldNo);
+                logMessage.Message = string.Format("World Error lastWorldNo = {0}, worldNo = {1}, stageIdx = {2}", lastWorldNo, worldNo, p.stageIdx);
                 Logging.RunLog(logMessage);
 
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;

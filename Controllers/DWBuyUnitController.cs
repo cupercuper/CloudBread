@@ -237,7 +237,7 @@ namespace CloudBread.Controllers
                     {
                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                         logMessage.Level = "Error";
-                        logMessage.Message = string.Format("Lack EnhancedStone Cur EnhancedStone = {0}", enhancedStone);
+                        logMessage.Message = string.Format("Lack EnhancedStone Cur EnhancedStone = {0} unitBuySerialNo = {1}", enhancedStone, serialNo);
                         Logging.RunLog(logMessage);
 
                         return result;
@@ -251,7 +251,7 @@ namespace CloudBread.Controllers
                     {
                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                         logMessage.Level = "Error";
-                        logMessage.Message = string.Format("Lack Gem Cur Gem = {0}", gem);
+                        logMessage.Message = string.Format("Lack Gem Cur Gem = {0}  unitBuySerialNo = {1}", gem, serialNo);
                         Logging.RunLog(logMessage);
 
                         return result;
