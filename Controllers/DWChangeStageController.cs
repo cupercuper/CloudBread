@@ -202,8 +202,11 @@ namespace CloudBread.Controllers
                 lastStageNo = curStageNo;
                 accStageCnt++;
 
-                CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, accStageCnt);
-                CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, (((worldNo - 1) * 10) + lastStageNo));
+                if (DWMemberData.IsTestMemberID(p.memberID) == false)
+                {
+                    CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, accStageCnt);
+                    CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, (((worldNo - 1) * 10) + lastStageNo));
+                }
             }
 
             ulong gemBoxNo = 0;

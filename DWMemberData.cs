@@ -17,6 +17,25 @@ namespace CloudBread
 
     public class DWMemberData
     {
+        public static string[] TEST_MEMBER_ID = new string[]
+        {
+            "cloud",
+            "kkkk"
+        };
+
+        public static bool IsTestMemberID(string memberID)
+        {
+            for(int i = 0; i < TEST_MEMBER_ID.Length; ++i)
+            {
+                if(TEST_MEMBER_ID[i] == memberID)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static byte[] ConvertByte(Dictionary<uint, UnitData> unitDic)
         {
             MemoryStream ms = new MemoryStream();
