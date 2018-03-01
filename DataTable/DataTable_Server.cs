@@ -673,19 +673,23 @@ public class UnitDataTable : DataTableBase
 	public byte Grade;
 	public int AttackCoolTime;
 	public int AttackRange;
-	public int AttackPower;
+	public int AttackPowerG;
 	public int AttackPowerF;
 	public int CriticalRate;
-	public int SplashRange;
+	public int SplashRangeG;
+	public int SplashRangeF;
 	public int Size;
 	public string Description;
-	public ulong Projectile;
+	public ulong ProjectileG;
+	public ulong ProjectileF;
 	public List<byte> AttackType;
 	public int UnitStoreMoney;
-	public string FireEffect;
+	public string FireEffectG;
+	public string FireEffectF;
 	public string TargetPosEffect;
 	public byte AttackDirectionType;
-	public string FireSound;
+	public string FireSoundG;
+	public string FireSoundF;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -695,25 +699,29 @@ public class UnitDataTable : DataTableBase
 		Grade = byte.Parse(dataRow[5].ToString());
 		AttackCoolTime = int.Parse(dataRow[6].ToString());
 		AttackRange = int.Parse(dataRow[7].ToString());
-		AttackPower = int.Parse(dataRow[8].ToString());
+		AttackPowerG = int.Parse(dataRow[8].ToString());
 		AttackPowerF = int.Parse(dataRow[9].ToString());
 		CriticalRate = int.Parse(dataRow[10].ToString());
-		SplashRange = int.Parse(dataRow[11].ToString());
-		Size = int.Parse(dataRow[12].ToString());
-		Description = dataRow[13].ToString();
-		Projectile = ulong.Parse(dataRow[14].ToString());
+		SplashRangeG = int.Parse(dataRow[11].ToString());
+		SplashRangeF = int.Parse(dataRow[12].ToString());
+		Size = int.Parse(dataRow[13].ToString());
+		Description = dataRow[14].ToString();
+		ProjectileG = ulong.Parse(dataRow[15].ToString());
+		ProjectileF = ulong.Parse(dataRow[16].ToString());
 		AttackType = new List<byte>();
-		string [] AttackType_tempArray = dataRow[15].ToString().Split(',');
+		string [] AttackType_tempArray = dataRow[17].ToString().Split(',');
 		for( int i = 0; i < AttackType_tempArray.Length; ++i)
 		{
 			byte temp = byte.Parse(AttackType_tempArray[i]);
 			AttackType.Add(temp);
 		}
-		UnitStoreMoney = int.Parse(dataRow[16].ToString());
-		FireEffect = dataRow[17].ToString();
-		TargetPosEffect = dataRow[18].ToString();
-		AttackDirectionType = byte.Parse(dataRow[19].ToString());
-		FireSound = dataRow[20].ToString();
+		UnitStoreMoney = int.Parse(dataRow[18].ToString());
+		FireEffectG = dataRow[19].ToString();
+		FireEffectF = dataRow[20].ToString();
+		TargetPosEffect = dataRow[21].ToString();
+		AttackDirectionType = byte.Parse(dataRow[22].ToString());
+		FireSoundG = dataRow[23].ToString();
+		FireSoundF = dataRow[24].ToString();
 	}
 }
 

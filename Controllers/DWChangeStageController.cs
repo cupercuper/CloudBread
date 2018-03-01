@@ -175,10 +175,10 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            if (p.allClear == true)
+            if (p.allClear == true && allClear == false)
             {
                 WorldDataTable worldDataTable = DWDataTableManager.GetDataTable(WorldDataTable_List.NAME, (ulong)(lastWorldNo + 1)) as WorldDataTable;
-                if(worldDataTable != null || lastStageNo % 10 != 0)
+                if (worldDataTable != null || lastStageNo % 10 != 0)
                 {
                     logMessage.memberID = p.memberID;
                     logMessage.Level = "Error";
@@ -189,6 +189,8 @@ namespace CloudBread.Controllers
                     result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                     return result;
                 }
+
+                allClear = true;
             }
 
             if (lastWorldNo < worldNo)
@@ -229,7 +231,7 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = curStageNo;
                     command.Parameters.Add("@lastStage", SqlDbType.SmallInt).Value = lastStageNo;
                     command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorldNo;
-                    command.Parameters.Add("@allClear", SqlDbType.Bit).Value = p.allClear;
+                    command.Parameters.Add("@allClear", SqlDbType.Bit).Value = allClear;
                     command.Parameters.Add("@accStageCnt", SqlDbType.BigInt).Value = accStageCnt;
                     command.Parameters.Add("@gemBoxCreateTime", SqlDbType.DateTime).Value = gemBoxCreateTime;
                     command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = gemBoxGet;
