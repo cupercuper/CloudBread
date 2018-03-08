@@ -386,7 +386,7 @@ public class GlobalSettingDataTable : DataTableBase
 	public int UnitListChangeGem;
 	public int UnitStoreActiveGem;
 	public int GemUseAddProbability;
-	public int CoinContainMaxCnt;
+	public float CoinGetTime;
 	public int GemBoxProbability;
 	public int GemBoxCount;
 	public int GemProbability;
@@ -403,7 +403,7 @@ public class GlobalSettingDataTable : DataTableBase
 		UnitListChangeGem = int.Parse(dataRow[2].ToString());
 		UnitStoreActiveGem = int.Parse(dataRow[3].ToString());
 		GemUseAddProbability = int.Parse(dataRow[4].ToString());
-		CoinContainMaxCnt = int.Parse(dataRow[5].ToString());
+		CoinGetTime = float.Parse(dataRow[5].ToString());
 		GemBoxProbability = int.Parse(dataRow[6].ToString());
 		GemBoxCount = int.Parse(dataRow[7].ToString());
 		GemProbability = int.Parse(dataRow[8].ToString());
@@ -472,6 +472,34 @@ public class LevelUpDataTable : DataTableBase
 	public void Load(DataRow dataRow)
 	{
 		LevelUpGold = int.Parse(dataRow[1].ToString());
+	}
+}
+
+public class ModeDataTable_List : DataTableListBase
+{
+	public const string NAME = "Mode";
+	public const string DATAFILENAME = "ModeData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			ModeDataTable data = new ModeDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class ModeDataTable : DataTableBase
+{
+	public string Name;
+	public string Icon;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		Icon = dataRow[2].ToString();
 	}
 }
 
