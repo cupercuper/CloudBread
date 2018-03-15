@@ -67,7 +67,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                DWRankModel result = result = GetResult(p);
+                DWRankModel result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")

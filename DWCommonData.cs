@@ -68,13 +68,14 @@ namespace DW.CommonData
     {
         CUR_STAGE_TYPE,
         ACC_STAGE_TYPE,
+        RTD_MODE_TYPE,
         MAX_TYPE
     }
 
     public enum ACTIVE_ITEM_TYPE
     {
         GAME_SPEED_UP,
-        AUTO_GET_ITEM,
+        GOLD_GET_INCREASE,
         GOLD_UP,
         MAX_TYPE
     }
@@ -114,6 +115,12 @@ namespace DW.CommonData
         NORMAL_ENTER_TYPE = 0,
         GEM_ENTER_TYPE,
         MAX_TYPE
+    }
+
+    public enum MODE_TYPE
+    {
+        RANDOM_DEFENCE_TYPE = 0,
+        MAX_TYPE,
     }
 
     [Serializable]
