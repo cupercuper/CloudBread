@@ -110,14 +110,13 @@ namespace CloudBread.Controllers
             DWEnhancementUnitModel result = new DWEnhancementUnitModel();
             long enhancedStone = 0;
             long cashEnhancedStone = 0;
-            long gem = 0;
-            long cashGem = 0;
+
             Dictionary<uint, UnitData> unitLIst = null;
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone, CashEnhancedStone, Gem, CashGem, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT EnhancedStone, CashEnhancedStone, UnitList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -140,9 +139,7 @@ namespace CloudBread.Controllers
                         {
                             enhancedStone = (long)dreader[0];
                             cashEnhancedStone = (long)dreader[1];
-                            gem = (long)dreader[2];
-                            cashGem = (long)dreader[3];
-                            unitLIst = DWMemberData.ConvertUnitDic(dreader[4] as byte[]);
+                            unitLIst = DWMemberData.ConvertUnitDic(dreader[2] as byte[]);
                         }
                     }
                 }
