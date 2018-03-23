@@ -174,10 +174,24 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)unitData.EnhancementCount) as EnhancementDataTable;
+            if (enhancementDataTable == null)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "Error";
+                logMessage.Logger = "DWSellUnitController";
+                logMessage.Message = string.Format("Not Found EnhancementDataTable = {0}", unitData.EnhancementCount);
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
             logMessage.memberID = p.memberID;
             logMessage.Level = "Info";
             logMessage.Logger = "DWSellUnitController";
-            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, GetEnhancedStoneCount(unitDataTable, unitData.EnhancementCount), 0, logMessage);
+            
+            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, (long)enhancementDataTable.AccStoneCnt, 0, logMessage);
             Logging.RunLog(logMessage);
 
             unitList.Remove(p.instanceNo);
@@ -240,41 +254,6 @@ namespace CloudBread.Controllers
             result.enhancedStone = enhancedStone;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
-        }
-
-        long GetEnhancedStoneCount(UnitDataTable unitDataTable, ushort enhancementCount)
-        {
-            long enhancementStone = unitDataTable.UnitStoreMoney;
-
-            for(int i = 1; i <= enhancementCount; ++i)
-            {
-                EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)i) as EnhancementDataTable;
-                if(enhancementDataTable == null)
-                {
-                    continue;
-                }
-
-                switch(unitDataTable.Grade)
-                {
-                    case 1:
-                        enhancementStone += enhancementDataTable.Grade_1;
-                        break;
-                    case 2:
-                        enhancementStone += enhancementDataTable.Grade_2;
-                        break;
-                    case 3:
-                        enhancementStone += enhancementDataTable.Grade_3;
-                        break;
-                    case 4:
-                        enhancementStone += enhancementDataTable.Grade_4;
-                        break;
-                    case 5:
-                        enhancementStone += enhancementDataTable.Grade_5;
-                        break;
-                }
-            }
-
-            return enhancementStone;
         }
     }
 }

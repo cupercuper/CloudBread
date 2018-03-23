@@ -161,6 +161,18 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            if(p.curEnhancementCnt != unitData.EnhancementCount)
+            {
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "Error";
+                logMessage.Logger = "DWEnhancementUnitController";
+                logMessage.Message = string.Format("Dont Same Unit EnhancementCount server = {0}, client = {1}", unitData.EnhancementCount, p.curEnhancementCnt);
+                Logging.RunLog(logMessage);
+
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
             EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)(unitData.EnhancementCount + 1)) as EnhancementDataTable;
             if(enhancementDataTable == null)
             {
@@ -187,56 +199,7 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            int necessaryStoneCount = 0;
-            int necessaryGemCount = 0;
-            int probability = 0;
-            int failSub = 0;
-            switch (unitDataTable.Grade)
-            {
-                case 1:
-                    necessaryStoneCount = enhancementDataTable.Grade_1;
-                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_1;
-                    probability = enhancementDataTable.Probability_1;
-                    failSub = enhancementDataTable.FailSub_1;
-                    break;
-                case 2:
-                    necessaryStoneCount = enhancementDataTable.Grade_2;
-                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_2;
-                    probability = enhancementDataTable.Probability_2;
-                    failSub = enhancementDataTable.FailSub_2;
-                    break;
-                case 3:
-                    necessaryStoneCount = enhancementDataTable.Grade_3;
-                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_3;
-                    probability = enhancementDataTable.Probability_3;
-                    failSub = enhancementDataTable.FailSub_3;
-                    break;
-                case 4:
-                    necessaryStoneCount = enhancementDataTable.Grade_4;
-                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_4;
-                    probability = enhancementDataTable.Probability_4;
-                    failSub = enhancementDataTable.FailSub_4;
-                    break;
-                case 5:
-                    necessaryStoneCount = enhancementDataTable.Grade_5;
-                    necessaryGemCount = enhancementDataTable.ProbabilityUp_Grade_5;
-                    probability = enhancementDataTable.Probability_5;
-                    failSub = enhancementDataTable.FailSub_5;
-                    break;
-            }
-
-            GlobalSettingDataTable globalSettingDataTable = DWDataTableManager.GetDataTable(GlobalSettingDataTable_List.NAME, 1) as GlobalSettingDataTable;
-            if(globalSettingDataTable == null)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWEnhancementUnitController";
-                logMessage.Message = string.Format("Not Found GlobalSettingDataTable");
-                Logging.RunLog(logMessage);
-
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
+            int necessaryStoneCount = enhancementDataTable.StoneCnt;
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";
@@ -253,48 +216,16 @@ namespace CloudBread.Controllers
             }
             Logging.RunLog(logMessage);
 
-            if (p.gemUse == 1)
-            {
-                if (DWMemberData.SubGem(ref gem, ref cashGem, necessaryGemCount, logMessage) == false)
-                {
-                    logMessage.Level = "Error";
-                    logMessage.Message = string.Format("Lack gem cur Gem = {0}, cur Cash Gem = {1}, necessaryGemCount = {2}, UnitSerial = {3}, Enhancement Serial = {4}", gem, cashGem, necessaryGemCount, unitData.SerialNo, unitData.EnhancementCount);
-                    Logging.RunLog(logMessage);
-
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                    return result;
-                }
-                Logging.RunLog(logMessage);
-            }
-
-            Random rand = new Random((int)DateTime.Now.Ticks);
-            int randProbability = rand.Next(0, 101);
-            int addProbability = p.gemUse == 1 ? globalSettingDataTable.GemUseAddProbability : 0;
-
-            if (randProbability <= probability + addProbability)
-            {
-                result.success = 1;
-                unitData.EnhancementCount++;
-            }
-            else
-            {
-                if(p.gemUse == 0)
-                {
-                    unitData.EnhancementCount = (ushort)(unitData.EnhancementCount - failSub);
-                }
-                result.success = 0;
-            }
+            unitData.EnhancementCount++;
  
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, Gem = @gem, CashGem = @cashGem WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitLIst);
                     command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
                     command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashEnhancedStone;
-                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
-                    command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -326,10 +257,9 @@ namespace CloudBread.Controllers
                 enhancementCount = unitData.EnhancementCount,
                 serialNo = unitData.SerialNo
             };
+
             result.enhancedStone = enhancedStone;
             result.cashEnhancedStone = cashEnhancedStone;
-            result.gem = gem;
-            result.cashGem = cashGem;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

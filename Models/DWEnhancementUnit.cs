@@ -8,7 +8,7 @@ namespace CloudBread.Models
     {
         public string memberID;
         public uint InstanceNo;
-        public byte gemUse;
+        public ushort curEnhancementCnt;
         public string token;
     }
 
@@ -18,9 +18,6 @@ namespace CloudBread.Models
         public ClientUnitData unitData;
         public long enhancedStone;
         public long cashEnhancedStone;
-        public long gem;
-        public long cashGem;
-        public byte success;
         public byte errorCode;
     }
 }

@@ -290,48 +290,14 @@ public class EnhancementDataTable_List : DataTableListBase
 
 public class EnhancementDataTable : DataTableBase
 {
-	public int Probability_1;
-	public int Probability_2;
-	public int Probability_3;
-	public int Probability_4;
-	public int Probability_5;
-	public int Grade_1;
-	public int Grade_2;
-	public int Grade_3;
-	public int Grade_4;
-	public int Grade_5;
-	public int ProbabilityUp_Grade_1;
-	public int ProbabilityUp_Grade_2;
-	public int ProbabilityUp_Grade_3;
-	public int ProbabilityUp_Grade_4;
-	public int ProbabilityUp_Grade_5;
-	public int FailSub_1;
-	public int FailSub_2;
-	public int FailSub_3;
-	public int FailSub_4;
-	public int FailSub_5;
+	public int StoneCnt;
+	public ulong AccStoneCnt;
+	public int Value;
 	public void Load(DataRow dataRow)
 	{
-		Probability_1 = int.Parse(dataRow[1].ToString());
-		Probability_2 = int.Parse(dataRow[2].ToString());
-		Probability_3 = int.Parse(dataRow[3].ToString());
-		Probability_4 = int.Parse(dataRow[4].ToString());
-		Probability_5 = int.Parse(dataRow[5].ToString());
-		Grade_1 = int.Parse(dataRow[6].ToString());
-		Grade_2 = int.Parse(dataRow[7].ToString());
-		Grade_3 = int.Parse(dataRow[8].ToString());
-		Grade_4 = int.Parse(dataRow[9].ToString());
-		Grade_5 = int.Parse(dataRow[10].ToString());
-		ProbabilityUp_Grade_1 = int.Parse(dataRow[11].ToString());
-		ProbabilityUp_Grade_2 = int.Parse(dataRow[12].ToString());
-		ProbabilityUp_Grade_3 = int.Parse(dataRow[13].ToString());
-		ProbabilityUp_Grade_4 = int.Parse(dataRow[14].ToString());
-		ProbabilityUp_Grade_5 = int.Parse(dataRow[15].ToString());
-		FailSub_1 = int.Parse(dataRow[16].ToString());
-		FailSub_2 = int.Parse(dataRow[17].ToString());
-		FailSub_3 = int.Parse(dataRow[18].ToString());
-		FailSub_4 = int.Parse(dataRow[19].ToString());
-		FailSub_5 = int.Parse(dataRow[20].ToString());
+		StoneCnt = int.Parse(dataRow[1].ToString());
+		AccStoneCnt = ulong.Parse(dataRow[2].ToString());
+		Value = int.Parse(dataRow[3].ToString());
 	}
 }
 
@@ -537,6 +503,106 @@ public class ProjectileDataTable : DataTableBase
 	}
 }
 
+public class RTDModeDataTable_List : DataTableListBase
+{
+	public const string NAME = "RTDMode";
+	public const string DATAFILENAME = "RTDModeData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			RTDModeDataTable data = new RTDModeDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class RTDModeDataTable : DataTableBase
+{
+	public string Name;
+	public byte HP;
+	public int StartDelayTime;
+	public int RoundDelayTime;
+	public int InitSummon;
+	public int MaxSummon;
+	public int RoundSummon;
+	public int RoundUpgrade;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		HP = byte.Parse(dataRow[2].ToString());
+		StartDelayTime = int.Parse(dataRow[3].ToString());
+		RoundDelayTime = int.Parse(dataRow[4].ToString());
+		InitSummon = int.Parse(dataRow[5].ToString());
+		MaxSummon = int.Parse(dataRow[6].ToString());
+		RoundSummon = int.Parse(dataRow[7].ToString());
+		RoundUpgrade = int.Parse(dataRow[8].ToString());
+	}
+}
+
+public class RTDModeRoundDataTable_List : DataTableListBase
+{
+	public const string NAME = "RTDModeRound";
+	public const string DATAFILENAME = "RTDModeRoundData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			RTDModeRoundDataTable data = new RTDModeRoundDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class RTDModeRoundDataTable : DataTableBase
+{
+	public List<ulong> EnemyList;
+	public List<int> HPList;
+	public List<int> DefencePowerLIst;
+	public List<ushort> CountList;
+	public byte BossStage;
+	public int CoolTime;
+	public void Load(DataRow dataRow)
+	{
+		EnemyList = new List<ulong>();
+		string [] EnemyList_tempArray = dataRow[1].ToString().Split(',');
+		for( int i = 0; i < EnemyList_tempArray.Length; ++i)
+		{
+			ulong temp = ulong.Parse(EnemyList_tempArray[i]);
+			EnemyList.Add(temp);
+		}
+		HPList = new List<int>();
+		string [] HPList_tempArray = dataRow[2].ToString().Split(',');
+		for( int i = 0; i < HPList_tempArray.Length; ++i)
+		{
+			int temp = int.Parse(HPList_tempArray[i]);
+			HPList.Add(temp);
+		}
+		DefencePowerLIst = new List<int>();
+		string [] DefencePowerLIst_tempArray = dataRow[3].ToString().Split(',');
+		for( int i = 0; i < DefencePowerLIst_tempArray.Length; ++i)
+		{
+			int temp = int.Parse(DefencePowerLIst_tempArray[i]);
+			DefencePowerLIst.Add(temp);
+		}
+		CountList = new List<ushort>();
+		string [] CountList_tempArray = dataRow[4].ToString().Split(',');
+		for( int i = 0; i < CountList_tempArray.Length; ++i)
+		{
+			ushort temp = ushort.Parse(CountList_tempArray[i]);
+			CountList.Add(temp);
+		}
+		BossStage = byte.Parse(dataRow[5].ToString());
+		CoolTime = int.Parse(dataRow[6].ToString());
+	}
+}
+
 public class ShopDataTable_List : DataTableListBase
 {
 	public const string NAME = "Shop";
@@ -700,7 +766,8 @@ public class UnitDataTable : DataTableBase
 	public byte Type;
 	public byte Grade;
 	public int AttackCoolTime;
-	public int AttackRange;
+	public int MaxAttackRange;
+	public int MinAttackRange;
 	public int AttackPowerG;
 	public int AttackPowerF;
 	public int CriticalRate;
@@ -718,6 +785,7 @@ public class UnitDataTable : DataTableBase
 	public byte AttackDirectionType;
 	public string FireSoundG;
 	public string FireSoundF;
+	public byte MovingFire;
 	public void Load(DataRow dataRow)
 	{
 		Name = dataRow[1].ToString();
@@ -726,30 +794,32 @@ public class UnitDataTable : DataTableBase
 		Type = byte.Parse(dataRow[4].ToString());
 		Grade = byte.Parse(dataRow[5].ToString());
 		AttackCoolTime = int.Parse(dataRow[6].ToString());
-		AttackRange = int.Parse(dataRow[7].ToString());
-		AttackPowerG = int.Parse(dataRow[8].ToString());
-		AttackPowerF = int.Parse(dataRow[9].ToString());
-		CriticalRate = int.Parse(dataRow[10].ToString());
-		SplashRangeG = int.Parse(dataRow[11].ToString());
-		SplashRangeF = int.Parse(dataRow[12].ToString());
-		Size = int.Parse(dataRow[13].ToString());
-		Description = dataRow[14].ToString();
-		ProjectileG = ulong.Parse(dataRow[15].ToString());
-		ProjectileF = ulong.Parse(dataRow[16].ToString());
+		MaxAttackRange = int.Parse(dataRow[7].ToString());
+		MinAttackRange = int.Parse(dataRow[8].ToString());
+		AttackPowerG = int.Parse(dataRow[9].ToString());
+		AttackPowerF = int.Parse(dataRow[10].ToString());
+		CriticalRate = int.Parse(dataRow[11].ToString());
+		SplashRangeG = int.Parse(dataRow[12].ToString());
+		SplashRangeF = int.Parse(dataRow[13].ToString());
+		Size = int.Parse(dataRow[14].ToString());
+		Description = dataRow[15].ToString();
+		ProjectileG = ulong.Parse(dataRow[16].ToString());
+		ProjectileF = ulong.Parse(dataRow[17].ToString());
 		AttackType = new List<byte>();
-		string [] AttackType_tempArray = dataRow[17].ToString().Split(',');
+		string [] AttackType_tempArray = dataRow[18].ToString().Split(',');
 		for( int i = 0; i < AttackType_tempArray.Length; ++i)
 		{
 			byte temp = byte.Parse(AttackType_tempArray[i]);
 			AttackType.Add(temp);
 		}
-		UnitStoreMoney = int.Parse(dataRow[18].ToString());
-		FireEffectG = dataRow[19].ToString();
-		FireEffectF = dataRow[20].ToString();
-		TargetPosEffect = dataRow[21].ToString();
-		AttackDirectionType = byte.Parse(dataRow[22].ToString());
-		FireSoundG = dataRow[23].ToString();
-		FireSoundF = dataRow[24].ToString();
+		UnitStoreMoney = int.Parse(dataRow[19].ToString());
+		FireEffectG = dataRow[20].ToString();
+		FireEffectF = dataRow[21].ToString();
+		TargetPosEffect = dataRow[22].ToString();
+		AttackDirectionType = byte.Parse(dataRow[23].ToString());
+		FireSoundG = dataRow[24].ToString();
+		FireSoundF = dataRow[25].ToString();
+		MovingFire = byte.Parse(dataRow[26].ToString());
 	}
 }
 
@@ -846,6 +916,40 @@ public class UnitSummonRandomTicketDataTable : DataTableBase
 		Name = dataRow[1].ToString();
 		GroupID = int.Parse(dataRow[2].ToString());
 		Description = dataRow[3].ToString();
+	}
+}
+
+public class UpgradeDataTable_List : DataTableListBase
+{
+	public const string NAME = "Upgrade";
+	public const string DATAFILENAME = "UpgradeData.dat";
+	public override void Load(DataTable dataTable)
+	{
+		foreach(DataRow dr in dataTable.Rows)
+		{
+			ulong serialNo = ulong.Parse(dr[0].ToString());
+			UpgradeDataTable data = new UpgradeDataTable();
+			data.Load(dr);
+			DataList.Add(serialNo, data);
+		}
+	}
+
+}
+
+public class UpgradeDataTable : DataTableBase
+{
+	public string Name;
+	public string Description;
+	public int UpgradeValue;
+	public int Probability;
+	public string Floor;
+	public void Load(DataRow dataRow)
+	{
+		Name = dataRow[1].ToString();
+		Description = dataRow[2].ToString();
+		UpgradeValue = int.Parse(dataRow[3].ToString());
+		Probability = int.Parse(dataRow[4].ToString());
+		Floor = dataRow[5].ToString();
 	}
 }
 
