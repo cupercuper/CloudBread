@@ -174,24 +174,19 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            long stonCnt = unitDataTable.UnitStoreMoney;
+            
             EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)unitData.EnhancementCount) as EnhancementDataTable;
-            if (enhancementDataTable == null)
+            if (enhancementDataTable != null)
             {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWSellUnitController";
-                logMessage.Message = string.Format("Not Found EnhancementDataTable = {0}", unitData.EnhancementCount);
-                Logging.RunLog(logMessage);
-
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
+                stonCnt += (long)enhancementDataTable.AccStoneCnt;
             }
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "Info";
             logMessage.Logger = "DWSellUnitController";
             
-            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, (long)enhancementDataTable.AccStoneCnt, 0, logMessage);
+            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, stonCnt, 0, logMessage);
             Logging.RunLog(logMessage);
 
             unitList.Remove(p.instanceNo);
