@@ -23,20 +23,19 @@ using Microsoft.Practices.EnterpriseLibrary.WindowsAzure.TransientFaultHandling.
 using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
-using CloudBreadRedis;
 
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWChangeStageController : ApiController
+    public class DWChangeUnitDeckController : ApiController
     {
-        // GET api/DWChangeStage
+        // GET api/DWChangeUnitDeck
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWChangeStageInputParam p)
+        public HttpResponseMessage Post(DWChangeUnitDeckInputParam p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -44,7 +43,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWChangeStageInputParam>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWChangeUnitDeckInputParam>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -66,7 +65,7 @@ namespace CloudBread.Controllers
 
             try
             {
-                DWChangeStageModel result = GetResult(p);
+                DWChangeUnitDeckModel result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -92,7 +91,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWChangeStageController";
+                logMessage.Logger = "DWChangeUnitDeckController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -101,167 +100,187 @@ namespace CloudBread.Controllers
             }
         }
 
-        DWChangeStageModel GetResult(DWChangeStageInputParam p)
+        DWChangeUnitDeckModel GetResult(DWChangeUnitDeckInputParam p)
         {
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
-            DWChangeStageModel result = new DWChangeStageModel();
-            
-            short lastStageNo = 0;
-            short lastWorldNo = 0;
-            bool allClear = false;
-            long accStageCnt = 0;
-            DateTime utcTime = DateTime.UtcNow;
-            DateTime gemBoxCreateTime = DateTime.UtcNow;
-            bool gemBoxGet = false;
-            long curGemBoxNo = 0;
-            
+            DWChangeUnitDeckModel result = new DWChangeUnitDeckModel();
+
+            List<uint> unitDeckList = null;
+            Dictionary<uint, UnitData> unitList = null;
+            byte unitSlotIdx = 1;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastStage, LastWorld, AllClear, AccStageCnt, GemBoxCreateTime, GemBoxGet, GemBoxNo FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT UnitList, UnitDeckList, UnitSlotIdx FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
-
                     using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
                     {
                         if (dreader.HasRows == false)
                         {
-                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "Error";
-                            logMessage.Logger = "DWChangeStageController";
-                            logMessage.Message = string.Format("Not Found User MemberID = {0}", p.memberID);
+                            logMessage.Logger = "DWChangeUnitDeckController";
+                            logMessage.Message = string.Format("Not Found User = {0}", p.memberID);
                             Logging.RunLog(logMessage);
 
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                             return result;
                         }
 
                         while (dreader.Read())
                         {
-                            lastStageNo = (short)dreader[0];
-                            lastWorldNo = (short)dreader[1];
-                            allClear = (bool)dreader[2];
-                            accStageCnt = (long)dreader[3];
-                            gemBoxCreateTime = (DateTime)dreader[4];
-                            gemBoxGet = (bool)dreader[5];
-                            curGemBoxNo = (long)dreader[6];
+                            unitList = DWMemberData.ConvertUnitDic(dreader[0] as byte[]);
+                            unitDeckList = DWMemberData.ConvertUnitDeckList(dreader[1] as byte[]);
+                            unitSlotIdx = (byte)dreader[2];
                         }
                     }
                 }
             }
 
-            short worldNo = (short)(p.stageIdx / 10);
-
-            if(p.stageIdx % 10 == 0)
+            if (unitList == null)
             {
-                worldNo = (short)(worldNo - 1);
-            }
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
-            short curStageNo = (short)(p.stageIdx - (worldNo * 10));
-
-            if(lastWorldNo + 1 < worldNo)
-            {
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "Error";
-                logMessage.Logger = "DWChangeStageController";
-                logMessage.Message = string.Format("World Error lastWorldNo = {0}, worldNo = {1}, stageIdx = {2}", lastWorldNo, worldNo, p.stageIdx);
+                logMessage.Logger = "DWChangeUnitDeckController";
+                logMessage.Message = string.Format("Not Found unitList OR canBuyUnitList = {0}", p.memberID);
                 Logging.RunLog(logMessage);
 
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
 
-            if (p.allClear == true && allClear == false)
+            UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
+            if (unitSlotDataTable == null)
             {
-                WorldDataTable worldDataTable = DWDataTableManager.GetDataTable(WorldDataTable_List.NAME, (ulong)(lastWorldNo + 1)) as WorldDataTable;
-                if (worldDataTable != null || lastStageNo % 10 != 0)
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "Error";
+                logMessage.Logger = "DWChangeUnitDeckController";
+                logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
+                Logging.RunLog(logMessage);
+                return result;
+            }
+
+            if (p.changeType == (byte)UNIT_CHANGE_TYPE.ADD_TYPE)
+            {
+                if (unitDeckList.Count >= unitSlotDataTable.UnitMaxCount)
                 {
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                     logMessage.memberID = p.memberID;
                     logMessage.Level = "Error";
-                    logMessage.Logger = "DWChangeStageController";
-                    logMessage.Message = string.Format("World Error lastWorldNo = {0}, lastStageNo = {1}", lastWorldNo, lastStageNo);
+                    logMessage.Logger = "DWChangeUnitDeckController";
+                    logMessage.Message = string.Format("UnitSlotDataTable Max  SerialNo = {0}", unitSlotIdx);
                     Logging.RunLog(logMessage);
-
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                     return result;
                 }
 
-                allClear = true;
+                unitDeckList.Add(p.changeInstanceNo);
             }
-
-            if (lastWorldNo < worldNo)
+            else if (p.changeType == (byte)UNIT_CHANGE_TYPE.SUB_TYPE)
             {
-                lastWorldNo = worldNo;
-                lastStageNo = 0;
-            }
-
-            if (lastStageNo < curStageNo && lastWorldNo <= worldNo)
-            {
-                lastStageNo = curStageNo;
-                accStageCnt++;
-
-                if (DWMemberData.IsTestMemberID(p.memberID) == false)
+                int index = -1;
+                for (int i = 0; i < unitDeckList.Count; ++i)
                 {
-                    CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, accStageCnt);
-                    double maxStage = (((worldNo - 1) * 10) + lastStageNo);
-                    if (CBRedis.GetSortedSetScore((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID) < maxStage)
+                    if (unitDeckList[i] == p.originInstanceNo)
                     {
-                        CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, maxStage);
+                        index = i;
+                        break;
                     }
                 }
+
+                if (index == -1)
+                {
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "Error";
+                    logMessage.Logger = "DWChangeUnitDeckController";
+                    logMessage.Message = string.Format("Not Found Instance No 1 = {0}", p.memberID);
+                    Logging.RunLog(logMessage);
+
+                    return result;
+                }
+
+                unitDeckList.RemoveAt(index);
             }
-
-            ulong gemBoxNo = 0;
-
-            TimeSpan subTime = utcTime - gemBoxCreateTime;
-            if (gemBoxGet == true && subTime.TotalMinutes >= DWDataTableManager.GlobalSettingDataTable.GemBoxDelay)
+            else if (p.changeType == (byte)UNIT_CHANGE_TYPE.CHANGE_TYPE)
             {
-                gemBoxGet = false;
-                gemBoxCreateTime = utcTime;
-                gemBoxNo = DWDataTableManager.GetGemBoxNo();
-                curGemBoxNo = (long)gemBoxNo;
+                int index = -1;
+                for (int i = 0; i < unitDeckList.Count; ++i)
+                {
+                    if (unitDeckList[i] == p.originInstanceNo)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index == -1)
+                {
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "Error";
+                    logMessage.Logger = "DWChangeUnitDeckController";
+                    logMessage.Message = string.Format("Not Found Instance No 2 = {0}", p.memberID);
+                    Logging.RunLog(logMessage);
+
+                    return result;
+                }
+
+                UnitData unitData = null;
+                if (unitList.TryGetValue(p.changeInstanceNo, out unitData) == false)
+                {
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "Error";
+                    logMessage.Logger = "DWChangeUnitDeckController";
+                    logMessage.Message = string.Format("Not Found unitList = {0}", p.memberID);
+                    Logging.RunLog(logMessage);
+
+                    return result;
+                }
+
+                unitDeckList[index] = p.changeInstanceNo;
             }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET CurStage = @curStage, LastStage = @lastStage, CurWorld = @curWorld, LastWorld = @lastWorld, AllClear = @allClear, AccStageCnt = @accStageCnt, GemBoxCreateTime = @gemBoxCreateTime, GemBoxGet = @gemBoxGet, GemBoxNo = @gemBoxNo WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET UnitDeckList = @unitDeckList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = worldNo;
-                    command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = curStageNo;
-                    command.Parameters.Add("@lastStage", SqlDbType.SmallInt).Value = lastStageNo;
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorldNo;
-                    command.Parameters.Add("@allClear", SqlDbType.Bit).Value = allClear;
-                    command.Parameters.Add("@accStageCnt", SqlDbType.BigInt).Value = accStageCnt;
-                    command.Parameters.Add("@gemBoxCreateTime", SqlDbType.DateTime).Value = gemBoxCreateTime;
-                    command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = gemBoxGet;
-                    command.Parameters.Add("@gemBoxNo", SqlDbType.BigInt).Value = curGemBoxNo;
+                    command.Parameters.Add("@unitDeckList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDeckList);
 
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
                     if (rowCount <= 0)
                     {
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "Error";
-                        logMessage.Logger = "DWChangeStageController";
-                        logMessage.Message = string.Format("Update Failed MemberID = {0}", p.memberID);
+                        logMessage.Logger = "DWChangeUnitDeckController";
+                        logMessage.Message = string.Format("UnitDeckList Update Failed");
                         Logging.RunLog(logMessage);
 
-                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }
             }
 
-            result.gemBoxNo = gemBoxNo;
+            result.originInstanceNo = p.originInstanceNo;
+            result.changeInstanceNo = p.changeInstanceNo;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
+
             return result;
         }
     }
-
 }
+

@@ -123,6 +123,14 @@ namespace DW.CommonData
         MAX_TYPE,
     }
 
+    public enum UNIT_CHANGE_TYPE
+    {
+        ADD_TYPE = 0,
+        SUB_TYPE,
+        CHANGE_TYPE,
+        MAX_TYPE,
+    }
+
     [Serializable]
     public class ClientUnitData
     {
@@ -132,12 +140,12 @@ namespace DW.CommonData
         public ulong serialNo;
     }
 
-    [Serializable]
-    public class UnitStoreData
-    {
-        public ulong serialNo;
-        public int count;
-    }
+    //[Serializable]
+    //public class UnitStoreData
+    //{
+    //    public ulong serialNo;
+    //    public int count;
+    //}
 
     [Serializable]
     public class DWUserData
@@ -152,6 +160,7 @@ namespace DW.CommonData
         public short curWorld;
         public short curStage;
         public short lastStage;
+        public List<uint> unitDeckList;
         public List<ClientUnitData> unitList;
         public List<ulong> canBuyUnitList;
         public long gold;
@@ -161,8 +170,8 @@ namespace DW.CommonData
         public long cashEnhancedStone;
         public byte unitSlotIdx;
         public long unitListChangeTime;
-        public byte unitStore;
-        public List<UnitStoreData> unitStoreList;
+        //public byte unitStore;
+        //public List<UnitStoreData> unitStoreList;
         public bool allClear;
         public List<ActiveItemData> activeItemList;
         public List<LimitShopItemData> limitShopItemDataList;
@@ -171,6 +180,7 @@ namespace DW.CommonData
         public int bossDungeonTicket;
         public short curBossDungeonNo;
         public short lastBossDungeonNo;
+        public List<uint> bossClearList;
     }
 
     [Serializable]

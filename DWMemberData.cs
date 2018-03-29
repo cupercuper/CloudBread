@@ -121,50 +121,50 @@ namespace CloudBread
             return ms.ToArray();
         }
 
-        public static List<UnitStoreData> ConvertUnitStoreList(byte[] buffer)
-        {
-            List<UnitStoreData> unitStoretList = new List<UnitStoreData>();
+        //public static List<UnitStoreData> ConvertUnitStoreList(byte[] buffer)
+        //{
+        //    List<UnitStoreData> unitStoretList = new List<UnitStoreData>();
 
-            if (buffer == null)
-            {
-                return unitStoretList;
-            }
+        //    if (buffer == null)
+        //    {
+        //        return unitStoretList;
+        //    }
 
-            MemoryStream ms = new MemoryStream(buffer);
-            BinaryReader br = new BinaryReader(ms);
+        //    MemoryStream ms = new MemoryStream(buffer);
+        //    BinaryReader br = new BinaryReader(ms);
 
-            int count = br.ReadInt32();
+        //    int count = br.ReadInt32();
 
-            for (int i = 0; i < count; ++i)
-            {
-                UnitStoreData unitStoreData = new UnitStoreData();
-                unitStoreData.serialNo = br.ReadUInt64();
-                unitStoreData.count = br.ReadInt32();
+        //    for (int i = 0; i < count; ++i)
+        //    {
+        //        UnitStoreData unitStoreData = new UnitStoreData();
+        //        unitStoreData.serialNo = br.ReadUInt64();
+        //        unitStoreData.count = br.ReadInt32();
 
-                unitStoretList.Add(unitStoreData);
-            }
-            br.Close();
-            ms.Close();
+        //        unitStoretList.Add(unitStoreData);
+        //    }
+        //    br.Close();
+        //    ms.Close();
 
-            return unitStoretList;
-        }
+        //    return unitStoretList;
+        //}
 
-        public static byte[] ConvertByte(List<UnitStoreData> list)
-        {
-            MemoryStream ms = new MemoryStream();
-            BinaryWriter bw = new BinaryWriter(ms);
+        //public static byte[] ConvertByte(List<UnitStoreData> list)
+        //{
+        //    MemoryStream ms = new MemoryStream();
+        //    BinaryWriter bw = new BinaryWriter(ms);
 
-            bw.Write(list.Count);
-            for (int i = 0; i < list.Count; ++i)
-            {
-                bw.Write(list[i].serialNo);
-                bw.Write(list[i].count);
-            }
+        //    bw.Write(list.Count);
+        //    for (int i = 0; i < list.Count; ++i)
+        //    {
+        //        bw.Write(list[i].serialNo);
+        //        bw.Write(list[i].count);
+        //    }
 
-            bw.Close();
-            ms.Close();
-            return ms.ToArray();
-        }
+        //    bw.Close();
+        //    ms.Close();
+        //    return ms.ToArray();
+        //}
 
 
         public static List<ulong> ConvertUnitList(byte[] buffer)
@@ -190,6 +190,72 @@ namespace CloudBread
             ms.Close();
             return unitList;
         }
+
+        public static List<uint> ConvertUnitDeckList(byte[] buffer)
+        {
+            List<uint> unitDeckList = new List<uint>();
+            if (buffer == null)
+            {
+                return unitDeckList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = 0;
+            count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                unitDeckList.Add(br.ReadUInt32());
+            }
+
+            br.Close();
+            ms.Close();
+            return unitDeckList;
+        }
+
+        public static List<uint> ConvertBossClearList(byte[] buffer)
+        {
+            List<uint> bossClearList = new List<uint>();
+            if (buffer == null)
+            {
+                return bossClearList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = 0;
+            count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                bossClearList.Add(br.ReadUInt32());
+            }
+
+            br.Close();
+            ms.Close();
+            return bossClearList;
+        }
+
+
+        public static byte[] ConvertByte(List<uint> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i]);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
 
         public static byte[] ConvertByte(DWMailData mailData)
         {

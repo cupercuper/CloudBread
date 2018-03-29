@@ -108,17 +108,19 @@ namespace CloudBread.Controllers
             DWGetUserDataModel result = new DWGetUserDataModel();
             DateTime bossDungeonTicketRefreshTime = DateTime.UtcNow;
 
-            /// Database connection retry policy
+            // Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, AllClear, ActiveItemList, LimitShopItemDataList, UnitTicketList, LastStage, AccStageCnt, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                //string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, AllClear, ActiveItemList, LimitShopItemDataList, UnitTicketList, LastStage, AccStageCnt, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+
+                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, AllClear, ActiveItemList, LimitShopItemDataList, UnitTicketList, LastStage, AccStageCnt, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime, UnitDeckList, BossClearList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
                     using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
                     {
-                        if(dreader.HasRows == false)
+                        if (dreader.HasRows == false)
                         {
                             result.errorCode = (byte)DW_ERROR_CODE.NOT_FOUND_USER;
                             return result;
@@ -126,40 +128,42 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            Dictionary<uint, UnitData> unitDic = DWMemberData.ConvertUnitDic(dreader[9] as byte[]);
+                            Dictionary<uint, UnitData> unitDic = DWMemberData.ConvertUnitDic(dreader[9] as byte[]); // UnitList
                             DWUserData workItem = new DWUserData()
                             {
-                                memberID = dreader[0].ToString(),
-                                nickName = dreader[1].ToString(),
-                                recommenderID = dreader[2].ToString(),
-                                captianLevel = (short)dreader[3],
-                                captianID = (byte)dreader[4],
-                                captianChange = (long)dreader[5],
-                                lastWorld = (short)dreader[6],
-                                curWorld = (short)dreader[7],
-                                curStage = (short)dreader[8],
+                                memberID = dreader[0].ToString(), // MemberID
+                                nickName = dreader[1].ToString(), // NickName
+                                recommenderID = dreader[2].ToString(), // RecommenderID
+                                captianLevel = (short)dreader[3], // CaptianLevel
+                                captianID = (byte)dreader[4], // CaptianID
+                                captianChange = (long)dreader[5], // CaptianChange
+                                lastWorld = (short)dreader[6], // LastWorld
+                                curWorld = (short)dreader[7], // CurWorld
+                                curStage = (short)dreader[8], // CurStage
                                 unitList = DWMemberData.ConvertClientUnitData(unitDic),
-                                canBuyUnitList = DWMemberData.ConvertUnitList(dreader[10] as byte[]),
-                                gold = (long)dreader[11],
-                                gem = (long)dreader[12],
-                                cashGem = (long)dreader[13],
-                                enhancedStone = (long)dreader[14],
-                                cashEnhancedStone = (long)dreader[15],
-                                unitSlotIdx = (byte)dreader[16],
-                                unitListChangeTime = ((DateTime)dreader[17]).Ticks,
-                                unitStore = (byte)dreader[18],
-                                unitStoreList = DWMemberData.ConvertUnitStoreList(dreader[19] as byte[]),
-                                allClear = (bool)dreader[20],
-                                activeItemList = DWMemberData.ConvertActiveItemList(dreader[21] as byte[]),
-                                limitShopItemDataList = DWMemberData.ConvertLimitShopItemDataList(dreader[22] as byte[]),
-                                unitTicketList = DWMemberData.ConvertUnitTicketDataList(dreader[23] as byte[]),
-                                lastStage = (short)dreader[24],
-                                accStage = (long)dreader[25],
-                                bossDungeonTicket = (int)dreader[26],
-                                lastBossDungeonNo = (short)dreader[27]
+                                canBuyUnitList = DWMemberData.ConvertUnitList(dreader[10] as byte[]), // CanBuyUnitList
+                                gold = (long)dreader[11], // Gold
+                                gem = (long)dreader[12], // Gem
+                                cashGem = (long)dreader[13], // CashGem
+                                enhancedStone = (long)dreader[14], // EnhancedStone
+                                cashEnhancedStone = (long)dreader[15], // CashEnhancedStone
+                                unitSlotIdx = (byte)dreader[16], // UnitSlotIdx
+                                unitListChangeTime = ((DateTime)dreader[17]).Ticks, // UnitListChangeTime
+                                //unitStore = (byte)dreader[18],
+                                //unitStoreList = DWMemberData.ConvertUnitStoreList(dreader[19] as byte[]),
+                                allClear = (bool)dreader[18], //AllClear
+                                activeItemList = DWMemberData.ConvertActiveItemList(dreader[19] as byte[]), // ActiveItemList
+                                limitShopItemDataList = DWMemberData.ConvertLimitShopItemDataList(dreader[20] as byte[]), // LimitShopItemDataList
+                                unitTicketList = DWMemberData.ConvertUnitTicketDataList(dreader[21] as byte[]), // UnitTicketList
+                                lastStage = (short)dreader[22], // LastStage
+                                accStage = (long)dreader[23], // AccStageCnt
+                                bossDungeonTicket = (int)dreader[24], // BossDungeonTicket
+                                lastBossDungeonNo = (short)dreader[25], // LastBossDungeonNo
+                                unitDeckList = DWMemberData.ConvertUnitDeckList(dreader[27] as byte[]), // UnitDeckList
+                                bossClearList = DWMemberData.ConvertBossClearList(dreader[28] as byte[])
                             };
 
-                            bossDungeonTicketRefreshTime = (DateTime)dreader[28];
+                            bossDungeonTicketRefreshTime = (DateTime)dreader[26];
 
                             result.userDataList.Add(workItem);
                             result.errorCode = (byte)DW_ERROR_CODE.OK;
@@ -167,6 +171,7 @@ namespace CloudBread.Controllers
                     }
                 }
             }
+
 
             int KOREA_TIME_ZONE = 9;
             DWMemberData.BossDungeonTicketRefresh(ref bossDungeonTicketRefreshTime, ref result.userDataList[0].bossDungeonTicket, KOREA_TIME_ZONE, DWDataTableManager.GlobalSettingDataTable.BossDugeonTicketCount);

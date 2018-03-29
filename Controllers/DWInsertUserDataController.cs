@@ -143,14 +143,15 @@ namespace CloudBread.Controllers
                 cashEnhancedStone = 0,
                 unitSlotIdx = 1,
                 unitListChangeTime = DateTime.UtcNow.Ticks,
-                unitStore = 0,
+                //unitStore = 0,
                 activeItemList = new List<ActiveItemData>(),
                 limitShopItemDataList = new List<LimitShopItemData>(),
                 unitTicketList = new List<DWUnitTicketData>(),
                 accStage = 1,
                 bossDungeonTicket = globalSettingDataTable.BossDugeonTicketCount,
                 curBossDungeonNo = 1,
-                lastBossDungeonNo = 1
+                lastBossDungeonNo = 1,
+                bossClearList = new List<uint>()
             };
 
             // Init Unit
@@ -159,15 +160,22 @@ namespace CloudBread.Controllers
             DWMemberData.AddUnitDic(ref unitDic, 30005); // 3성 골리앗
             DWMemberData.AddUnitDic(ref unitDic, 50002); // 5성 파이어뱃
             result.userData.unitList = DWMemberData.ConvertClientUnitData(unitDic);
+            result.userData.unitDeckList = new List<uint>();
+            for(int i = 0; i < result.userData.unitList.Count; ++i)
+            {
+                result.userData.unitDeckList.Add(result.userData.unitList[i].instanceNo);
+            }
             //---------------------------------------------------------
-     
-            result.userData.unitStoreList = new List<UnitStoreData>();
+
+            //result.userData.unitStoreList = new List<UnitStoreData>();
 
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, ActiveItemList, LimitShopItemDataList, UnitTicketList, BossDungeonTicket, LastBossDungeonNo) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList, @activeItemList, @limitShopItemDataList, @unitTicketList, @bossDungeonTicket, @lastBossDungeonNo)";
+                //string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, ActiveItemList, LimitShopItemDataList, UnitTicketList, BossDungeonTicket, LastBossDungeonNo) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList, @activeItemList, @limitShopItemDataList, @unitTicketList, @bossDungeonTicket, @lastBossDungeonNo)";
+
+                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, ActiveItemList, LimitShopItemDataList, UnitTicketList, BossDungeonTicket, LastBossDungeonNo, UnitDeckList, BossClearList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @activeItemList, @limitShopItemDataList, @unitTicketList, @bossDungeonTicket, @lastBossDungeonNo, @unitDeckList, @bossClearList)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -189,14 +197,17 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = result.userData.cashEnhancedStone;
                     command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = 1;
                     command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = new DateTime(result.userData.unitListChangeTime);
-                    command.Parameters.Add("@unitStore", SqlDbType.TinyInt).Value = 0;
-                    command.Parameters.Add("@unitStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitStoreList);
+                    //command.Parameters.Add("@unitStore", SqlDbType.TinyInt).Value = 0;
+                    //command.Parameters.Add("@unitStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitStoreList);
                     command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.activeItemList);
                     command.Parameters.Add("@limitShopItemDataList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.limitShopItemDataList);
                     command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitTicketList);
                     command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = result.userData.bossDungeonTicket;
                     command.Parameters.Add("@lastBossDungeonNo", SqlDbType.SmallInt).Value = result.userData.lastBossDungeonNo;
+                    command.Parameters.Add("@unitDeckList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitDeckList);
+                    command.Parameters.Add("@bossClearList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.bossClearList);
 
+                    
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();

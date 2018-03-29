@@ -363,6 +363,8 @@ public class GlobalSettingDataTable : DataTableBase
 	public int CaptainChangeGoldRate;
 	public int CaptainChangeGoldMaxRate;
 	public int CaptainChangeGoldAuto;
+	public int BossClearGemValue;
+	public int BossClearGemCount;
 	public void Load(DataRow dataRow)
 	{
 		UnitListChangeTime = int.Parse(dataRow[1].ToString());
@@ -380,6 +382,8 @@ public class GlobalSettingDataTable : DataTableBase
 		CaptainChangeGoldRate = int.Parse(dataRow[13].ToString());
 		CaptainChangeGoldMaxRate = int.Parse(dataRow[14].ToString());
 		CaptainChangeGoldAuto = int.Parse(dataRow[15].ToString());
+		BossClearGemValue = int.Parse(dataRow[16].ToString());
+		BossClearGemCount = int.Parse(dataRow[17].ToString());
 	}
 }
 

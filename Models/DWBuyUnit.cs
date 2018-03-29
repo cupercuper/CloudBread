@@ -9,15 +9,14 @@ namespace CloudBread.Models
     {
         public string memberID;
         public byte index;
-        public byte unitStore;
         public string token;
     }
 
     [Serializable]
     public class DWBuyUnitModel
     {
-        public List<UnitStoreData> unitStoreDataList;
-        public List<ClientUnitData> unitDataList;
+        public List<ClientUnitData> unitList;
+        public List<uint> unitDeckList;
         public byte index;
         public long gem;
         public long cashGem;

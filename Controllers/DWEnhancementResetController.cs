@@ -27,15 +27,15 @@ using DW.CommonData;
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWSellUnitController : ApiController
+    public class DWEnhancementResetController : ApiController
     {
-        // GET api/DWSellUnit
+        // GET api/DWEnhancementReset
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWSellUnitInputParam p)
+        public HttpResponseMessage Post(DWEnhancementResetInputParam p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -43,7 +43,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWSellUnitInputParam>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWEnhancementResetInputParam>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -59,14 +59,14 @@ namespace CloudBread.Controllers
 
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
             string jsonParam = JsonConvert.SerializeObject(p);
-            
+
             HttpResponseMessage response = new HttpResponseMessage();
             EncryptedData encryptedResult = new EncryptedData();
 
             try
             {
                 /// Database connection retry policy
-                DWSellUnitModel result = GetResult(p);
+                DWEnhancementResetModel result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -93,7 +93,7 @@ namespace CloudBread.Controllers
                 // error log
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "ERROR";
-                logMessage.Logger = "DWSellUnitController";
+                logMessage.Logger = "DWEnhancementResetController";
                 logMessage.Message = jsonParam;
                 logMessage.Exception = ex.ToString();
                 Logging.RunLog(logMessage);
@@ -102,22 +102,22 @@ namespace CloudBread.Controllers
             }
         }
 
-        DWSellUnitModel GetResult(DWSellUnitInputParam p)
+        DWEnhancementResetModel GetResult(DWEnhancementResetInputParam p)
         {
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
-            DWSellUnitModel result = new DWSellUnitModel();
+            DWEnhancementResetModel result = new DWEnhancementResetModel();
 
             // Database connection retry policy
             Dictionary<uint, UnitData> unitList = null;
-            List<uint> unitDeckList = null;
             long enhancedStone = 0;
             long cashEnhancedStone = 0;
+
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT UnitList, EnhancedStone, CashEnhancedStone, UnitDeckList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT UnitList, EnhancedStone, CashEnhancedStone FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -127,7 +127,7 @@ namespace CloudBread.Controllers
                         {
                             logMessage.memberID = p.memberID;
                             logMessage.Level = "Error";
-                            logMessage.Logger = "DWSellUnitController";
+                            logMessage.Logger = "DWEnhancementResetController";
                             logMessage.Message = string.Format("Not Found User");
                             Logging.RunLog(logMessage);
 
@@ -140,7 +140,6 @@ namespace CloudBread.Controllers
                             unitList = DWMemberData.ConvertUnitDic(dreader[0] as byte[]);
                             enhancedStone = (long)dreader[1];
                             cashEnhancedStone = (long)dreader[2];
-                            unitDeckList = DWMemberData.ConvertUnitDeckList(dreader[3] as byte[]);
                         }
                     }
                 }
@@ -151,7 +150,7 @@ namespace CloudBread.Controllers
             {
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "Error";
-                logMessage.Logger = "DWSellUnitController";
+                logMessage.Logger = "DWEnhancementResetController";
                 logMessage.Message = string.Format("Not Found Unit Instance = {0}", p.instanceNo);
                 Logging.RunLog(logMessage);
 
@@ -159,48 +158,29 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            UnitDataTable unitDataTable = DWDataTableManager.GetDataTable(UnitDataTable_List.NAME, unitData.SerialNo) as UnitDataTable;
-            if (unitDataTable == null)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWSellUnitController";
-                logMessage.Message = string.Format("Not Found Unit DataTable = {0}", unitData.SerialNo);
-                Logging.RunLog(logMessage);
-
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
-
-            long stonCnt = unitDataTable.UnitStoreMoney;
-
+            long stoneCnt = 0;
             EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)unitData.EnhancementCount) as EnhancementDataTable;
             if (enhancementDataTable != null)
             {
-                stonCnt += (long)enhancementDataTable.AccStoneCnt;
+                stoneCnt = (long)enhancementDataTable.AccStoneCnt;
             }
+
+            unitData.EnhancementCount = 0;
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "Info";
-            logMessage.Logger = "DWSellUnitController";
+            logMessage.Logger = "DWEnhancementResetController";
 
-            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, stonCnt, 0, logMessage);
+            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, stoneCnt, 0, logMessage);
             Logging.RunLog(logMessage);
-
-            unitList.Remove(p.instanceNo);
-            if(unitDeckList.Contains(p.instanceNo))
-            {
-                unitDeckList.Remove(p.instanceNo);
-            }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, UnitDeckList = @unitDeckList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
                     command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
-                    command.Parameters.Add("@unitDeckList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDeckList);
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -209,7 +189,7 @@ namespace CloudBread.Controllers
                     {
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "Error";
-                        logMessage.Logger = "DWSellUnitController";
+                        logMessage.Logger = "DWEnhancementResetController";
                         logMessage.Message = string.Format("Update Failed");
                         Logging.RunLog(logMessage);
 
@@ -219,14 +199,8 @@ namespace CloudBread.Controllers
                 }
             }
 
-            logMessage.memberID = p.memberID;
-            logMessage.Level = "INFO";
-            logMessage.Logger = "DWSellUnitController";
-            logMessage.Message = string.Format("Instance No = {0}, EnhancedStone = {1} CashEnhancedStone = {2}", p.instanceNo, enhancedStone, cashEnhancedStone);
-            Logging.RunLog(logMessage);
-
             result.instanceNo = p.instanceNo;
-            result.enhancedStone = enhancedStone;
+            result.enhancedStone = stoneCnt;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

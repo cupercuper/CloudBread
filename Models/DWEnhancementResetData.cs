@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace CloudBread.Models
 {
     [Serializable]
-    public class DWSellUnitInputParam
+    public class DWEnhancementResetInputParam
     {
         public string memberID;
         public uint instanceNo;
@@ -12,7 +11,7 @@ namespace CloudBread.Models
     }
 
     [Serializable]
-    public class DWSellUnitModel
+    public class DWEnhancementResetModel
     {
         public uint instanceNo;
         public long enhancedStone;

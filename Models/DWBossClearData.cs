@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace CloudBread.Models
 {
+
     [Serializable]
-    public class DWSellUnitInputParam
+    public class DWBossClearDataInputParam
     {
         public string memberID;
-        public uint instanceNo;
+        public uint clearIdx;
         public string token;
     }
 
     [Serializable]
-    public class DWSellUnitModel
+    public class DWBossClearDataModel
     {
-        public uint instanceNo;
-        public long enhancedStone;
         public byte errorCode;
     }
 }
