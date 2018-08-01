@@ -106,7 +106,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "SELECT MemberID FROM DWMembers Where NickName = @nickName";
+                string strQuery = "SELECT MemberID FROM DWMembersNew Where NickName = @nickName";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@nickName", SqlDbType.NVarChar).Value = p.nickName;

@@ -16,7 +16,7 @@ namespace CloudBread.Models
     public class DWUserDeckInfoModel
     {
         public string nickName;
-        public List<ClientUnitData> unitList;
+        public List<UnitData> unitList;
         public byte errorCode;
     }
 }

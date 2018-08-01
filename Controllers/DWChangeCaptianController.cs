@@ -109,8 +109,8 @@ namespace CloudBread.Controllers
             DWChangeCaptianModel result = new DWChangeCaptianModel();
 
             short lastWorld = 0;
-            long enhancedStone = 0;
-            long cashEnhancedStone = 0;
+            long ether = 0;
+            long cashEther = 0;
             long captianChange = 0;
             bool allClear = false;
 
@@ -118,7 +118,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EnhancedStone, CashEnhancedStone, CaptianChange, LastWorld, AllClear FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Ether, CashEther, CaptianChange, LastWorld, AllClear FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -140,8 +140,8 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            enhancedStone = (long)dreader[0];
-                            cashEnhancedStone = (long)dreader[1];
+                            ether = (long)dreader[0];
+                            cashEther = (long)dreader[1];
                             captianChange = (long)dreader[2];
                             lastWorld = (short)dreader[3];
                             allClear = (bool)dreader[4];
@@ -181,7 +181,7 @@ namespace CloudBread.Controllers
             logMessage.Level = "INFO";
             logMessage.Logger = "DWChangeCaptianController";
             
-            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, worldDataTable.EnhancementStone, 0, logMessage);
+            DWMemberData.AddEther(ref ether, ref cashEther, worldDataTable.EnhancementStone, 0, logMessage);
 
             Logging.RunLog(logMessage);
 
@@ -193,13 +193,13 @@ namespace CloudBread.Controllers
             byte captianID = DWDataTableManager.GetCaptianID();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             { 
-                string strQuery = string.Format("UPDATE DWMembers SET CaptianID = @captianID, CaptianLevel = @captianLevel, CaptianChange = @captianChange, EnhancedStone = @enhancedStone, CurWorld = @curWorld, LastWorld = @lastWorld, CurStage = @curStage, LastStage = @lastStage WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET CaptianID = @captianID, CaptianLevel = @captianLevel, CaptianChange = @captianChange, Ether = @ether, CurWorld = @curWorld, LastWorld = @lastWorld, CurStage = @curStage, LastStage = @lastStage WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@captianID", SqlDbType.TinyInt).Value = captianID;
                     command.Parameters.Add("@captianLevel", SqlDbType.SmallInt).Value = 1;
                     command.Parameters.Add("@captianChange", SqlDbType.BigInt).Value = captianChange;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
+                    command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
                     command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = 1;
                     command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = 1;
                     command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = 1;
@@ -230,11 +230,11 @@ namespace CloudBread.Controllers
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";
             logMessage.Logger = "DWChangeCaptianController";
-            logMessage.Message = string.Format("CaptianID = {0}, EnhancedStone = {1}, CaptianChange = {2}", captianID, enhancedStone, captianChange);
+            logMessage.Message = string.Format("CaptianID = {0}, Ether = {1}, CaptianChange = {2}", captianID, ether, captianChange);
             Logging.RunLog(logMessage);
 
             result.captianID = captianID;
-            result.enhancedStone = enhancedStone;
+            result.ether = ether;
             result.captianChange = captianChange;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 

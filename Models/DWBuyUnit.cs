@@ -8,20 +8,15 @@ namespace CloudBread.Models
     public class DWBuyUnitInputParam
     {
         public string memberID;
-        public byte index;
+        public ulong serialNo;
+        public ushort level;
         public string token;
     }
 
     [Serializable]
     public class DWBuyUnitModel
     {
-        public List<ClientUnitData> unitList;
-        public List<uint> unitDeckList;
-        public byte index;
-        public long gem;
-        public long cashGem;
-        public long enhancedStone;
-        public long cashEnhancedStone;
+        public UnitData unitData;
         public byte errorCode;
     }
 }

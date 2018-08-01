@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using DW.CommonData;
 
 namespace CloudBread.Models
 {
@@ -13,11 +15,15 @@ namespace CloudBread.Models
     [Serializable]
     public class DWReadMailModel
     {
-        public long index;
-        public long gold;
+        public double gold;
         public long gem;
-        public long enhancedStone;
-        public int bossDungeonTicket;
+        public long ether;
+        public long gas;
+        public List<SkillItemData> skillItemList;
+        public List<BoxData> boxList;
+        public long relicBoxCnt;
+        public long index;
+        public List<DWItemData> itemList;
         public byte errorCode;
     }
 }

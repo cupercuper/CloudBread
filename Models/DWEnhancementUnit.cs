@@ -15,9 +15,9 @@ namespace CloudBread.Models
     [Serializable]
     public class DWEnhancementUnitModel
     {
-        public ClientUnitData unitData;
-        public long enhancedStone;
-        public long cashEnhancedStone;
+        //public ClientUnitData unitData;
+        public long ether;
+        public long cashEther;
         public byte errorCode;
     }
 }

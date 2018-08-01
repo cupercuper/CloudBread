@@ -17,7 +17,7 @@ namespace CloudBread.Models
         public long addGold;
         public long gem;
         public long cashGem;
-        public long enhancedStone;
+        public long ether;
         public short lastBossDungeonNo;
         public int bossDungeonTicket;
         public byte errorCode;

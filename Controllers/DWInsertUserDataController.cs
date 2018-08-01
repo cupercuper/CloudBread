@@ -24,6 +24,7 @@ using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
 using CloudBreadRedis;
+using CloudBread.Manager;
 
 namespace CloudBread.Controllers
 {
@@ -121,6 +122,7 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            TimeSpan dailyQeustTimeRemain = new TimeSpan(globalSettingDataTable.DailyQuestResetTIme, 0, 0);
 
             result.userData = new DWUserData()
             {
@@ -134,48 +136,99 @@ namespace CloudBread.Controllers
                 curWorld = 1,
                 curStage = 1,
                 lastStage = 1,
-                unitList = null,
-                canBuyUnitList = DWDataTableManager.GetCanBuyFirstUserUnitList(),
+                unitList = new List<UnitData>(),
                 gold = 0,
-                gem = 4000,
+                gem = 10000,
                 cashGem = 0,
-                enhancedStone = 400,
-                cashEnhancedStone = 0,
-                unitSlotIdx = 1,
-                unitListChangeTime = DateTime.UtcNow.Ticks,
-                //unitStore = 0,
+                ether = 0,
+                cashEther = 0,
+                gas = 0,
+                cashGas = 0,
                 activeItemList = new List<ActiveItemData>(),
                 limitShopItemDataList = new List<LimitShopItemData>(),
-                unitTicketList = new List<DWUnitTicketData>(),
                 accStage = 1,
                 bossDungeonTicket = globalSettingDataTable.BossDugeonTicketCount,
                 curBossDungeonNo = 1,
                 lastBossDungeonNo = 1,
-                bossClearList = new List<uint>()
+                bossClearList = new List<uint>(),
+                timeZoneID = p.timeZoneID,
+                timeZoneTotalMin = p.timeZoneTotalMin,
+                continueAttendanceCnt = 0,
+                accAttendanceCnt = 0,
+                continueAttendanceNo = 0,
+                accAttendanceNo = 0,
+                dailyQuestList = new List<QuestData>(),
+                dailyQeustTimeRemain = dailyQeustTimeRemain.Ticks,
+                achievementList = new List<QuestData>(),
+                resourceDrillIdx = 0,
+                resourceDrillTimeRemain = 0,
+                luckySupplyShipTimeRemain = 0,
+                skillItemList = new List<SkillItemData>(),
+                boxList = new List<BoxData>(),
+                relicList = new List<RelicData>(),
+                relicStoreList = new List<RelicData>(),
+                relicSlotIdx = 1,
+                baseCampList = new List<BaseCampData>(),
+                relicBoxCnt = 0,
+                gameSpeedItemCnt = 0,
+                gameSpeedItemTimeRemain = 0,
+                lastReturnStage = 0,
             };
 
-            // Init Unit
-            Dictionary<uint, UnitData> unitDic = new Dictionary<uint, UnitData>();
-            DWMemberData.AddUnitDic(ref unitDic, 10001); // 1성 마린
-            DWMemberData.AddUnitDic(ref unitDic, 30005); // 3성 골리앗
-            DWMemberData.AddUnitDic(ref unitDic, 50002); // 5성 파이어뱃
-            result.userData.unitList = DWMemberData.ConvertClientUnitData(unitDic);
-            result.userData.unitDeckList = new List<uint>();
-            for(int i = 0; i < result.userData.unitList.Count; ++i)
+            List<ulong> dailyQuestNoList = DWDataTableManager.GetDailyQuestList();
+            for (int i = (int)DAILY_QUEST_GRADE_TYPE.GRADE_1; i < (int)DAILY_QUEST_GRADE_TYPE.MAX_TYPE; ++i)
             {
-                result.userData.unitDeckList.Add(result.userData.unitList[i].instanceNo);
+                QuestData dailyQuestData = new QuestData();
+                dailyQuestData.serialNo = dailyQuestNoList[i - 1];
+                dailyQuestData.complete = 0;
+                dailyQuestData.getReward = 0;
+                dailyQuestData.curValue = "0";
+
+                result.userData.dailyQuestList.Add(dailyQuestData);
+            }
+
+            List<ulong> achievementNoList = DWDataTableManager.FirstAchievementList();
+            for(int i = 0; i < achievementNoList.Count; ++i)
+            {
+                QuestData achievementData = new QuestData();
+                achievementData.serialNo = achievementNoList[i];
+                achievementData.complete = 0;
+                achievementData.getReward = 0;
+                achievementData.curValue = "0";
+
+                result.userData.achievementList.Add(achievementData);
+            }
+
+            //AttendanceCheckManager.AttendanceCheckInit(p.memberID, result.userData.timeZoneTotalMin, out result.userData.continueAttendanceNo, out result.userData.accAttendanceNo);
+
+            // Init Unit
+            List<ulong> unitList = DWDataTableManager.GetFirstUnitList();
+            for (int i = 0; i < unitList.Count; ++i)
+            {
+                UnitData unitData = new UnitData();
+                unitData.serialNo = unitList[i];
+                unitData.level = 1;
+
+                result.userData.unitList.Add(unitData);
             }
             //---------------------------------------------------------
 
-            //result.userData.unitStoreList = new List<UnitStoreData>();
+            // Init Skill Item
+            List<SkillItemDataTable> skillItemList = DWDataTableManager.GetFirstSkillItemList();
+            for(int i = 0; i < skillItemList.Count; ++i)
+            {
+                SkillItemData itemData = new SkillItemData();
+                itemData.type = skillItemList[i].Type;
+                itemData.count = 0;
+
+                result.userData.skillItemList.Add(itemData);
+            }
 
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                //string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, UnitStore, UnitStoreList, ActiveItemList, LimitShopItemDataList, UnitTicketList, BossDungeonTicket, LastBossDungeonNo) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @unitStore, @unitStoreList, @activeItemList, @limitShopItemDataList, @unitTicketList, @bossDungeonTicket, @lastBossDungeonNo)";
-
-                string strQuery = "Insert into DWMembers (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, CanBuyUnitList, Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitListChangeTime, ActiveItemList, LimitShopItemDataList, UnitTicketList, BossDungeonTicket, LastBossDungeonNo, UnitDeckList, BossClearList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @canBuyUnitList, @gold, @gem, @cashGem, @enhancedStone, @cashEnhancedStone, @unitSlotIdx, @unitListChangeTime, @activeItemList, @limitShopItemDataList, @unitTicketList, @bossDungeonTicket, @lastBossDungeonNo, @unitDeckList, @bossClearList)";
+                string strQuery = "Insert into DWMembersNew (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, Gold, Gem, CashGem, Ether, CashEther, ActiveItemList, LimitShopItemDataList, BossDungeonTicket, LastBossDungeonNo, BossClearList, TimeZone, TimeZoneID, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, DailyQuestList, AchievementList, ResouceDrillIdx, LuckySupplyShipLastTime, SkillItemList, BoxList, RelicList, RelicStoreList, RelicSlotIdx, Gas, CashGas, BaseCampList, RelicBoxCount, LastReturnStage) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @gold, @gem, @cashGem, @ether, @cashEther, @activeItemList, @limitShopItemDataList, @bossDungeonTicket, @lastBossDungeonNo, @bossClearList, @timeZone, @timeZoneID, @continueAttendanceCnt, @continueAttendanceNo, @accAttendanceCnt, @accAttendanceNo, @dailyQuestList, @achievementList, @resouceDrillIdx, @luckySupplyShipLastTime, @skillItemList, @boxList, @relicList, @relicStoreList, @relicSlotIdx, @gas, @cashGas, @baseCampList, @relicBoxCount, @lastReturnStage)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -188,26 +241,38 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = result.userData.curWorld;
                     command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = result.userData.curStage;
                     command.Parameters.Add("@lastStage", SqlDbType.SmallInt).Value = result.userData.curStage;
-                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
-                    command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.canBuyUnitList);
-                    command.Parameters.Add("@gold", SqlDbType.BigInt).Value = result.userData.gold;
+                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitList);
+                    command.Parameters.Add("@gold", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.gold);
                     command.Parameters.Add("@gem", SqlDbType.BigInt).Value = result.userData.gem;
                     command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = result.userData.cashGem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = result.userData.enhancedStone;
-                    command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = result.userData.cashEnhancedStone;
-                    command.Parameters.Add("@unitSlotIdx", SqlDbType.TinyInt).Value = 1;
-                    command.Parameters.Add("@unitListChangeTime", SqlDbType.DateTime).Value = new DateTime(result.userData.unitListChangeTime);
-                    //command.Parameters.Add("@unitStore", SqlDbType.TinyInt).Value = 0;
-                    //command.Parameters.Add("@unitStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitStoreList);
+                    command.Parameters.Add("@ether", SqlDbType.BigInt).Value = result.userData.ether;
+                    command.Parameters.Add("@cashEther", SqlDbType.BigInt).Value = result.userData.cashEther;     
                     command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.activeItemList);
                     command.Parameters.Add("@limitShopItemDataList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.limitShopItemDataList);
-                    command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitTicketList);
                     command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = result.userData.bossDungeonTicket;
                     command.Parameters.Add("@lastBossDungeonNo", SqlDbType.SmallInt).Value = result.userData.lastBossDungeonNo;
-                    command.Parameters.Add("@unitDeckList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.unitDeckList);
                     command.Parameters.Add("@bossClearList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.bossClearList);
+                    command.Parameters.Add("@timeZone", SqlDbType.Int).Value = result.userData.timeZoneTotalMin;
+                    command.Parameters.Add("@timeZoneID", SqlDbType.NVarChar).Value = result.userData.timeZoneID;
+                    command.Parameters.Add("@continueAttendanceCnt", SqlDbType.TinyInt).Value = result.userData.continueAttendanceCnt;
+                    command.Parameters.Add("@continueAttendanceNo", SqlDbType.SmallInt).Value = result.userData.continueAttendanceNo;
+                    command.Parameters.Add("@accAttendanceCnt", SqlDbType.TinyInt).Value = result.userData.accAttendanceCnt;
+                    command.Parameters.Add("@accAttendanceNo", SqlDbType.SmallInt).Value = result.userData.accAttendanceNo;
+                    command.Parameters.Add("@dailyQuestList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.dailyQuestList);
+                    command.Parameters.Add("@achievementList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.achievementList);
+                    command.Parameters.Add("@resouceDrillIdx", SqlDbType.TinyInt).Value = result.userData.resourceDrillIdx;
+                    command.Parameters.Add("@luckySupplyShipLastTime", SqlDbType.DateTime).Value = new DateTime(1970,1,1);
+                    command.Parameters.Add("@skillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.skillItemList);
+                    command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userData.boxList);
+                    command.Parameters.Add("@relicList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(new Dictionary<uint, RelicData>());
+                    command.Parameters.Add("@relicStoreList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(new Dictionary<uint, RelicData>());
+                    command.Parameters.Add("@relicSlotIdx", SqlDbType.TinyInt).Value = result.userData.relicSlotIdx;
+                    command.Parameters.Add("@gas", SqlDbType.BigInt).Value = result.userData.gas;
+                    command.Parameters.Add("@cashGas", SqlDbType.BigInt).Value = result.userData.cashGas;
+                    command.Parameters.Add("@baseCampList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(new Dictionary<ulong, ushort>());
+                    command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = result.userData.relicBoxCnt;
+                    command.Parameters.Add("@lastReturnStage", SqlDbType.BigInt).Value = result.userData.lastReturnStage;
 
-                    
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
@@ -216,7 +281,7 @@ namespace CloudBread.Controllers
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "Error";
                         logMessage.Logger = "DWInsertUserDataController";
-                        logMessage.Message = string.Format("Insert Failed DWMembers");
+                        logMessage.Message = string.Format("Insert Failed DWMembersNew");
                         Logging.RunLog(logMessage);
 
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
@@ -228,7 +293,7 @@ namespace CloudBread.Controllers
             List<long> eventLIst = new List<long>();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembersInputEvent (MemberID, EventList) VALUES (@memberID, @eventList)";
+                string strQuery = "Insert into DWMembersInputEventNew (MemberID, EventList) VALUES (@memberID, @eventList)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -242,7 +307,7 @@ namespace CloudBread.Controllers
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "Error";
                         logMessage.Logger = "DWInsertUserDataController";
-                        logMessage.Message = string.Format("Insert Failed DWMembersInputEvent");
+                        logMessage.Message = string.Format("Insert Failed DWMembersInputEventNew");
                         Logging.RunLog(logMessage);
 
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
@@ -251,11 +316,11 @@ namespace CloudBread.Controllers
                 }
             }
 
-            if (DWMemberData.IsTestMemberID(p.memberID) == false)
-            {
-                CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, 1);
-                CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, 1);
-            }
+            //if (DWMemberData.IsTestMemberID(p.memberID) == false)
+            //{
+            //    CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, 1);
+            //    CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, 1);
+            //}
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";

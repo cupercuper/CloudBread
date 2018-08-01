@@ -24,6 +24,8 @@ using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
 using CloudBreadRedis;
+using CloudBread.Manager;
+
 
 namespace CloudBread.Controllers
 {
@@ -112,15 +114,16 @@ namespace CloudBread.Controllers
             bool allClear = false;
             long accStageCnt = 0;
             DateTime utcTime = DateTime.UtcNow;
-            DateTime gemBoxCreateTime = DateTime.UtcNow;
-            bool gemBoxGet = false;
-            long curGemBoxNo = 0;
+            DateTime scienceDroneCreateTime = DateTime.UtcNow;
+            long curDroneNo = 0;
+            List<SkillItemData> skillItemList = null;
+            bool destroyDrone = false;
             
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastStage, LastWorld, AllClear, AccStageCnt, GemBoxCreateTime, GemBoxGet, GemBoxNo FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT LastStage, LastWorld, AllClear, AccStageCnt, ScienceDroneCreateTime, ScienceDroneNo, DestroyScienceDrone, SkillItemList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -146,9 +149,10 @@ namespace CloudBread.Controllers
                             lastWorldNo = (short)dreader[1];
                             allClear = (bool)dreader[2];
                             accStageCnt = (long)dreader[3];
-                            gemBoxCreateTime = (DateTime)dreader[4];
-                            gemBoxGet = (bool)dreader[5];
-                            curGemBoxNo = (long)dreader[6];
+                            scienceDroneCreateTime = (DateTime)dreader[4];
+                            curDroneNo = (long)dreader[5];
+                            destroyDrone = (bool)dreader[6];
+                            skillItemList = DWMemberData.ConvertSkillItemList(dreader[7] as byte[]);
                         }
                     }
                 }
@@ -215,20 +219,47 @@ namespace CloudBread.Controllers
                 }
             }
 
-            ulong gemBoxNo = 0;
-
-            TimeSpan subTime = utcTime - gemBoxCreateTime;
-            if (gemBoxGet == true && subTime.TotalMinutes >= DWDataTableManager.GlobalSettingDataTable.GemBoxDelay)
+            ulong checkStageNo = ((ulong)lastWorldNo - 1) * 10 + (ulong)lastStageNo;
+            Dictionary<ulong, DataTableBase> skillItemDataTableList = DWDataTableManager.GetDataTableList(SkillItemDataTable_List.NAME);
+            foreach(KeyValuePair<ulong, DataTableBase> kv in skillItemDataTableList)
             {
-                gemBoxGet = false;
-                gemBoxCreateTime = utcTime;
-                gemBoxNo = DWDataTableManager.GetGemBoxNo();
-                curGemBoxNo = (long)gemBoxNo;
+                SkillItemDataTable skillItemDataTable = kv.Value as SkillItemDataTable;
+                if(skillItemDataTable == null)
+                {
+                    continue;
+                }
+
+                if (skillItemDataTable.OpenStage > checkStageNo)
+                {
+                    continue;
+                }
+
+                SkillItemData skillItemData = skillItemList.Find(a => a.type == skillItemDataTable.Type);
+                if(skillItemData != null)
+                {
+                    continue;
+                }
+
+                skillItemData = new SkillItemData();
+                skillItemData.type = skillItemDataTable.Type;
+                skillItemData.count = 0;
+                skillItemList.Add(skillItemData);
+            }
+
+            ulong droneNo = 0;
+
+            TimeSpan subTime = utcTime - scienceDroneCreateTime;
+            if (destroyDrone && subTime.TotalSeconds >= DWDataTableManager.GlobalSettingDataTable.ScienceDroneCreateTime)
+            {
+                scienceDroneCreateTime = utcTime;
+                droneNo = DWDataTableManager.GetScienceDroneNo();
+                curDroneNo = (long)droneNo;
+                destroyDrone = false;
             }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET CurStage = @curStage, LastStage = @lastStage, CurWorld = @curWorld, LastWorld = @lastWorld, AllClear = @allClear, AccStageCnt = @accStageCnt, GemBoxCreateTime = @gemBoxCreateTime, GemBoxGet = @gemBoxGet, GemBoxNo = @gemBoxNo WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET CurStage = @curStage, LastStage = @lastStage, CurWorld = @curWorld, LastWorld = @lastWorld, AllClear = @allClear, AccStageCnt = @accStageCnt, ScienceDroneCreateTime = @scienceDroneCreateTime, ScienceDroneNo = @scienceDroneNo, DestroyScienceDrone = @destroyScienceDrone, SkillItemList = @skillItemList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = worldNo;
@@ -237,9 +268,10 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = lastWorldNo;
                     command.Parameters.Add("@allClear", SqlDbType.Bit).Value = allClear;
                     command.Parameters.Add("@accStageCnt", SqlDbType.BigInt).Value = accStageCnt;
-                    command.Parameters.Add("@gemBoxCreateTime", SqlDbType.DateTime).Value = gemBoxCreateTime;
-                    command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = gemBoxGet;
-                    command.Parameters.Add("@gemBoxNo", SqlDbType.BigInt).Value = curGemBoxNo;
+                    command.Parameters.Add("@scienceDroneCreateTime", SqlDbType.DateTime).Value = scienceDroneCreateTime;
+                    command.Parameters.Add("@scienceDroneNo", SqlDbType.BigInt).Value = curDroneNo;
+                    command.Parameters.Add("@destroyScienceDrone", SqlDbType.Bit).Value = destroyDrone;
+                    command.Parameters.Add("@skillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(skillItemList);
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -258,7 +290,7 @@ namespace CloudBread.Controllers
                 }
             }
 
-            result.gemBoxNo = gemBoxNo;
+            result.droneNo = droneNo;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

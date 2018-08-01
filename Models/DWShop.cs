@@ -15,14 +15,17 @@ namespace CloudBread.Models
     [Serializable]
     public class DWShopModel
     {
-        public long gold;
+        public double gold;
         public long gem;
         public long cashGem;
-        public long enhancedStone;
-        public long cashEnhancedStone;
-        public List<ActiveItemData> activeItemList;
-        public List<ClientUnitData> unitDataList;
-        public List<DWUnitTicketData> unitTicketList;
+        public long ether;
+        public long cashEther;
+        public long gas;
+        public long cashGas;
+        public List<SkillItemData> skillItemList;
+        public List<BoxData> boxList;
+        public long relicBoxCnt;
+        public List<LimitShopItemData> limitShopItemDataList;
         public byte errorCode;
     }
 }

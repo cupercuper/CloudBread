@@ -14,7 +14,7 @@ namespace CloudBread.Models
     public class DWEnhancementResetModel
     {
         public uint instanceNo;
-        public long enhancedStone;
+        public long ether;
         public byte errorCode;
     }
 }

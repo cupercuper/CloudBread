@@ -118,7 +118,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, CashGem, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime, BossDungeonEnterType FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime, BossDungeonEnterType FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -213,13 +213,12 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET BossDungeonTicket = @bossDungeonTicket, BossDungeonTicketRefreshTime = @bossDungeonTicketRefreshTime, BossDungeonEnterType = @bossDungeonEnterType, GemBoxGet = @gemBoxGet WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET BossDungeonTicket = @bossDungeonTicket, BossDungeonTicketRefreshTime = @bossDungeonTicketRefreshTime, BossDungeonEnterType = @bossDungeonEnterType WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = bossDungeonTicket;
                     command.Parameters.Add("@bossDungeonTicketRefreshTime", SqlDbType.DateTime).Value = bossDungeonTicketRefreshTime;
                     command.Parameters.Add("@bossDungeonEnterType", SqlDbType.TinyInt).Value = bossDungeonEnterType;
-                    command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = true;
                     
                     connection.OpenWithRetry(retryPolicy);
 

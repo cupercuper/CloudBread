@@ -14,7 +14,7 @@ namespace CloudBread.Models
     [Serializable]
     public class DWChangeStageModel
     {
-        public ulong gemBoxNo;
+        public ulong droneNo;
         public byte errorCode;
     }
 }

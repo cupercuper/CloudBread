@@ -162,7 +162,7 @@ namespace CloudBread.Controllers
 
             SortedSetEntry[] sortedSetRank = CBRedis.GetSortedSetRankByRange((int)p.rankType, firstIndex, lastIndex);
             Dictionary<string, string> userNickNameDic = new Dictionary<string, string>();
-            string strQuery = string.Format("SELECT MemberID, NickName FROM[dbo].[DWMembers] Where MemberID IN (");
+            string strQuery = string.Format("SELECT MemberID, NickName FROM[dbo].[DWMembersNew] Where MemberID IN (");
             for(int i = 0; i < sortedSetRank.Length; ++i)
             {
                 if (i == sortedSetRank.Length - 1)

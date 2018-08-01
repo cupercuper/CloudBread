@@ -108,122 +108,122 @@ namespace CloudBread.Controllers
 
             DWGemBoxOpenModel result = new DWGemBoxOpenModel();
 
-            /// Database connection retry policy
-            long gem = 0;
-            long cashGem = 0;
-            bool gemBoxGet = false;
-            long curGemBoxNo = 0;
+            ///// Database connection retry policy
+            //long gem = 0;
+            //long cashGem = 0;
+            //bool gemBoxGet = false;
+            //long curGemBoxNo = 0;
 
-            RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-            {
-                string strQuery = string.Format("SELECT Gem, CashGem, GemBoxGet, GemBoxNo FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
-                {
-                    connection.OpenWithRetry(retryPolicy);
-                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
-                    {
-                        if (dreader.HasRows == false)
-                        {
-                            logMessage.memberID = p.memberID;
-                            logMessage.Level = "Error";
-                            logMessage.Logger = "DWGemBoxOpenController";
-                            logMessage.Message = string.Format("Not Found User");
-                            Logging.RunLog(logMessage);
+            //RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+            //using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            //{
+            //    string strQuery = string.Format("SELECT Gem, CashGem, GemBoxGet, GemBoxNo FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+            //    using (SqlCommand command = new SqlCommand(strQuery, connection))
+            //    {
+            //        connection.OpenWithRetry(retryPolicy);
+            //        using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+            //        {
+            //            if (dreader.HasRows == false)
+            //            {
+            //                logMessage.memberID = p.memberID;
+            //                logMessage.Level = "Error";
+            //                logMessage.Logger = "DWGemBoxOpenController";
+            //                logMessage.Message = string.Format("Not Found User");
+            //                Logging.RunLog(logMessage);
 
-                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                            return result;
-                        }
+            //                result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+            //                return result;
+            //            }
 
-                        while (dreader.Read())
-                        {
-                            gem = (long)dreader[0];
-                            cashGem = (long)dreader[1];
-                            gemBoxGet = (bool)dreader[2];
-                            curGemBoxNo = (long)dreader[3];
-                        }
-                    }
-                }
-            }
+            //            while (dreader.Read())
+            //            {
+            //                gem = (long)dreader[0];
+            //                cashGem = (long)dreader[1];
+            //                gemBoxGet = (bool)dreader[2];
+            //                curGemBoxNo = (long)dreader[3];
+            //            }
+            //        }
+            //    }
+            //}
 
-            if(curGemBoxNo != (long)p.serialNo)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWGemBoxOpenController";
-                logMessage.Message = string.Format("Box No Error curBoxNo = {0}, inputNo = {1}", curGemBoxNo, p.serialNo);
-                Logging.RunLog(logMessage);
+            //if(curGemBoxNo != (long)p.serialNo)
+            //{
+            //    logMessage.memberID = p.memberID;
+            //    logMessage.Level = "Error";
+            //    logMessage.Logger = "DWGemBoxOpenController";
+            //    logMessage.Message = string.Format("Box No Error curBoxNo = {0}, inputNo = {1}", curGemBoxNo, p.serialNo);
+            //    Logging.RunLog(logMessage);
 
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
+            //    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    return result;
+            //}
 
-            if(gemBoxGet == true)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWGemBoxOpenController";
-                logMessage.Message = string.Format("Gem Box Open True");
-                Logging.RunLog(logMessage);
+            //if(gemBoxGet == true)
+            //{
+            //    logMessage.memberID = p.memberID;
+            //    logMessage.Level = "Error";
+            //    logMessage.Logger = "DWGemBoxOpenController";
+            //    logMessage.Message = string.Format("Gem Box Open True");
+            //    Logging.RunLog(logMessage);
 
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
+            //    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    return result;
+            //}
 
-            GemBoxDataTable gemBoxDataTable = DWDataTableManager.GetDataTable(GemBoxDataTable_List.NAME, (ulong)curGemBoxNo) as GemBoxDataTable;
-            if(gemBoxDataTable == null)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWGemBoxOpenController";
-                logMessage.Message = string.Format("Gem Box Not Found curGemBoxNo = {0}", curGemBoxNo);
-                Logging.RunLog(logMessage);
+            //GemBoxDataTable gemBoxDataTable = DWDataTableManager.GetDataTable(GemBoxDataTable_List.NAME, (ulong)curGemBoxNo) as GemBoxDataTable;
+            //if(gemBoxDataTable == null)
+            //{
+            //    logMessage.memberID = p.memberID;
+            //    logMessage.Level = "Error";
+            //    logMessage.Logger = "DWGemBoxOpenController";
+            //    logMessage.Message = string.Format("Gem Box Not Found curGemBoxNo = {0}", curGemBoxNo);
+            //    Logging.RunLog(logMessage);
 
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
+            //    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    return result;
+            //}
 
-            DWMemberData.AddGem(ref gem, ref cashGem, gemBoxDataTable.GemCount, 0, logMessage);
+            //DWMemberData.AddGem(ref gem, ref cashGem, gemBoxDataTable.GemCount, 0, logMessage);
 
-            logMessage.memberID = p.memberID;
-            logMessage.Level = "INFO";
-            logMessage.Logger = "DWGemBoxOpenController";
-            Logging.RunLog(logMessage);
+            //logMessage.memberID = p.memberID;
+            //logMessage.Level = "INFO";
+            //logMessage.Logger = "DWGemBoxOpenController";
+            //Logging.RunLog(logMessage);
 
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-            {
-                string strQuery = string.Format("UPDATE DWMembers SET Gem = @gem, GemBoxGet = @gemBoxGet, GemBoxNo = @gemBoxNo WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
-                {
-                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
-                    command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = true;
-                    command.Parameters.Add("@gemBoxNo", SqlDbType.BigInt).Value = 0;
+            //using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            //{
+            //    string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, GemBoxGet = @gemBoxGet, GemBoxNo = @gemBoxNo WHERE MemberID = '{0}'", p.memberID);
+            //    using (SqlCommand command = new SqlCommand(strQuery, connection))
+            //    {
+            //        command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
+            //        command.Parameters.Add("@gemBoxGet", SqlDbType.Bit).Value = true;
+            //        command.Parameters.Add("@gemBoxNo", SqlDbType.BigInt).Value = 0;
 
-                    connection.OpenWithRetry(retryPolicy);
+            //        connection.OpenWithRetry(retryPolicy);
 
-                    int rowCount = command.ExecuteNonQuery();
-                    if (rowCount <= 0)
-                    {
-                        logMessage.memberID = p.memberID;
-                        logMessage.Level = "Error";
-                        logMessage.Logger = "DWGemBoxOpenController";
-                        logMessage.Message = string.Format("Update Failed");
-                        Logging.RunLog(logMessage);
+            //        int rowCount = command.ExecuteNonQuery();
+            //        if (rowCount <= 0)
+            //        {
+            //            logMessage.memberID = p.memberID;
+            //            logMessage.Level = "Error";
+            //            logMessage.Logger = "DWGemBoxOpenController";
+            //            logMessage.Message = string.Format("Update Failed");
+            //            Logging.RunLog(logMessage);
 
-                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                        return result;
-                    }
-                }
-            }
+            //            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+            //            return result;
+            //        }
+            //    }
+            //}
 
-            logMessage.memberID = p.memberID;
-            logMessage.Level = "INFO";
-            logMessage.Logger = "DWGemBoxOpenController";
-            logMessage.Message = string.Format("gem = {0}", gem);
-            Logging.RunLog(logMessage);
+            //logMessage.memberID = p.memberID;
+            //logMessage.Level = "INFO";
+            //logMessage.Logger = "DWGemBoxOpenController";
+            //logMessage.Message = string.Format("gem = {0}", gem);
+            //Logging.RunLog(logMessage);
 
-            result.gem = gem;
-            result.errorCode = (byte)DW_ERROR_CODE.OK;
+            //result.gem = gem;
+            //result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }
     }

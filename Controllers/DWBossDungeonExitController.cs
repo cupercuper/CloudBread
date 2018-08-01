@@ -108,9 +108,9 @@ namespace CloudBread.Controllers
             DWBossDungeonExitModel result = new DWBossDungeonExitModel();
 
             long gem = 0;
-            long enhancedStone = 0;
+            long ether = 0;
             long cashGem = 0;
-            long cashEnhancedStone = 0;
+            long cashEther = 0;
             long gold = 0;
             short lastBossDungeonNo = 0;
             byte bossDungeonEnterType = 0;
@@ -119,7 +119,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, LastBossDungeonNo, BossDungeonEnterType, BossDungeonTicket FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gold, Gem, CashGem, Ether, CashEther, LastBossDungeonNo, BossDungeonEnterType, BossDungeonTicket FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -142,8 +142,8 @@ namespace CloudBread.Controllers
                             gold = (long)dreader[0];
                             gem = (long)dreader[1];
                             cashGem = (long)dreader[2];
-                            enhancedStone = (long)dreader[3];
-                            cashEnhancedStone = (long)dreader[4];
+                            ether = (long)dreader[3];
+                            cashEther = (long)dreader[4];
                             lastBossDungeonNo = (short)dreader[5];
                             bossDungeonEnterType = (byte)dreader[6];
                             bossDungeonTicket = (int)dreader[7];
@@ -224,7 +224,7 @@ namespace CloudBread.Controllers
                     return result;
                 }
 
-                DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, clearBossDungeonDataTableList.EnhancementStone, 0, logMessage);
+                DWMemberData.AddEther(ref ether, ref cashEther, clearBossDungeonDataTableList.EnhancementStone, 0, logMessage);
                 logMessage.memberID = p.memberID;
                 logMessage.Level = "Info";
                 logMessage.Logger = "DWBossDungeonExitController";
@@ -236,14 +236,14 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, CashGem = @cashGem, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, LastBossDungeonNo = @lastBossDungeonNo, BossDungeonEnterType = @bossDungeonEnterType, BossDungeonTicket = @bossDungeonTicket WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Gold = @gold, Gem = @gem, CashGem = @cashGem, Ether = @ether, CashEther = @cashEther, LastBossDungeonNo = @lastBossDungeonNo, BossDungeonEnterType = @bossDungeonEnterType, BossDungeonTicket = @bossDungeonTicket WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
                     command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
                     command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
-                    command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashEnhancedStone;
+                    command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
+                    command.Parameters.Add("@cashEther", SqlDbType.BigInt).Value = cashEther;
                     command.Parameters.Add("@lastBossDungeonNo", SqlDbType.SmallInt).Value = lastBossDungeonNo;
                     command.Parameters.Add("@bossDungeonEnterType", SqlDbType.TinyInt).Value = (byte)BOSS_DUNGEON_ENTER_TYPE.MAX_TYPE;
                     command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = bossDungeonTicket;
@@ -274,7 +274,7 @@ namespace CloudBread.Controllers
             result.addGold = addGold;
             result.gem = gem;
             result.cashGem = cashGem;
-            result.enhancedStone = enhancedStone;
+            result.ether = ether;
             result.lastBossDungeonNo = lastBossDungeonNo;
             result.bossDungeonTicket = bossDungeonTicket;
             result.errorCode = (byte)DW_ERROR_CODE.OK;

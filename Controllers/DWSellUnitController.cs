@@ -108,125 +108,125 @@ namespace CloudBread.Controllers
 
             DWSellUnitModel result = new DWSellUnitModel();
 
-            // Database connection retry policy
-            Dictionary<uint, UnitData> unitList = null;
-            List<uint> unitDeckList = null;
-            long enhancedStone = 0;
-            long cashEnhancedStone = 0;
+            //// Database connection retry policy
+            //Dictionary<uint, UnitData> unitList = null;
+            //List<uint> unitDeckList = null;
+            //long ether = 0;
+            //long cashEther = 0;
 
-            RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-            {
-                string strQuery = string.Format("SELECT UnitList, EnhancedStone, CashEnhancedStone, UnitDeckList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
-                {
-                    connection.OpenWithRetry(retryPolicy);
-                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
-                    {
-                        if (dreader.HasRows == false)
-                        {
-                            logMessage.memberID = p.memberID;
-                            logMessage.Level = "Error";
-                            logMessage.Logger = "DWSellUnitController";
-                            logMessage.Message = string.Format("Not Found User");
-                            Logging.RunLog(logMessage);
+            //RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+            //using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            //{
+            //    string strQuery = string.Format("SELECT UnitList, Ether, CashEther, UnitDeckList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+            //    using (SqlCommand command = new SqlCommand(strQuery, connection))
+            //    {
+            //        connection.OpenWithRetry(retryPolicy);
+            //        using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+            //        {
+            //            if (dreader.HasRows == false)
+            //            {
+            //                logMessage.memberID = p.memberID;
+            //                logMessage.Level = "Error";
+            //                logMessage.Logger = "DWSellUnitController";
+            //                logMessage.Message = string.Format("Not Found User");
+            //                Logging.RunLog(logMessage);
 
-                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                            return result;
-                        }
+            //                result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+            //                return result;
+            //            }
 
-                        while (dreader.Read())
-                        {
-                            unitList = DWMemberData.ConvertUnitDic(dreader[0] as byte[]);
-                            enhancedStone = (long)dreader[1];
-                            cashEnhancedStone = (long)dreader[2];
-                            unitDeckList = DWMemberData.ConvertUnitDeckList(dreader[3] as byte[]);
-                        }
-                    }
-                }
-            }
+            //            while (dreader.Read())
+            //            {
+            //                unitList = DWMemberData.ConvertUnitDic(dreader[0] as byte[]);
+            //                ether = (long)dreader[1];
+            //                cashEther = (long)dreader[2];
+            //                unitDeckList = DWMemberData.ConvertUnitDeckList(dreader[3] as byte[]);
+            //            }
+            //        }
+            //    }
+            //}
 
-            UnitData unitData = null;
-            if (unitList.TryGetValue(p.instanceNo, out unitData) == false)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWSellUnitController";
-                logMessage.Message = string.Format("Not Found Unit Instance = {0}", p.instanceNo);
-                Logging.RunLog(logMessage);
+            //UnitData unitData = null;
+            //if (unitList.TryGetValue(p.instanceNo, out unitData) == false)
+            //{
+            //    logMessage.memberID = p.memberID;
+            //    logMessage.Level = "Error";
+            //    logMessage.Logger = "DWSellUnitController";
+            //    logMessage.Message = string.Format("Not Found Unit Instance = {0}", p.instanceNo);
+            //    Logging.RunLog(logMessage);
 
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
+            //    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    return result;
+            //}
 
-            UnitDataTable unitDataTable = DWDataTableManager.GetDataTable(UnitDataTable_List.NAME, unitData.SerialNo) as UnitDataTable;
-            if (unitDataTable == null)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWSellUnitController";
-                logMessage.Message = string.Format("Not Found Unit DataTable = {0}", unitData.SerialNo);
-                Logging.RunLog(logMessage);
+            //UnitDataTable unitDataTable = DWDataTableManager.GetDataTable(UnitDataTable_List.NAME, unitData.SerialNo) as UnitDataTable;
+            //if (unitDataTable == null)
+            //{
+            //    logMessage.memberID = p.memberID;
+            //    logMessage.Level = "Error";
+            //    logMessage.Logger = "DWSellUnitController";
+            //    logMessage.Message = string.Format("Not Found Unit DataTable = {0}", unitData.SerialNo);
+            //    Logging.RunLog(logMessage);
 
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                return result;
-            }
+            //    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    return result;
+            //}
 
-            long stonCnt = unitDataTable.UnitStoreMoney;
+            //long stonCnt = unitDataTable.UnitStoreMoney;
 
-            EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)unitData.EnhancementCount) as EnhancementDataTable;
-            if (enhancementDataTable != null)
-            {
-                stonCnt += (long)enhancementDataTable.AccStoneCnt;
-            }
+            //EnhancementDataTable enhancementDataTable = DWDataTableManager.GetDataTable(EnhancementDataTable_List.NAME, (ulong)unitData.EnhancementCount) as EnhancementDataTable;
+            //if (enhancementDataTable != null)
+            //{
+            //    stonCnt += (long)enhancementDataTable.AccStoneCnt;
+            //}
 
-            logMessage.memberID = p.memberID;
-            logMessage.Level = "Info";
-            logMessage.Logger = "DWSellUnitController";
+            //logMessage.memberID = p.memberID;
+            //logMessage.Level = "Info";
+            //logMessage.Logger = "DWSellUnitController";
 
-            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, stonCnt, 0, logMessage);
-            Logging.RunLog(logMessage);
+            //DWMemberData.AddEther(ref ether, ref cashEther, stonCnt, 0, logMessage);
+            //Logging.RunLog(logMessage);
 
-            unitList.Remove(p.instanceNo);
-            if(unitDeckList.Contains(p.instanceNo))
-            {
-                unitDeckList.Remove(p.instanceNo);
-            }
+            //unitList.Remove(p.instanceNo);
+            //if(unitDeckList.Contains(p.instanceNo))
+            //{
+            //    unitDeckList.Remove(p.instanceNo);
+            //}
 
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-            {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitList = @unitList, EnhancedStone = @enhancedStone, UnitDeckList = @unitDeckList WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
-                {
-                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
-                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
-                    command.Parameters.Add("@unitDeckList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDeckList);
+            //using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            //{
+            //    string strQuery = string.Format("UPDATE DWMembersNew SET UnitList = @unitList, Ether = @ether, UnitDeckList = @unitDeckList WHERE MemberID = '{0}'", p.memberID);
+            //    using (SqlCommand command = new SqlCommand(strQuery, connection))
+            //    {
+            //        command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
+            //        command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
+            //        command.Parameters.Add("@unitDeckList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDeckList);
 
-                    connection.OpenWithRetry(retryPolicy);
+            //        connection.OpenWithRetry(retryPolicy);
 
-                    int rowCount = command.ExecuteNonQuery();
-                    if (rowCount <= 0)
-                    {
-                        logMessage.memberID = p.memberID;
-                        logMessage.Level = "Error";
-                        logMessage.Logger = "DWSellUnitController";
-                        logMessage.Message = string.Format("Update Failed");
-                        Logging.RunLog(logMessage);
+            //        int rowCount = command.ExecuteNonQuery();
+            //        if (rowCount <= 0)
+            //        {
+            //            logMessage.memberID = p.memberID;
+            //            logMessage.Level = "Error";
+            //            logMessage.Logger = "DWSellUnitController";
+            //            logMessage.Message = string.Format("Update Failed");
+            //            Logging.RunLog(logMessage);
 
-                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                        return result;
-                    }
-                }
-            }
+            //            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+            //            return result;
+            //        }
+            //    }
+            //}
 
-            logMessage.memberID = p.memberID;
-            logMessage.Level = "INFO";
-            logMessage.Logger = "DWSellUnitController";
-            logMessage.Message = string.Format("Instance No = {0}, EnhancedStone = {1} CashEnhancedStone = {2}", p.instanceNo, enhancedStone, cashEnhancedStone);
-            Logging.RunLog(logMessage);
+            //logMessage.memberID = p.memberID;
+            //logMessage.Level = "INFO";
+            //logMessage.Logger = "DWSellUnitController";
+            //logMessage.Message = string.Format("Instance No = {0}, Ether = {1} CashEther = {2}", p.instanceNo, ether, cashEther);
+            //Logging.RunLog(logMessage);
 
-            result.instanceNo = p.instanceNo;
-            result.enhancedStone = enhancedStone;
+            //result.instanceNo = p.instanceNo;
+            //result.ether = ether;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

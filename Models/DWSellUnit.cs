@@ -15,7 +15,7 @@ namespace CloudBread.Models
     public class DWSellUnitModel
     {
         public uint instanceNo;
-        public long enhancedStone;
+        public long ether;
         public byte errorCode;
     }
 }

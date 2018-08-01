@@ -9,6 +9,8 @@ namespace CloudBread.Models
         public string memberID;
         public string nickName;
         public string recommenderID;
+        public string timeZoneID;
+        public int timeZoneTotalMin;
         public string token;
     }
 

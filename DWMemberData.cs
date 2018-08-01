@@ -8,13 +8,6 @@ using Logger.Logging;
 
 namespace CloudBread
 {
-    public class UnitData
-    {
-        public ushort Level;
-        public ushort EnhancementCount;
-        public ulong SerialNo;
-    }
-
     public class DWMemberData
     {
         public static string[] TEST_MEMBER_ID = new string[]
@@ -36,18 +29,16 @@ namespace CloudBread
             return false;
         }
 
-        public static byte[] ConvertByte(Dictionary<uint, UnitData> unitDic)
+        public static byte[] ConvertByte(List<UnitData> unitList)
         {
             MemoryStream ms = new MemoryStream();
             BinaryWriter bw = new BinaryWriter(ms);
                 
-            bw.Write(unitDic.Count);
-            foreach (KeyValuePair<uint, UnitData> kv in unitDic)
+            bw.Write(unitList.Count);
+            for(int i = 0; i < unitList.Count; ++i)
             {
-                bw.Write(kv.Key);
-                bw.Write(kv.Value.Level);
-                bw.Write(kv.Value.EnhancementCount);
-                bw.Write(kv.Value.SerialNo);
+                bw.Write(unitList[i].level);
+                bw.Write(unitList[i].serialNo);
             }
 
             bw.Close();
@@ -55,12 +46,12 @@ namespace CloudBread
             return ms.ToArray();
         }
 
-        public static Dictionary<uint, UnitData> ConvertUnitDic(byte [] buffer)
+        public static List<UnitData> ConvertUnitDataList(byte [] buffer)
         {
-            Dictionary<uint, UnitData> unitDic = new Dictionary<uint, UnitData>();
+            List<UnitData> unitList = new List<UnitData>();
             if(buffer == null)
             {
-                return unitDic;
+                return unitList;
             }
 
             MemoryStream ms = new MemoryStream(buffer);
@@ -71,38 +62,17 @@ namespace CloudBread
 
             for (int i = 0; i < count; ++i)
             {
-                uint key = br.ReadUInt32();
+                UnitData unitData = new UnitData();
+                unitData.level = br.ReadUInt16();
+                unitData.serialNo = br.ReadUInt64();
 
-                UnitData unitDaa = new UnitData();
-                unitDaa.Level = br.ReadUInt16();
-                unitDaa.EnhancementCount = br.ReadUInt16();
-                unitDaa.SerialNo = br.ReadUInt64();
-
-                unitDic.Add(key, unitDaa);
+                unitList.Add(unitData);
             }
 
             br.Close();
             ms.Close();
 
-            return unitDic;
-        }
-
-        public static List<ClientUnitData> ConvertClientUnitData(Dictionary<uint, UnitData> unitDic)
-        {
-            List<ClientUnitData> clientUnitDataList = new List<ClientUnitData>();
-
-            foreach(KeyValuePair<uint, UnitData> kv in unitDic)
-            {
-                ClientUnitData unitData = new ClientUnitData();
-                unitData.instanceNo = kv.Key;
-                unitData.level = kv.Value.Level;
-                unitData.enhancementCount = kv.Value.EnhancementCount;
-                unitData.serialNo = kv.Value.SerialNo;
-
-                clientUnitDataList.Add(unitData);
-            }
-
-            return clientUnitDataList;
+            return unitList;
         }
 
         public static byte[] ConvertByte(List<ulong> list)
@@ -269,7 +239,8 @@ namespace CloudBread
             for (int i = 0; i < mailData.itemData.Count; ++i)
             {
                 bw.Write(mailData.itemData[i].itemType);
-                bw.Write(mailData.itemData[i].count);
+                bw.Write(mailData.itemData[i].subType);
+                bw.Write(mailData.itemData[i].value);
             }
 
             bw.Close();
@@ -298,7 +269,8 @@ namespace CloudBread
             {
                 DWItemData itemData = new DWItemData();
                 itemData.itemType = br.ReadByte();
-                itemData.count = br.ReadInt32();
+                itemData.subType = br.ReadByte();
+                itemData.value = br.ReadString();
 
                 mailData.itemData.Add(itemData);
             }
@@ -330,7 +302,8 @@ namespace CloudBread
             {
                 DWItemData itemData = new DWItemData();
                 itemData.itemType = br.ReadByte();
-                itemData.count = br.ReadInt32();
+                itemData.subType = br.ReadByte(); 
+                itemData.value = br.ReadString();
 
                 eventData.itemData.Add(itemData);
             }
@@ -518,56 +491,451 @@ namespace CloudBread
             return ms.ToArray();
         }
 
-        public static uint AddUnitDic(ref Dictionary<uint, UnitData> unitDic, ulong serialNo)
+        public static List<QuestData> ConvertQuestDataList(byte[] buffer)
         {
-            if(unitDic.Count == 0)
+            List<QuestData> dailyQuestDataList = new List<QuestData>();
+            if (buffer == null)
             {
-                UnitData unitData = new UnitData()
-                {
-                    EnhancementCount = 0,
-                    Level = 1,
-                    SerialNo = serialNo
-                };
-
-                unitDic.Add(1, unitData);
-
-                return 1;
+                return dailyQuestDataList;
             }
 
-            uint[] keys = new uint[unitDic.Keys.Count];
-            unitDic.Keys.CopyTo(keys, 0);
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
 
-            uint lastKey = keys[keys.Length - 1];
-            uint curKey = lastKey;
-            while (true)
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
             {
-                if (curKey == uint.MaxValue)
-                {
-                    curKey = 0;
-                }
+                QuestData dailyQuestData = new QuestData();
+                dailyQuestData.serialNo = br.ReadUInt64();
+                dailyQuestData.complete = br.ReadByte();
+                dailyQuestData.getReward = br.ReadByte();
+                dailyQuestData.curValue = br.ReadString();
 
-                curKey++;
-                if(curKey == lastKey)
-                {
-                    break;
-                }
-
-                if (unitDic.ContainsKey(curKey) == false)
-                {
-                    UnitData unitData = new UnitData()
-                    {
-                        EnhancementCount = 0,
-                        Level = 1,
-                        SerialNo = serialNo
-                    };
-
-                    unitDic.Add(curKey, unitData);
-                    return curKey;
-                }
+                dailyQuestDataList.Add(dailyQuestData);
             }
 
-            return 0;
+            br.Close();
+            ms.Close();
+
+            return dailyQuestDataList;
         }
+
+
+        public static byte [] ConvertByte(List<QuestData> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i].serialNo);
+                bw.Write(list[i].complete);
+                bw.Write(list[i].getReward);
+                bw.Write(list[i].curValue);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static LuckySupplyShipData ConvertLuckySupplyShipData(byte[] buffer)
+        {
+            LuckySupplyShipData luckySupplyShipData = new LuckySupplyShipData();
+            luckySupplyShipData.itemList = new List<DWItemData>();
+
+            if (buffer == null)
+            {
+                return luckySupplyShipData;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            luckySupplyShipData.shipIdx = br.ReadByte();
+            luckySupplyShipData.fail = br.ReadByte();
+
+            int count = br.ReadInt32();
+            for (int i = 0; i < count; ++i)
+            {
+                DWItemData itemData = new DWItemData();
+                itemData.itemType = br.ReadByte();
+                itemData.subType = br.ReadByte();
+                itemData.value = br.ReadString();
+
+                luckySupplyShipData.itemList.Add(itemData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return luckySupplyShipData;
+        }
+
+        public static byte[] ConvertByte(LuckySupplyShipData shipData)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(shipData.shipIdx);
+            bw.Write(shipData.fail);
+            bw.Write(shipData.itemList.Count);
+            for (int i = 0; i < shipData.itemList.Count; ++i)
+            {
+                bw.Write(shipData.itemList[i].itemType);
+                bw.Write(shipData.itemList[i].subType);
+                bw.Write(shipData.itemList[i].value);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static Dictionary<byte, int> ConvertByteList(byte[] buffer)
+        {
+            Dictionary<byte, int> byteList = new Dictionary<byte, int>();
+            if(buffer == null)
+            {
+                return byteList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+            for(int i = 0; i < count; ++i)
+            {
+                byte key = br.ReadByte();
+                int value = br.ReadInt32();
+
+                byteList.Add(key, value);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return byteList;
+        }
+
+        public static byte[] ConvertByte(Dictionary<byte, int> byteList)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+
+            bw.Write(byteList.Count);
+            foreach(KeyValuePair<byte, int> kv in byteList)
+            {
+                bw.Write(kv.Key);
+                bw.Write(kv.Value);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static byte[] ConvertByte(double value)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(value);
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static double ConvertDouble(byte[] buffer)
+        {
+            double value = 0;
+            if (buffer == null)
+            {
+                return value;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            value = br.ReadDouble();
+
+            br.Close();
+            ms.Close();
+
+            return value;
+        }
+
+        public static byte[] ConvertByte(Dictionary<uint, RelicData> dic)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(dic.Count);
+            foreach(KeyValuePair<uint, RelicData> kv in dic)
+            {
+                bw.Write(kv.Key);
+                bw.Write(kv.Value.instanceNo);
+                bw.Write(kv.Value.serialNo);
+                bw.Write(kv.Value.level);
+                bw.Write(kv.Value.buffValue.Count);
+                for(int i = 0; i < kv.Value.buffValue.Count; ++i)
+                {
+                    bw.Write(kv.Value.buffValue[i]);
+                }
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static Dictionary<uint, RelicData> ConvertRelicDataDic(byte[] buffer)
+        {
+            Dictionary<uint, RelicData> relicDataDic = new Dictionary<uint, RelicData>();
+            if (buffer == null)
+            {
+                return relicDataDic;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                uint key = br.ReadUInt32();
+
+                RelicData relicData = new RelicData();
+                relicData.instanceNo = br.ReadUInt32();
+                relicData.serialNo = br.ReadUInt64();
+                relicData.level = br.ReadUInt16();
+                relicData.buffValue = new List<double>();
+                int buffValueCnt = br.ReadInt32();
+                for(int k = 0; k < buffValueCnt; ++k)
+                {
+                    relicData.buffValue.Add(br.ReadDouble());
+                }
+
+                relicDataDic.Add(key, relicData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return relicDataDic;
+        }
+
+        public static byte[] ConvertByte(Dictionary<ulong, RelicStoreData> dic)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(dic.Count);
+            foreach (KeyValuePair<ulong, RelicStoreData> kv in dic)
+            {
+                bw.Write(kv.Key);
+                bw.Write(kv.Value.serialNo);
+                bw.Write(kv.Value.count);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static Dictionary<ulong, RelicStoreData> ConvertRelicStoreDataDic(byte[] buffer)
+        {
+            Dictionary<ulong, RelicStoreData> relicDataDic = new Dictionary<ulong, RelicStoreData>();
+            if (buffer == null)
+            {
+                return relicDataDic;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                ulong key = br.ReadUInt64();
+
+                RelicStoreData relicData = new RelicStoreData();
+                relicData.serialNo = br.ReadUInt64();
+                relicData.count = br.ReadUInt32();
+
+                relicDataDic.Add(key, relicData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return relicDataDic;
+        }
+
+        public static byte[] ConvertByte(Dictionary<ulong, ushort> dic)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(dic.Count);
+            foreach (KeyValuePair<ulong, ushort> kv in dic)
+            {
+                bw.Write(kv.Key);
+                bw.Write(kv.Value);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+
+        public static Dictionary<ulong, ushort> ConvertBaseCampDic(byte[] buffer)
+        {
+            Dictionary<ulong, ushort> baseCampList = new Dictionary<ulong, ushort>();
+            if (buffer == null)
+            {
+                return baseCampList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                ulong key = br.ReadUInt64();
+                ushort value = br.ReadUInt16();
+
+                baseCampList.Add(key, value);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return baseCampList;
+        }
+
+        public static List<BaseCampData> ConvertBaseCampList(Dictionary<ulong, ushort> dic)
+        {
+            List<BaseCampData> baseCampList = new List<BaseCampData>();
+            if (dic == null)
+            {
+                return baseCampList;
+            }
+
+            foreach(KeyValuePair<ulong, ushort> kv in dic)
+            {
+                BaseCampData campData = new BaseCampData();
+                campData.serialNo = kv.Key;
+                campData.level = kv.Value;
+                baseCampList.Add(campData);
+            }
+
+            return baseCampList;
+        }
+
+        public static byte[] ConvertByte(List<SkillItemData> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for(int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i].type);
+                bw.Write(list[i].count);
+
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+
+        public static List<SkillItemData> ConvertSkillItemList(byte[] buffer)
+        {
+            List<SkillItemData> skillItemList = new List<SkillItemData>();
+            if (buffer == null)
+            {
+                return skillItemList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                SkillItemData skillItemData = new SkillItemData();
+                skillItemData.type = br.ReadByte();
+                skillItemData.count = br.ReadUInt32();
+
+                skillItemList.Add(skillItemData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return skillItemList;
+        }
+
+        public static byte[] ConvertByte(List<BoxData> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i].type);
+                bw.Write(list[i].count);
+
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+
+        public static List<BoxData> ConvertBoxDataList(byte[] buffer)
+        {
+            List<BoxData> boxDataList = new List<BoxData>();
+            if (buffer == null)
+            {
+                return boxDataList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                BoxData boxData = new BoxData();
+                boxData.type = br.ReadByte();
+                boxData.count = br.ReadUInt32();
+
+                boxDataList.Add(boxData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return boxDataList;
+        }
+
 
         public static double GetPoint(short worldNo, long changeCaptianCnt)
         {
@@ -575,47 +943,92 @@ namespace CloudBread
             return point;
         }
 
-        public static bool AddEnhancedStone(ref long enhancedStone,ref long cashEnhancedStone, long addFreeEnhancedStone, long addCashEnhancedStone, Logging.CBLoggers logMessage)
+        public static bool AddEther(ref long ether, ref long cashEther, long addFreeEther, long addCashEther, Logging.CBLoggers logMessage)
         {            
-            if(long.MaxValue - enhancedStone < addFreeEnhancedStone)
+            if(long.MaxValue - ether < addFreeEther)
             {
-                enhancedStone = long.MaxValue;
+                ether = long.MaxValue;
             }
             else
             {
-                enhancedStone += addFreeEnhancedStone;
+                ether += addFreeEther;
             }
 
-            if (long.MaxValue - cashEnhancedStone < addCashEnhancedStone)
+            if (long.MaxValue - cashEther < addCashEther)
             {
-                cashEnhancedStone = long.MaxValue;
+                cashEther = long.MaxValue;
             }
             else
             {
-                cashEnhancedStone += addCashEnhancedStone;
+                cashEther += addCashEther;
             }
 
-            logMessage.Message = string.Format("AddEnhancedStone enhancedStone = {0}, cashEnhancedStone = {1}, addFreeEnhancedStone = {2}, addCashEnhancedStone = {3}", enhancedStone, cashEnhancedStone, addFreeEnhancedStone, addCashEnhancedStone);
+            logMessage.Message = string.Format("AddEther ether = {0}, cashEther = {1}, addFreeEther = {2}, addCashEther = {3}", ether, cashEther, addFreeEther, addCashEther);
 
             return true;
         }
 
-        public static bool SubEnhancedStone(ref long enhancedStone, ref long cashEnhancedStone, long subEnhancedStone, Logging.CBLoggers logMessage)
+        public static bool SubEther(ref long ether, ref long cashEther, long subEther, Logging.CBLoggers logMessage)
         {
-            if(enhancedStone + cashEnhancedStone < subEnhancedStone)
+            if(ether + cashEther < subEther)
             {
                 return false;
             }
 
-            enhancedStone -= subEnhancedStone;
+            ether -= subEther;
             
-            if (enhancedStone < 0)
+            if (ether < 0)
             {
-                cashEnhancedStone += enhancedStone;
-                enhancedStone = 0;
+                cashEther += ether;
+                ether = 0;
             }
 
-            logMessage.Message = string.Format("SubEnhancedStone enhancedStone = {0}, cashEnhancedStone = {1}, subEnhancedStone = {2}", enhancedStone, cashEnhancedStone, subEnhancedStone);
+            logMessage.Message = string.Format("SubEther ether = {0}, cashEther = {1}, subEther = {2}", ether, cashEther, subEther);
+
+            return true;
+        }
+
+        public static bool AddGas(ref long gas, ref long cashGas, long addFreeGas, long addCashGas, Logging.CBLoggers logMessage)
+        {
+            if (long.MaxValue - gas < addFreeGas)
+            {
+                gas = long.MaxValue;
+            }
+            else
+            {
+                gas += addFreeGas;
+            }
+
+            if (long.MaxValue - cashGas < addCashGas)
+            {
+                cashGas = long.MaxValue;
+            }
+            else
+            {
+                cashGas += addCashGas;
+            }
+
+            logMessage.Message = string.Format("AddGas gas = {0}, cashGas = {1}, addFreeGas = {2}, addCashGas = {3}", gas, cashGas, addFreeGas, addCashGas);
+
+            return true;
+        }
+
+        public static bool SubGas(ref long gas, ref long cashGas, long subGas, Logging.CBLoggers logMessage)
+        {
+            if (gas + cashGas < subGas)
+            {
+                return false;
+            }
+
+            gas -= subGas;
+
+            if (gas < 0)
+            {
+                cashGas += gas;
+                gas = 0;
+            }
+
+            logMessage.Message = string.Format("SubEther Gas = {0}, cashGas = {1}, subGas = {2}", gas, cashGas, subGas);
 
             return true;
         }
@@ -746,6 +1159,277 @@ namespace CloudBread
                 if (bossDungeonTicket < ticketMaxCnt)
                 {
                     bossDungeonTicket = ticketMaxCnt;
+                }
+            }
+        }
+
+        public static bool DailyQuestRefresh(ref DateTime acceptTime, ref List<QuestData> dailyQuestList, ref long remainTime)
+        {
+            TimeSpan resetTime = new TimeSpan(DWDataTableManager.GlobalSettingDataTable.DailyQuestResetTIme, 0, 0);
+            TimeSpan subTime = DateTime.UtcNow - acceptTime;
+            if(subTime.TotalHours < (double)DWDataTableManager.GlobalSettingDataTable.DailyQuestResetTIme)
+            {
+                resetTime = resetTime.Subtract(subTime);
+                remainTime = resetTime.Ticks;
+                return false;
+            }
+
+            acceptTime = DateTime.UtcNow;
+            remainTime = resetTime.Ticks;
+
+            dailyQuestList.Clear();
+
+            List<ulong> dailyQuestNoList = DWDataTableManager.GetDailyQuestList();
+
+            for (int i = (int)DAILY_QUEST_GRADE_TYPE.GRADE_1; i < (int)DAILY_QUEST_GRADE_TYPE.MAX_TYPE; ++i)
+            {
+                QuestData dailyQuestData = new QuestData();
+                dailyQuestData.serialNo = dailyQuestNoList[i - 1];;
+                dailyQuestData.complete = 0;
+                dailyQuestData.getReward = 0;
+                dailyQuestData.curValue = "0";
+
+                dailyQuestList.Add(dailyQuestData);
+            }
+
+            return true;
+        }
+
+        public static void RefreshDrillIdx(DateTime drillStartTime, ref byte drillIdx, ref long remainTime)
+        {
+            remainTime = 0;
+            if (drillIdx == 0)
+            {
+                return;
+            }
+
+            ResourceDrillDataTable drillDataTable = DWDataTableManager.GetDataTable(ResourceDrillDataTable_List.NAME, (ulong)drillIdx) as ResourceDrillDataTable; 
+            if(drillDataTable == null)
+            {
+                return;
+            }
+
+            TimeSpan subTime = DateTime.UtcNow - drillStartTime;
+            if(subTime.TotalHours >= (double)drillDataTable.ResetTime)
+            {
+                drillIdx = 0;
+                return;
+            }
+
+            remainTime = subTime.Ticks;
+        }
+
+        public static void RefreshLuckySupplyShipRemainTime(DateTime lastTime, ref long remainTime)
+        {
+            remainTime = 0;
+
+            if (lastTime <= DateTime.UtcNow)
+            {
+                remainTime = 0;
+                return;
+            }
+
+            TimeSpan subTime = lastTime - DateTime.UtcNow;
+            remainTime = subTime.Ticks;
+        }
+
+        public static void AddItem(DWItemData itemData, ref double gold, ref long gem, ref long cashGem, ref long ether, ref long cashEther, ref long gas, ref long cashGas, ref long relicBoxCnt, ref List<SkillItemData> skillItemList, ref List<BoxData> boxList, ulong stageNo, Logging.CBLoggers logMessage, bool build = true, bool cash = false)
+        {
+            switch ((ITEM_TYPE)itemData.itemType)
+            {
+                case ITEM_TYPE.GOLD_TYPE:
+                    {
+                        double value = double.Parse(itemData.value);
+                        gold += value;
+                    }
+                    break;
+                case ITEM_TYPE.GEM_TYPE:
+                    {
+                        uint value = uint.Parse(itemData.value);
+                        if (cash == false)
+                        {
+                            if (AddGem(ref gem, ref cashGem, value, 0, logMessage) == false)
+                            {
+
+                            }
+                        }
+                        else
+                        {
+                            if (AddGem(ref gem, ref cashGem, 0, value, logMessage) == false)
+                            {
+
+                            }
+                        }
+                    }
+                    break;
+                case ITEM_TYPE.ETHER_TYPE:
+                    {
+                        uint value = uint.Parse(itemData.value);
+                        if (cash == false)
+                        {
+                            if (AddEther(ref ether, ref cashEther, value, 0, logMessage) == false)
+                            {
+
+                            }
+                        }
+                        else
+                        {
+                            if (AddEther(ref ether, ref cashEther, 0, value, logMessage) == false)
+                            {
+
+                            }
+                        }
+                    }
+                    break;
+                case ITEM_TYPE.SKILL_ITEM_TYPE:
+                    {
+                        if(skillItemList == null)
+                        {
+                            return;
+                        }
+
+                        uint value = uint.Parse(itemData.value);
+
+                        if (build)
+                        {
+                            List<byte> typeList = new List<byte>();
+                            for (int i = 0; i < skillItemList.Count; ++i)
+                            {
+                                typeList.Add(skillItemList[i].type);
+                            }
+
+                            Random rand = new Random((int)DateTime.Now.Ticks);
+                            int idx = rand.Next(0, typeList.Count);
+
+                            SkillItemData skillData = skillItemList[idx];
+                            if (skillData == null)
+                            {
+                                skillData = new SkillItemData();
+                                skillItemList.Add(skillData);
+                            }
+                            skillData.count += value;
+                            itemData.subType = skillData.type;
+                        }
+                        else
+                        {
+                            SkillItemData skillData = skillItemList.Find(a => a.type == itemData.subType);
+                            if (skillData == null)
+                            {
+                                skillData = new SkillItemData();
+                                skillItemList.Add(skillData);
+                            }
+                            skillData.count += value;
+                        }
+                    }
+                    break;
+                case ITEM_TYPE.BOX_TYPE:
+                    {
+                        if (boxList == null)
+                        {
+                            return;
+                        }
+
+                        uint value = uint.Parse(itemData.value);
+                        BoxData boxData = boxList.Find(a => a.type == itemData.subType);
+                        if (boxData == null)
+                        {
+                            boxData = new BoxData();
+                            boxList.Add(boxData);
+                        }
+                        boxData.count += value;
+                    }
+                    break;
+                case ITEM_TYPE.GAS_TYPE:
+                    {
+                        
+                        uint value = uint.Parse(itemData.value);
+                        if (cash == false)
+                        {
+                            if (AddGas(ref gas, ref cashGas, value, 0, logMessage) == false)
+                            {
+
+                            }
+                        }
+                        else
+                        {
+                            if (AddGas(ref gas, ref cashGas, 0, value, logMessage) == false)
+                            {
+
+                            }
+                        }
+                    }
+                    break;
+                case ITEM_TYPE.MINERAL_BOX_TYPE:
+                    {
+                        if (build)
+                        {
+                            gold += DWDataTableManager.GetMineral((MINERAL_BOX_TYPE)itemData.subType, stageNo);
+                            gold = Math.Truncate(gold);
+                            itemData.value = gold.ToString();
+                        }
+                        else
+                        {
+                            gold += double.Parse(itemData.value);
+                        }
+                    }
+                    break;
+                case ITEM_TYPE.RELIC_BOX_TYPE:
+                    {
+                        uint value = uint.Parse(itemData.value);
+                        relicBoxCnt += value;
+                    }
+                    break;
+            }
+        }
+
+        public static double GetBuffValue(Random random, int min, int max)
+        {
+            double value = 0.0;
+            if (min == max)
+            {
+                // 버프 값은 소수점 2자리만 쓰지만 데이터 테이블에서는 공통으로 모든 변수를 소수점 세자리까지 쓰게한다.
+                int tempValue = min / 10;
+                value = (double)tempValue / 100.0;
+            }
+            else
+            {
+                // 유물 버프 값은 소수점 2자리만 쓴다 한자리는 날려 버린다.
+                int tempMin = min / 10;
+                int tempMax = max / 10;
+                // 한자리 버린 상태에서 100으로 나눠서 소수점 2자리만 쓰게 한다.
+                value = (double)random.Next(tempMin, tempMax) / 100.0;
+            }
+
+            return value;
+        }
+
+        public static bool InsertRelicInstanceNo(Dictionary<uint, RelicData> relicDataDic, out uint instanceNo)
+        {
+            if (relicDataDic.Count == 0)
+            {
+                instanceNo = 1;
+            }
+            else
+            {
+                instanceNo = relicDataDic.Keys.Last();
+            }
+            uint lastIntanceNo = instanceNo;
+            while (true)
+            {
+                instanceNo++;
+                if (instanceNo == uint.MaxValue)
+                {
+                    instanceNo = 1;
+                }
+                else if(instanceNo == lastIntanceNo)
+                {
+                    return false;
+                }
+
+                RelicData relicData = null;
+                if(relicDataDic.TryGetValue(instanceNo, out relicData) == false)
+                {
+                    return true;
                 }
             }
         }

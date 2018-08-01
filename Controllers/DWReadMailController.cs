@@ -140,16 +140,22 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            double gold = 0;
             long gem = 0;
             long cashGem = 0;
-            long gold = 0;
-            long enhancedStone = 0;
-            long cashEnhancedStone = 0;
-            int bossDungeonTicket = 0;
+            long ether = 0;
+            long cashEther = 0;
+            long gas = 0;
+            long cashGas = 0;
+            List<SkillItemData> skillItemList = null;
+            List<BoxData> boxList = null;
+            long relicBoxCnt = 0;
+            short lastWorld = 0;
+            short lastStage = 0;
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, BossDungeonTicket FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -169,59 +175,46 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            gold = (long)dreader[0];
-                            gem = (long)dreader[1];
-                            cashGem = (long)dreader[2];
-                            enhancedStone = (long)dreader[3];
-                            cashEnhancedStone = (long)dreader[4];
-                            bossDungeonTicket = (int)dreader[5];
+                            gem = (long)dreader[0];
+                            cashGem = (long)dreader[1];
+                            ether = (long)dreader[2];
+                            cashEther = (long)dreader[3];
+                            gas = (long)dreader[4];
+                            cashGas = (long)dreader[5];
+                            skillItemList = DWMemberData.ConvertSkillItemList(dreader[6] as byte[]);
+                            boxList = DWMemberData.ConvertBoxDataList(dreader[7] as byte[]);
+                            relicBoxCnt = (long)dreader[8];
+                            lastWorld = (short)dreader[9];
+                            lastStage = (short)dreader[10];
                         }
                     }
                 }
             }
 
-            int addGold = 0;
+            ulong stageNo = (((ulong)lastWorld - 1) * 10) + (ulong)lastStage;
+
             for (int i = 0; i < mailData.itemData.Count; ++i)
             {
-                switch ((ITEM_TYPE)mailData.itemData[i].itemType)
-                {
-                    case ITEM_TYPE.GOLD_TYPE:
-                        gold += mailData.itemData[i].count;
-                        addGold = mailData.itemData[i].count;
-                        break;
+                result.itemList.Add(mailData.itemData[i]);
+                DWMemberData.AddItem(mailData.itemData[i], ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, stageNo, logMessage);
+                logMessage.memberID = p.memberID;
+                logMessage.Level = "INFO";
+                logMessage.Logger = "DWReadMailController";
+                logMessage.Message = string.Format("Add Item itemType = {0} itemValue = {1}", mailData.itemData[i].itemType, mailData.itemData[i].value);
+                Logging.RunLog(logMessage);
 
-                    case ITEM_TYPE.GEM_TYPE:
-                        logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
-                        logMessage.Logger = "DWReadMailController";
-                        DWMemberData.AddGem(ref gem, ref cashGem, mailData.itemData[i].count, 0, logMessage);
-                        Logging.RunLog(logMessage);
-
-                        break;
-
-                    case ITEM_TYPE.ENHANCEDSTONE_TYPE:
-                        logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
-                        logMessage.Logger = "DWReadMailController";
-                        DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, mailData.itemData[i].count, 0, logMessage);
-                        Logging.RunLog(logMessage);
-                        break;
-
-                    case ITEM_TYPE.BOSS_DUNGEON_TICKET_TYPE:
-                        bossDungeonTicket += mailData.itemData[i].count;
-                        break;
-                }
             }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, EnhancedStone = @enhancedStone, BossDungeonTicket = @bossDungeonTicket WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList  WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
                     command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
-                    command.Parameters.Add("@bossDungeonTicket", SqlDbType.Int).Value = bossDungeonTicket;
+                    command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
+                    command.Parameters.Add("@gas", SqlDbType.BigInt).Value = gas;
+                    command.Parameters.Add("@skillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(skillItemList);
+                    command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -231,7 +224,7 @@ namespace CloudBread.Controllers
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "Error";
                         logMessage.Logger = "DWReadMailController";
-                        logMessage.Message = string.Format("Update Failed DWMembers");
+                        logMessage.Message = string.Format("Update Failed DWMembersNew");
                         Logging.RunLog(logMessage);
 
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
@@ -265,17 +258,14 @@ namespace CloudBread.Controllers
                 }
             }
 
-            logMessage.memberID = p.memberID;
-            logMessage.Level = "INFO";
-            logMessage.Logger = "DWReadMailController";
-            logMessage.Message = string.Format("Cur Gem = {0}, Cur EnhancedStone = {1}, Add Gold = {2}", gem, enhancedStone, addGold);
-            Logging.RunLog(logMessage);
-
-            result.index = p.index;
-            result.gold = addGold;
+            result.gold = gold;
             result.gem = gem;
-            result.enhancedStone = enhancedStone;
-            result.bossDungeonTicket = bossDungeonTicket;
+            result.ether = ether;
+            result.gas = gas;
+            result.skillItemList = skillItemList;
+            result.boxList = boxList;
+            result.relicBoxCnt = relicBoxCnt;
+            result.index = p.index;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;

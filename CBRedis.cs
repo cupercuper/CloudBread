@@ -30,6 +30,50 @@ namespace CloudBreadRedis
         static string CloudBreadGameLogRedisServer = globalVal.CloudBreadGameLogRedisServer;
         static string EMPTY_USER = "Master";
 
+        public static bool KeyExists(int rankIdx, string key)
+        {
+            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringSocket);
+
+            // try to connect database
+            try
+            {
+                // StringSet task
+                IDatabase cache = connection.GetDatabase(rankIdx);
+                bool exists = cache.KeyExists(key);
+
+                connection.Close();
+                connection.Dispose();
+
+                return exists;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public static void SetRedisExpireKey(int rankIdx, string key, string value, TimeSpan expireTime)
+        {
+            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringSocket);
+
+            // try to connect database
+            try
+            {
+                // StringSet task
+                IDatabase cache = connection.GetDatabase(rankIdx);
+                cache.StringSet(key, value, expireTime);
+
+                connection.Close();
+                connection.Dispose();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
         /// @brief save socket auth key in redis db0
         public static bool SetRedisKey(string key, string value, int? expTimeMin)    // todo: value as oject or ...?
         {
@@ -54,6 +98,60 @@ namespace CloudBreadRedis
                 connection.Dispose();
 
                 return true;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public static bool SetRedisKey(int rankIdx, string key, RedisValue value, int? expTimeMin)    // todo: value as oject or ...?
+        {
+            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringSocket);
+
+            // try to connect database
+            try
+            {
+                // StringSet task
+                IDatabase cache = connection.GetDatabase(rankIdx);
+                if (expTimeMin == null)
+                {
+                    // save without expire time
+                    cache.StringSet(key, value);
+                }
+                else
+                {
+                    cache.StringSet(key, value, TimeSpan.FromMinutes(Convert.ToDouble(expTimeMin)));
+                }
+
+                connection.Close();
+                connection.Dispose();
+
+                return true;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        public static RedisValue GetRedisKeyValue(int rankIdx, string key)
+        {
+            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringSocket);
+
+            // try to connect database
+            try
+            {
+                // StringGet task
+                IDatabase cache = connection.GetDatabase(rankIdx);
+                RedisValue result = cache.StringGet(key);
+
+                connection.Close();
+                connection.Dispose();
+
+                return result;
             }
             catch (Exception)
             {
@@ -159,6 +257,25 @@ namespace CloudBreadRedis
             return score;
         }
 
+        public static void KeyDelete(int rankIdx, string key)
+        {
+            ConnectionMultiplexer connection = ConnectionMultiplexer.Connect(redisConnectionStringRank);
+
+            try
+            {
+                IDatabase cache = connection.GetDatabase(rankIdx);
+                cache.KeyDelete(key);
+
+                connection.Close();
+                connection.Dispose();
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
 
         /// @brief Get selected rank range members. 
         /// Get my rank and then call this method to fetch +-10 rank(total 20) rank
@@ -256,7 +373,7 @@ namespace CloudBreadRedis
                 RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
                 SqlConnection conn = new SqlConnection(globalVal.DBConnectionString);
                 conn.Open();
-                string strQuery = "SELECT MemberID, CaptianChange, LastWorld FROM DWMembers";
+                string strQuery = "SELECT MemberID, CaptianChange, LastWorld FROM DWMembersNew";
 
                 SqlCommand command = new SqlCommand(strQuery, conn);
 

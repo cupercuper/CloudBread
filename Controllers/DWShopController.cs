@@ -106,23 +106,24 @@ namespace CloudBread.Controllers
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
             DWShopModel result = new DWShopModel();
 
-            result.unitDataList = new List<ClientUnitData>();
-            result.unitTicketList = new List<DWUnitTicketData>();
-
-            long gold = 0;
+            double gold = 0;
             long gem = 0;
             long cashGem = 0;
-            long enhancedStone = 0;
-            long cashEnhancedStone = 0;
-            byte unitSlotIdx = 0;
-            Dictionary<uint, UnitData> unitDic = null;
-            List<DWUnitTicketData> unitTicketList = null;
-            List<ActiveItemData> activeItemList = null;
+            long ether = 0;
+            long cashEther = 0;
+            long gas = 0;
+            long cashGas = 0;
+            long relicBoxCnt = 0;
+            short lastWorld = 0;
+            short lastStage = 0;
+            List<SkillItemData> skillItemList = null;
+            List<BoxData> boxList = null;
+            List<LimitShopItemData> limitShopItemDataList = null;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gold, Gem, CashGem, EnhancedStone, CashEnhancedStone, UnitSlotIdx, UnitList, UnitTicketList, ActiveItemList FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, LimitShopItemDataList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -136,33 +137,23 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            gold = (long)dreader[0];
-                            gem = (long)dreader[1];
-                            cashGem = (long)dreader[2];
-                            enhancedStone = (long)dreader[3];
-                            cashEnhancedStone = (long)dreader[4];
-                            unitSlotIdx = (byte)dreader[5];
-                            unitDic = DWMemberData.ConvertUnitDic(dreader[6] as byte[]);
-                            unitTicketList = DWMemberData.ConvertUnitTicketDataList(dreader[7] as byte[]);
-                            activeItemList = DWMemberData.ConvertActiveItemList(dreader[8] as byte[]);
+                            gem = (long)dreader[0];
+                            cashGem = (long)dreader[1];
+                            ether = (long)dreader[2];
+                            cashEther = (long)dreader[3];
+                            gas = (long)dreader[4];
+                            cashGas = (long)dreader[5];
+                            skillItemList = DWMemberData.ConvertSkillItemList(dreader[6] as byte[]);
+                            boxList = DWMemberData.ConvertBoxDataList(dreader[7] as byte[]);
+                            relicBoxCnt = (long)dreader[8];
+                            lastWorld = (short)dreader[9];
+                            lastStage = (short)dreader[10];
+                            limitShopItemDataList = DWMemberData.ConvertLimitShopItemDataList(dreader[11] as byte[]);
                         }
                     }
                 }
             }
 
-            DWMemberData.UpdateActiveItem(activeItemList);
-
-            UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
-            if (unitSlotDataTable == null)
-            {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWShopController";
-                logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
-                Logging.RunLog(logMessage);
-                return result;
-            }
 
             ShopDataTable shopDataTable = DWDataTableManager.GetDataTable(ShopDataTable_List.NAME, p.serialNo) as ShopDataTable;
             if (shopDataTable == null)
@@ -178,7 +169,43 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            if((MONEY_TYPE)shopDataTable.MoneyType == MONEY_TYPE.CASH_TYPE)
+            if (shopDataTable.Limit > 0)
+            {
+                bool addItem = true;
+                for (int k = 0; k < limitShopItemDataList.Count; ++k)
+                {
+                    if (limitShopItemDataList[k].serialNo == p.serialNo)
+                    {
+                        addItem = false;
+                        if (shopDataTable.Limit <= limitShopItemDataList[k].count)
+                        {
+                            result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                            logMessage.memberID = p.memberID;
+                            logMessage.Level = "Error";
+                            logMessage.Logger = "DWGooglePurchaseVerifyController";
+                            logMessage.Message = string.Format("limitItem Error Cur Count = {0} ShopDataTable SeralNo = {1}", limitShopItemDataList[k].count, p.serialNo);
+                            Logging.RunLog(logMessage);
+
+                            return result;
+                        }
+                        else
+                        {
+                            limitShopItemDataList[k].count++;
+                        }
+                    }
+                }
+
+                if (addItem)
+                {
+                    LimitShopItemData limitShopItemData = new LimitShopItemData();
+                    limitShopItemData.serialNo = p.serialNo;
+                    limitShopItemData.count = 1;
+                    limitShopItemDataList.Add(limitShopItemData);
+                }
+            }
+
+            if ((MONEY_TYPE)shopDataTable.MoneyType == MONEY_TYPE.CASH_TYPE)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
@@ -193,22 +220,6 @@ namespace CloudBread.Controllers
 
             switch((MONEY_TYPE)shopDataTable.MoneyType)
             {
-                case MONEY_TYPE.GOLD_TYPE:
-                    if(gold < shopDataTable.MoneyCount)
-                    {
-                        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-
-                        logMessage.memberID = p.memberID;
-                        logMessage.Level = "INFO";
-                        logMessage.Logger = "DWShopController";
-                        logMessage.Message = string.Format("lack gold");
-                        Logging.RunLog(logMessage);
-
-                        return result;
-                    }
-
-                    gold -= shopDataTable.MoneyCount;
-                    break;
                 case MONEY_TYPE.GEM_TYPE:
                     if (DWMemberData.SubGem(ref gem, ref cashGem, shopDataTable.MoneyCount, logMessage) == false)
                     {
@@ -227,15 +238,35 @@ namespace CloudBread.Controllers
                     logMessage.Logger = "DWShopController";
                     Logging.RunLog(logMessage);
                     break;
-                case MONEY_TYPE.ENHANCEDSTONE_TYPE:
-                    if (DWMemberData.SubEnhancedStone(ref enhancedStone, ref cashEnhancedStone, shopDataTable.MoneyCount, logMessage) == false)
+                case MONEY_TYPE.ETHER_TYPE:
+                    if (DWMemberData.SubEther(ref ether, ref cashEther, shopDataTable.MoneyCount, logMessage) == false)
                     {
                         result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "Error";
                         logMessage.Logger = "DWShopController";
-                        logMessage.Message = string.Format("lack enhancedStone ({0},{1}) shop serialNo = {2} moneyCount = {3}", enhancedStone, cashEnhancedStone, p.serialNo, shopDataTable.MoneyCount);
+                        logMessage.Message = string.Format("lack Ether ({0},{1}) shop serialNo = {2} moneyCount = {3}", ether, cashEther, p.serialNo, shopDataTable.MoneyCount);
+                        Logging.RunLog(logMessage);
+
+                        return result;
+                    }
+
+                    logMessage.memberID = p.memberID;
+                    logMessage.Level = "INFO";
+                    logMessage.Logger = "DWShopController";
+                    Logging.RunLog(logMessage);
+
+                    break;
+                case MONEY_TYPE.GAS_TYPE:
+                    if (DWMemberData.SubGas(ref gas, ref cashGas, shopDataTable.MoneyCount, logMessage) == false)
+                    {
+                        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "Error";
+                        logMessage.Logger = "DWShopController";
+                        logMessage.Message = string.Format("lack Ether ({0},{1}) shop serialNo = {2} moneyCount = {3}", ether, cashEther, p.serialNo, shopDataTable.MoneyCount);
                         Logging.RunLog(logMessage);
 
                         return result;
@@ -249,170 +280,32 @@ namespace CloudBread.Controllers
                     break;
             }
 
-            long addGold = 0;
-
-            for (int k = 0; k < shopDataTable.ItemList.Count; ++k)
+            ulong stageNo = (((ulong)lastWorld - 1) * 10) + (ulong)lastStage;
+            DWItemData itemData = new DWItemData();
+            for (int i = 0; i < shopDataTable.ItemTypeList.Count; ++i)
             {
-                ItemDataTable itemDataTable = DWDataTableManager.GetDataTable(ItemDataTable_List.NAME, shopDataTable.ItemList[k]) as ItemDataTable;
-                if (itemDataTable == null)
-                {
-                    continue;
-                }
+                itemData.itemType = shopDataTable.ItemTypeList[i];
+                itemData.subType = shopDataTable.ItemSubTypeList[i];
+                itemData.value = shopDataTable.ItemValueList[i];
 
-                switch ((ITEM_TYPE)itemDataTable.ChangeType)
-                {
-                    case ITEM_TYPE.GOLD_TYPE:
-                        {
-                            gold += long.Parse(itemDataTable.Value);
-                            addGold += long.Parse(itemDataTable.Value);
-                        }
-                        break;
-                    case ITEM_TYPE.GEM_TYPE:
-                        {
-                            DWMemberData.AddGem(ref gem, ref cashGem, 0, long.Parse(itemDataTable.Value), logMessage);
-                            logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
-                            logMessage.Logger = "DWShopController";
-                            Logging.RunLog(logMessage);
-                        }
-                        break;
-                    case ITEM_TYPE.ENHANCEDSTONE_TYPE:
-                        {
-                            DWMemberData.AddEnhancedStone(ref enhancedStone, ref cashEnhancedStone, 0, long.Parse(itemDataTable.Value), logMessage);
-                            logMessage.memberID = p.memberID;
-                            logMessage.Level = "INFO";
-                            logMessage.Logger = "DWShopController";
-                            Logging.RunLog(logMessage);
-                        }
-                        break;
-                    case ITEM_TYPE.UNIT_TYPE:
-                        {
-                            if (unitSlotDataTable.UnitMaxCount == unitDic.Count)
-                            {
-                                DWUnitTicketData ticketData = new DWUnitTicketData();
-                                ticketData.ticketType = UNIT_SUMMON_TICKET_TYPE.FIX_TYPE;
-                                ticketData.serialNo = ulong.Parse(itemDataTable.Value);
-
-                                unitTicketList.Add(ticketData);
-                                result.unitTicketList.Add(ticketData);
-                            }
-                            else
-                            {
-                                uint instanceNo = 0;
-                                UnitData unitData = null;
-                                instanceNo = DWMemberData.AddUnitDic(ref unitDic, ulong.Parse(itemDataTable.Value));
-                                if (unitDic.TryGetValue(instanceNo, out unitData) == false)
-                                {
-                                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-
-                                    logMessage.memberID = p.memberID;
-                                    logMessage.Level = "Error";
-                                    logMessage.Logger = "DWShopController";
-                                    logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
-                                    Logging.RunLog(logMessage);
-
-                                    return result;
-                                }
-
-                                ClientUnitData clientUnitData = new ClientUnitData()
-                                {
-                                    instanceNo = instanceNo,
-                                    level = unitData.Level,
-                                    enhancementCount = unitData.EnhancementCount,
-                                    serialNo = unitData.SerialNo
-                                };
-
-                                result.unitDataList.Add(clientUnitData);
-                            }
-                        }
-                        break;
-                    case ITEM_TYPE.UNIT_RANDOM_TYPE:
-                        {
-                            if (unitSlotDataTable.UnitMaxCount == unitDic.Count)
-                            {
-                                DWUnitTicketData ticketData = new DWUnitTicketData();
-                                ticketData.ticketType = UNIT_SUMMON_TICKET_TYPE.RANDOM_TYPE;
-                                ticketData.serialNo = ulong.Parse(itemDataTable.Value);
-
-                                unitTicketList.Add(ticketData);
-
-                                result.unitTicketList.Add(ticketData);
-                            }
-                            else
-                            {
-                                UnitSummonRandomTicketDataTable unitSummonRandomTicketDataTable = DWDataTableManager.GetDataTable(UnitSummonRandomTicketDataTable_List.NAME, ulong.Parse(itemDataTable.Value)) as UnitSummonRandomTicketDataTable;
-                                if (unitSummonRandomTicketDataTable == null)
-                                {
-                                    return result;
-                                }
-
-                                ulong serialNo = DWDataTableManager.GetUnitTicket((DWDataTableManager.GROUP_ID)unitSummonRandomTicketDataTable.GroupID);
-                                if (serialNo == 0)
-                                {
-                                    return result;
-                                }
-
-                                UnitSummonDataTable unitSummonDataTable = DWDataTableManager.GetDataTable(UnitSummonDataTable_List.NAME, serialNo) as UnitSummonDataTable;
-                                if (unitSummonDataTable == null)
-                                {
-                                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                                    logMessage.memberID = p.memberID;
-                                    logMessage.Level = "Error";
-                                    logMessage.Logger = "DWShopController";
-                                    logMessage.Message = string.Format("Not Found UnitSummonDataTable SerialNo = {0}", serialNo);
-                                    Logging.RunLog(logMessage);
-                                    return result;
-                                }
-
-                                uint instanceNo = 0;
-                                UnitData unitData = null;
-                                instanceNo = DWMemberData.AddUnitDic(ref unitDic, unitSummonDataTable.ChangeSerialNo);
-                                if (unitDic.TryGetValue(instanceNo, out unitData) == false)
-                                {
-                                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-
-                                    logMessage.memberID = p.memberID;
-                                    logMessage.Level = "Error";
-                                    logMessage.Logger = "DWShopController";
-                                    logMessage.Message = string.Format("UnitList Error  InstanceNo = {0}", instanceNo);
-                                    Logging.RunLog(logMessage);
-
-                                    return result;
-                                }
-
-                                ClientUnitData clientUnitData = new ClientUnitData()
-                                {
-                                    instanceNo = instanceNo,
-                                    level = unitData.Level,
-                                    enhancementCount = unitData.EnhancementCount,
-                                    serialNo = unitData.SerialNo
-                                };
-
-                                result.unitDataList.Add(clientUnitData);
-                            }
-                        }
-                        break;
-                    case ITEM_TYPE.ACTIVE_ITEM_TYPE:
-                        {
-                            DWMemberData.AddActiveItem(activeItemList, ulong.Parse(itemDataTable.Value));
-                        }
-                        break;
-                }
+                DWMemberData.AddItem(itemData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, stageNo, logMessage);
             }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET Gold = @gold, Gem = @gem, CashGem = @cashGem, EnhancedStone = @enhancedStone, CashEnhancedStone = @cashEnhancedStone, UnitList = @unitList, UnitTicketList = @unitTicketList, ActiveItemList = @activeItemList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, CashGem = @cashGem, Ether = @ether, CashEther = @cashEther, Gas = @gas, CashGas = @cashGas, SkillItemList = @skillItemList, BoxList=@boxList, RelicBoxCount=@relicBoxCount, LimitShopItemDataList=@limitShopItemDataList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@gold", SqlDbType.BigInt).Value = gold;
                     command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
                     command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
-                    command.Parameters.Add("@enhancedStone", SqlDbType.BigInt).Value = enhancedStone;
-                    command.Parameters.Add("@cashEnhancedStone", SqlDbType.BigInt).Value = cashEnhancedStone;
-                    command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDic);
-                    command.Parameters.Add("@unitTicketList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitTicketList);
-                    command.Parameters.Add("@activeItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(activeItemList);
+                    command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
+                    command.Parameters.Add("@cashEther", SqlDbType.BigInt).Value = cashEther;
+                    command.Parameters.Add("@gas", SqlDbType.BigInt).Value = gas;
+                    command.Parameters.Add("@cashGas", SqlDbType.BigInt).Value = cashGas;
+                    command.Parameters.Add("@skillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(skillItemList);
+                    command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
+                    command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCnt;
+                    command.Parameters.Add("@limitShopItemDataList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(limitShopItemDataList);
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -422,7 +315,7 @@ namespace CloudBread.Controllers
                         logMessage.memberID = p.memberID;
                         logMessage.Level = "Error";
                         logMessage.Logger = "DWShopController";
-                        logMessage.Message = string.Format("DWMembers Udpate Failed");
+                        logMessage.Message = string.Format("DWMembersNew Udpate Failed");
                         Logging.RunLog(logMessage);
 
                         result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
@@ -431,12 +324,17 @@ namespace CloudBread.Controllers
                 }
             }
 
-            result.gold = addGold;
+            result.gold = gold;
             result.gem = gem;
             result.cashGem = cashGem;
-            result.enhancedStone = enhancedStone;
-            result.cashEnhancedStone = cashEnhancedStone;
-            result.activeItemList = activeItemList;
+            result.ether = ether;
+            result.cashEther = cashEther;
+            result.gas = gas;
+            result.cashGas = cashGas;
+            result.skillItemList = skillItemList;
+            result.boxList = boxList;
+            result.relicBoxCnt = relicBoxCnt;
+            result.limitShopItemDataList = limitShopItemDataList;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;

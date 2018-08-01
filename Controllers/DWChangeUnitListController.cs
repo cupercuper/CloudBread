@@ -115,7 +115,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, CashGem, UnitListChangeTime FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, UnitListChangeTime FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -158,28 +158,28 @@ namespace CloudBread.Controllers
             }
 
             TimeSpan subTime = utcTime - unitListChangeTime;
-            // 1분을 갭을 준다.
-            if (subTime.TotalMinutes < globalSetting.UnitListChangeTime - 1)
-            {
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "INFO";
-                logMessage.Logger = "DWChangeUnitListController";
-                if (DWMemberData.SubGem(ref gem, ref cashGem, globalSetting.UnitListChangeGem, logMessage) == false)
-                {
-                    logMessage.Level = "Error";
-                    logMessage.Message = string.Format("Lack Gem");
-                    Logging.RunLog(logMessage);
+            //// 1분을 갭을 준다.
+            //if (subTime.TotalMinutes < globalSetting.UnitListChangeTime - 1)
+            //{
+            //    logMessage.memberID = p.memberID;
+            //    logMessage.Level = "INFO";
+            //    logMessage.Logger = "DWChangeUnitListController";
+            //    if (DWMemberData.SubGem(ref gem, ref cashGem, globalSetting.UnitListChangeGem, logMessage) == false)
+            //    {
+            //        logMessage.Level = "Error";
+            //        logMessage.Message = string.Format("Lack Gem");
+            //        Logging.RunLog(logMessage);
 
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                    return result;
-                }
-                Logging.RunLog(logMessage);
-            }
+            //        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //        return result;
+            //    }
+            //    Logging.RunLog(logMessage);
+            //}
 
             List<ulong> unitLIst = DWDataTableManager.GetCanBuyUnitList();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembers SET CanBuyUnitList = @canBuyUnitList, Gem = @gem, CashGem = @cashGem, UnitListChangeTime = @unitListChangeTime WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET CanBuyUnitList = @canBuyUnitList, Gem = @gem, CashGem = @cashGem, UnitListChangeTime = @unitListChangeTime WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@canBuyUnitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitLIst);

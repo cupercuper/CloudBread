@@ -2,7 +2,6 @@
 
 namespace CloudBread.Models
 {
-
     [Serializable]
     public class DWBossClearDataInputParam
     {

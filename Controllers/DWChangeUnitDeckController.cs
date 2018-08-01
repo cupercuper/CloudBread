@@ -106,174 +106,174 @@ namespace CloudBread.Controllers
 
             DWChangeUnitDeckModel result = new DWChangeUnitDeckModel();
 
-            List<uint> unitDeckList = null;
-            Dictionary<uint, UnitData> unitList = null;
-            byte unitSlotIdx = 1;
+            //List<uint> unitDeckList = null;
+            //Dictionary<uint, UnitData> unitList = null;
+            //byte unitSlotIdx = 1;
 
-            RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-            {
-                string strQuery = string.Format("SELECT UnitList, UnitDeckList, UnitSlotIdx FROM DWMembers WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
-                {
-                    connection.OpenWithRetry(retryPolicy);
-                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
-                    {
-                        if (dreader.HasRows == false)
-                        {
-                            logMessage.memberID = p.memberID;
-                            logMessage.Level = "Error";
-                            logMessage.Logger = "DWChangeUnitDeckController";
-                            logMessage.Message = string.Format("Not Found User = {0}", p.memberID);
-                            Logging.RunLog(logMessage);
+            //RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+            //using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            //{
+            //    string strQuery = string.Format("SELECT UnitList, UnitDeckList, UnitSlotIdx FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+            //    using (SqlCommand command = new SqlCommand(strQuery, connection))
+            //    {
+            //        connection.OpenWithRetry(retryPolicy);
+            //        using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+            //        {
+            //            if (dreader.HasRows == false)
+            //            {
+            //                logMessage.memberID = p.memberID;
+            //                logMessage.Level = "Error";
+            //                logMessage.Logger = "DWChangeUnitDeckController";
+            //                logMessage.Message = string.Format("Not Found User = {0}", p.memberID);
+            //                Logging.RunLog(logMessage);
 
-                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
-                            return result;
-                        }
+            //                result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+            //                return result;
+            //            }
 
-                        while (dreader.Read())
-                        {
-                            unitList = DWMemberData.ConvertUnitDic(dreader[0] as byte[]);
-                            unitDeckList = DWMemberData.ConvertUnitDeckList(dreader[1] as byte[]);
-                            unitSlotIdx = (byte)dreader[2];
-                        }
-                    }
-                }
-            }
+            //            while (dreader.Read())
+            //            {
+            //                unitList = DWMemberData.ConvertUnitDic(dreader[0] as byte[]);
+            //                unitDeckList = DWMemberData.ConvertUnitDeckList(dreader[1] as byte[]);
+            //                unitSlotIdx = (byte)dreader[2];
+            //            }
+            //        }
+            //    }
+            //}
 
-            if (unitList == null)
-            {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //if (unitList == null)
+            //{
+            //    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWChangeUnitDeckController";
-                logMessage.Message = string.Format("Not Found unitList OR canBuyUnitList = {0}", p.memberID);
-                Logging.RunLog(logMessage);
+            //    logMessage.memberID = p.memberID;
+            //    logMessage.Level = "Error";
+            //    logMessage.Logger = "DWChangeUnitDeckController";
+            //    logMessage.Message = string.Format("Not Found unitList OR canBuyUnitList = {0}", p.memberID);
+            //    Logging.RunLog(logMessage);
 
-                return result;
-            }
+            //    return result;
+            //}
 
-            UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
-            if (unitSlotDataTable == null)
-            {
-                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                logMessage.memberID = p.memberID;
-                logMessage.Level = "Error";
-                logMessage.Logger = "DWChangeUnitDeckController";
-                logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
-                Logging.RunLog(logMessage);
-                return result;
-            }
+            //UnitSlotDataTable unitSlotDataTable = DWDataTableManager.GetDataTable(UnitSlotDataTable_List.NAME, unitSlotIdx) as UnitSlotDataTable;
+            //if (unitSlotDataTable == null)
+            //{
+            //    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    logMessage.memberID = p.memberID;
+            //    logMessage.Level = "Error";
+            //    logMessage.Logger = "DWChangeUnitDeckController";
+            //    logMessage.Message = string.Format("UnitSlotDataTable = null SerialNo = {0}", unitSlotIdx);
+            //    Logging.RunLog(logMessage);
+            //    return result;
+            //}
 
-            if (p.changeType == (byte)UNIT_CHANGE_TYPE.ADD_TYPE)
-            {
-                if (unitDeckList.Count >= unitSlotDataTable.UnitMaxCount)
-                {
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                    logMessage.memberID = p.memberID;
-                    logMessage.Level = "Error";
-                    logMessage.Logger = "DWChangeUnitDeckController";
-                    logMessage.Message = string.Format("UnitSlotDataTable Max  SerialNo = {0}", unitSlotIdx);
-                    Logging.RunLog(logMessage);
-                    return result;
-                }
+            //if (p.changeType == (byte)UNIT_CHANGE_TYPE.ADD_TYPE)
+            //{
+            //    if (unitDeckList.Count >= unitSlotDataTable.UnitMaxCount)
+            //    {
+            //        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //        logMessage.memberID = p.memberID;
+            //        logMessage.Level = "Error";
+            //        logMessage.Logger = "DWChangeUnitDeckController";
+            //        logMessage.Message = string.Format("UnitSlotDataTable Max  SerialNo = {0}", unitSlotIdx);
+            //        Logging.RunLog(logMessage);
+            //        return result;
+            //    }
 
-                unitDeckList.Add(p.changeInstanceNo);
-            }
-            else if (p.changeType == (byte)UNIT_CHANGE_TYPE.SUB_TYPE)
-            {
-                int index = -1;
-                for (int i = 0; i < unitDeckList.Count; ++i)
-                {
-                    if (unitDeckList[i] == p.originInstanceNo)
-                    {
-                        index = i;
-                        break;
-                    }
-                }
+            //    unitDeckList.Add(p.changeInstanceNo);
+            //}
+            //else if (p.changeType == (byte)UNIT_CHANGE_TYPE.SUB_TYPE)
+            //{
+            //    int index = -1;
+            //    for (int i = 0; i < unitDeckList.Count; ++i)
+            //    {
+            //        if (unitDeckList[i] == p.originInstanceNo)
+            //        {
+            //            index = i;
+            //            break;
+            //        }
+            //    }
 
-                if (index == -1)
-                {
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    if (index == -1)
+            //    {
+            //        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
-                    logMessage.memberID = p.memberID;
-                    logMessage.Level = "Error";
-                    logMessage.Logger = "DWChangeUnitDeckController";
-                    logMessage.Message = string.Format("Not Found Instance No 1 = {0}", p.memberID);
-                    Logging.RunLog(logMessage);
+            //        logMessage.memberID = p.memberID;
+            //        logMessage.Level = "Error";
+            //        logMessage.Logger = "DWChangeUnitDeckController";
+            //        logMessage.Message = string.Format("Not Found Instance No 1 = {0}", p.memberID);
+            //        Logging.RunLog(logMessage);
 
-                    return result;
-                }
+            //        return result;
+            //    }
 
-                unitDeckList.RemoveAt(index);
-            }
-            else if (p.changeType == (byte)UNIT_CHANGE_TYPE.CHANGE_TYPE)
-            {
-                int index = -1;
-                for (int i = 0; i < unitDeckList.Count; ++i)
-                {
-                    if (unitDeckList[i] == p.originInstanceNo)
-                    {
-                        index = i;
-                        break;
-                    }
-                }
+            //    unitDeckList.RemoveAt(index);
+            //}
+            //else if (p.changeType == (byte)UNIT_CHANGE_TYPE.CHANGE_TYPE)
+            //{
+            //    int index = -1;
+            //    for (int i = 0; i < unitDeckList.Count; ++i)
+            //    {
+            //        if (unitDeckList[i] == p.originInstanceNo)
+            //        {
+            //            index = i;
+            //            break;
+            //        }
+            //    }
 
-                if (index == -1)
-                {
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    if (index == -1)
+            //    {
+            //        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
-                    logMessage.memberID = p.memberID;
-                    logMessage.Level = "Error";
-                    logMessage.Logger = "DWChangeUnitDeckController";
-                    logMessage.Message = string.Format("Not Found Instance No 2 = {0}", p.memberID);
-                    Logging.RunLog(logMessage);
+            //        logMessage.memberID = p.memberID;
+            //        logMessage.Level = "Error";
+            //        logMessage.Logger = "DWChangeUnitDeckController";
+            //        logMessage.Message = string.Format("Not Found Instance No 2 = {0}", p.memberID);
+            //        Logging.RunLog(logMessage);
 
-                    return result;
-                }
+            //        return result;
+            //    }
 
-                UnitData unitData = null;
-                if (unitList.TryGetValue(p.changeInstanceNo, out unitData) == false)
-                {
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+            //    UnitData unitData = null;
+            //    if (unitList.TryGetValue(p.changeInstanceNo, out unitData) == false)
+            //    {
+            //        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
 
-                    logMessage.memberID = p.memberID;
-                    logMessage.Level = "Error";
-                    logMessage.Logger = "DWChangeUnitDeckController";
-                    logMessage.Message = string.Format("Not Found unitList = {0}", p.memberID);
-                    Logging.RunLog(logMessage);
+            //        logMessage.memberID = p.memberID;
+            //        logMessage.Level = "Error";
+            //        logMessage.Logger = "DWChangeUnitDeckController";
+            //        logMessage.Message = string.Format("Not Found unitList = {0}", p.memberID);
+            //        Logging.RunLog(logMessage);
 
-                    return result;
-                }
+            //        return result;
+            //    }
 
-                unitDeckList[index] = p.changeInstanceNo;
-            }
+            //    unitDeckList[index] = p.changeInstanceNo;
+            //}
 
-            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
-            {
-                string strQuery = string.Format("UPDATE DWMembers SET UnitDeckList = @unitDeckList WHERE MemberID = '{0}'", p.memberID);
-                using (SqlCommand command = new SqlCommand(strQuery, connection))
-                {
-                    command.Parameters.Add("@unitDeckList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDeckList);
+            //using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            //{
+            //    string strQuery = string.Format("UPDATE DWMembersNew SET UnitDeckList = @unitDeckList WHERE MemberID = '{0}'", p.memberID);
+            //    using (SqlCommand command = new SqlCommand(strQuery, connection))
+            //    {
+            //        command.Parameters.Add("@unitDeckList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitDeckList);
 
-                    connection.OpenWithRetry(retryPolicy);
+            //        connection.OpenWithRetry(retryPolicy);
 
-                    int rowCount = command.ExecuteNonQuery();
-                    if (rowCount <= 0)
-                    {
-                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+            //        int rowCount = command.ExecuteNonQuery();
+            //        if (rowCount <= 0)
+            //        {
+            //            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
 
-                        logMessage.memberID = p.memberID;
-                        logMessage.Level = "Error";
-                        logMessage.Logger = "DWChangeUnitDeckController";
-                        logMessage.Message = string.Format("UnitDeckList Update Failed");
-                        Logging.RunLog(logMessage);
+            //            logMessage.memberID = p.memberID;
+            //            logMessage.Level = "Error";
+            //            logMessage.Logger = "DWChangeUnitDeckController";
+            //            logMessage.Message = string.Format("UnitDeckList Update Failed");
+            //            Logging.RunLog(logMessage);
 
-                        return result;
-                    }
-                }
-            }
+            //            return result;
+            //        }
+            //    }
+            //}
 
             result.originInstanceNo = p.originInstanceNo;
             result.changeInstanceNo = p.changeInstanceNo;

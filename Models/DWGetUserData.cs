@@ -15,6 +15,7 @@ namespace CloudBread.Models
     public class DWGetUserDataModel
     {
         public List<DWUserData> userDataList = new List<DWUserData>();
+        public byte refreshDailyQeust;
         public byte errorCode;
     }
 }

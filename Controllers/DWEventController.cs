@@ -140,7 +140,7 @@ namespace CloudBread.Controllers
             List<long> eventList = new List<long>();
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT EventList FROM DWMembersInputEvent WHERE MemberID = @memberID");
+                string strQuery = string.Format("SELECT EventList FROM DWMembersInputEventNew WHERE MemberID = @memberID");
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = p.memberID;
@@ -167,7 +167,7 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersInputEvent SET EventList = @eventList WHERE MemberID = @memberID");
+                string strQuery = string.Format("UPDATE DWMembersInputEventNew SET EventList = @eventList WHERE MemberID = @memberID");
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@eventList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(eventList);
