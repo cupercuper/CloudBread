@@ -332,6 +332,8 @@ namespace DW.CommonData
         public short gameSpeedItemCnt;
         public long gameSpeedItemTimeRemain;
         public long lastReturnStage;
+        public long baseCampResetCnt;
+        public byte relicInventorySlotIdx;
     }
 
     [Serializable]

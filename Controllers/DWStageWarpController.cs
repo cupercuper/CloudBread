@@ -215,6 +215,21 @@ namespace CloudBread.Controllers
             warpStageNo = warpStageNo - (warpWorldNo * 10);
             warpWorldNo++;
 
+            EnemyDataTable enemy = DWDataTableManager.GetDataTable(EnemyDataTable_List.NAME, DWDataTableManager.GlobalSettingDataTable.WarpMonsterID) as EnemyDataTable;
+            if(enemy == null)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            double mineral = 0;
+            ulong subStage = warpStageNo - stageNo;
+            for(ulong i = 1; i <= subStage; ++i)
+            {
+                double mineralStageNo = stageNo + (double)i;
+                mineral += enemy.HP* Math.Pow(1.39, Math.Min(mineralStageNo, 115.0)) * Math.Pow(1.13, Math.Max((mineralStageNo - 115.0), 9.0));
+            }
+            
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
                 string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, CashGem = @cashGem, LastWorld = @lastWorld, LastStage = @lastStage, CurWorld = @curWorld, CurStage = @curStage, UnitList = @unitList WHERE MemberID = '{0}'", p.memberID);
@@ -245,6 +260,7 @@ namespace CloudBread.Controllers
                 }
             }
 
+            result.mineral = mineral;
             result.gem = gem;
             result.cashGem = cashGem;
             result.warpWorldNo = (short)warpWorldNo;

@@ -15,6 +15,7 @@ namespace CloudBread.Models
     [Serializable]
     public class DWStageWarpDataModel
     {
+        public double mineral;
         public long gem;
         public long cashGem;
         public short warpWorldNo;

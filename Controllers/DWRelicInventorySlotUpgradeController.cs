@@ -115,7 +115,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, CashGem, RelicIncentorySlotIdx FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, RelicInventorySlotIdx FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -168,12 +168,12 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, CashGem = @cashGem, RelicIncentorySlotIdx = @relicIncentorySlotIdx WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, CashGem = @cashGem, RelicInventorySlotIdx = @relicInventorySlotIdx WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
                     command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
-                    command.Parameters.Add("@relicSlotIdx", SqlDbType.TinyInt).Value = relicInventorySlotIdx;
+                    command.Parameters.Add("@relicInventorySlotIdx", SqlDbType.TinyInt).Value = relicInventorySlotIdx;
 
                     connection.OpenWithRetry(retryPolicy);
 

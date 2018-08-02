@@ -585,6 +585,7 @@ public class GlobalSettingDataTable : DataTableBase
 	public int GameSpeedItemTime;
 	public byte GameSpeedItemMaxCount;
 	public int MonsterMineralValue;
+	public ulong WarpMonsterID;
 	public void Load(DataRow dataRow)
 	{
 		CoinGetTime = float.Parse(dataRow[1].ToString());
@@ -598,6 +599,7 @@ public class GlobalSettingDataTable : DataTableBase
 		GameSpeedItemTime = int.Parse(dataRow[9].ToString());
 		GameSpeedItemMaxCount = byte.Parse(dataRow[10].ToString());
 		MonsterMineralValue = int.Parse(dataRow[11].ToString());
+		WarpMonsterID = ulong.Parse(dataRow[12].ToString());
 	}
 }
 

@@ -168,12 +168,12 @@ namespace CloudBread.Controllers
             long addGas = 0;
             if (captainChangeStageNo == 0)
             {
-                addGas = (long)((stageNo - DWDataTableManager.GlobalSettingDataTable.ReturnStage) / 50) + 1;
-                captainChangeStageNo = ((addGas - 1) * 50) + (long)DWDataTableManager.GlobalSettingDataTable.ReturnStage;
+                addGas = (long)((stageNo - DWDataTableManager.GlobalSettingDataTable.ReturnStage) / 25) + 1;
+                captainChangeStageNo = ((addGas - 1) * 25) + (long)DWDataTableManager.GlobalSettingDataTable.ReturnStage;
             }
-            else if ((long)stageNo - captainChangeStageNo >= 50)
+            else if ((long)stageNo - captainChangeStageNo >= 25)
             {
-                addGas = ((long)stageNo - captainChangeStageNo) / 50;
+                addGas = ((long)stageNo - captainChangeStageNo) / 25;
                 captainChangeStageNo = (addGas * 50) + captainChangeStageNo;
             }
 

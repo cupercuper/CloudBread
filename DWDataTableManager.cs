@@ -162,6 +162,7 @@ namespace CloudBread
                 AddDataTable(ScienceDroneDataTable_List.NAME, new ScienceDroneDataTable_List());
                 AddDataTable(WarpDataTable_List.NAME, new WarpDataTable_List());
                 AddDataTable(BoxDataTable_List.NAME, new BoxDataTable_List());
+                AddDataTable(RelicInventorySlotDataTable_List.NAME, new RelicInventorySlotDataTable_List());
 
                 //BuildUnitSummonRatioList();
                 BuildCaptianList();

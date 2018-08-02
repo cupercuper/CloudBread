@@ -1334,6 +1334,7 @@ namespace CloudBread
                         if (boxData == null)
                         {
                             boxData = new BoxData();
+                            boxData.type = itemData.subType;
                             boxList.Add(boxData);
                         }
                         boxData.count += value;

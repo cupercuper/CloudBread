@@ -27,15 +27,15 @@ using DW.CommonData;
 namespace CloudBread.Controllers
 {
     [MobileAppController]
-    public class DWBaseCampResetController : ApiController
+    public class DWRelicBoxOpenController : ApiController
     {
-        // GET api/DWBaseCampReset
+        // GET api/DWRelicBoxOpen
         public string Get()
         {
             return "Hello from custom controller!";
         }
 
-        public HttpResponseMessage Post(DWBaseCampResetDataInputParam p)
+        public HttpResponseMessage Post(DWRelicBoxOpenDataInputParam p)
         {
             // try decrypt data
             if (!string.IsNullOrEmpty(p.token) && globalVal.CloudBreadCryptSetting == "AES256")
@@ -43,7 +43,7 @@ namespace CloudBread.Controllers
                 try
                 {
                     string decrypted = Crypto.AES_decrypt(p.token, globalVal.CloudBreadCryptKey, globalVal.CloudBreadCryptIV);
-                    p = JsonConvert.DeserializeObject<DWBaseCampResetDataInputParam>(decrypted);
+                    p = JsonConvert.DeserializeObject<DWRelicBoxOpenDataInputParam>(decrypted);
 
                 }
                 catch (Exception ex)
@@ -66,7 +66,7 @@ namespace CloudBread.Controllers
             try
             {
                 /// Database connection retry policy
-                DWBaseCampResetDataModel result = GetResult(p);
+                DWRelicBoxOpenDataModel result = GetResult(p);
 
                 /// Encrypt the result response
                 if (globalVal.CloudBreadCryptSetting == "AES256")
@@ -102,24 +102,20 @@ namespace CloudBread.Controllers
             }
         }
 
-        DWBaseCampResetDataModel GetResult(DWBaseCampResetDataInputParam p)
+        DWRelicBoxOpenDataModel GetResult(DWRelicBoxOpenDataInputParam p)
         {
             Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
-            DWBaseCampResetDataModel result = new DWBaseCampResetDataModel();
-
-            long gas = 0;
-            long cashGas = 0;
-            long gem = 0;
-            long cashGem = 0;
-            Dictionary<ulong, ushort> baseCampDic = new Dictionary<ulong, ushort>();
-            long resetCnt = 0;
-
+            DWRelicBoxOpenDataModel result = new DWRelicBoxOpenDataModel();
+            
+            byte relicSlotIdx = 0;
+            Dictionary<uint, RelicData> relicDataDic = new Dictionary<uint, RelicData>();
+            long relicBoxCount = 0;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gas, CashGas, Gem, CashGem, BaseCampList, BaseCampResetCount FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT RelicSlotIdx, RelicList, RelicBoxCount FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -139,62 +135,89 @@ namespace CloudBread.Controllers
 
                         while (dreader.Read())
                         {
-                            gas = (long)dreader[0];
-                            cashGas = (long)dreader[1];
-                            gem = (long)dreader[2];
-                            cashGem = (long)dreader[3];
-                            baseCampDic = DWMemberData.ConvertBaseCampDic(dreader[4] as byte[]);
-                            resetCnt = (long)dreader[5];
+                            relicSlotIdx = (byte)dreader[0];
+                            relicDataDic = DWMemberData.ConvertRelicDataDic(dreader[1] as byte[]);
+                            relicBoxCount = (long)dreader[2];
                         }
                     }
                 }
             }
 
-            if (long.MaxValue - resetCnt > 0)
-            {
-                resetCnt++;
-            }
-
-            if (resetCnt > 1)
-            {
-                long resetMoney = Math.Min(resetCnt * (resetCnt - 1) * 100, 1000);
-                if(DWMemberData.SubGem(ref gem, ref cashGem, resetMoney, logMessage) == false)
-                {
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                    return result;
-                }
-            }
-
-            long totalGas = 0;
-            foreach (KeyValuePair<ulong, ushort> kv in baseCampDic)
-            {
-                ushort level = kv.Value; 
-                for (int i = 0; i < level; ++i)
-                {
-                    totalGas += i + 1;
-                }
-            }
-
-            if (DWMemberData.AddGas(ref gas, ref cashGas, totalGas, 0, logMessage) == false)
+            if(relicBoxCount == 0)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
 
-            baseCampDic.Clear();
+            RelicSlotDataTable slotDataTable = DWDataTableManager.GetDataTable(RelicSlotDataTable_List.NAME, (ulong)relicSlotIdx) as RelicSlotDataTable;
+            if (slotDataTable == null)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            if (relicDataDic.Count >= slotDataTable.Count)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            ulong relicNo = DWDataTableManager.GetRelicNo(relicDataDic);
+            if (relicNo == 0)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            RelicDataTable relicDataTable = DWDataTableManager.GetDataTable(RelicDataTable_List.NAME, relicNo) as RelicDataTable;
+            if (relicDataTable == null)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                return result;
+            }
+
+            uint instanceNo = 0;
+            if (DWMemberData.InsertRelicInstanceNo(relicDataDic, out instanceNo) == false)
+            {
+                result.errorCode = (byte)DW_ERROR_CODE.INSTANCE_NO_OVER;
+                return result;
+            }
+
+            Random random = new Random((int)DateTime.Now.Ticks);
+            List<double> buffValueList = new List<double>();
+            if (relicDataTable.Buff_1 != 0)
+            {
+                buffValueList.Add(DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_1, relicDataTable.BuffMaxValue_1));
+            }
+
+            if (relicDataTable.Buff_2 != 0)
+            {
+                buffValueList.Add(DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_2, relicDataTable.BuffMaxValue_2));
+            }
+
+            if (relicDataTable.Buff_3 != 0)
+            {
+                buffValueList.Add(DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_3, relicDataTable.BuffMaxValue_3));
+            }
+
+            RelicData relicData = new RelicData();
+            relicData.instanceNo = instanceNo;
+            relicData.level = 1;
+            relicData.serialNo = relicNo;
+            relicData.buffValue = buffValueList;
+
+            relicDataDic.Add(instanceNo, relicData);
+
+            --relicBoxCount;
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET Gas = @gas, CashGas = @cashGas, Gem = @gem, CashGem = @cashGem, BaseCampList = @baseCampList, BaseCampResetCount = @baseCampResetCount WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET RelicList = @relicList, RelicBoxCount = @relicBoxCount WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@gas", SqlDbType.BigInt).Value = gas;
-                    command.Parameters.Add("@cashGas", SqlDbType.BigInt).Value = cashGas;
-                    command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
-                    command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
-                    command.Parameters.Add("@baseCampList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(baseCampDic);
-                    command.Parameters.Add("@baseCampResetCount", SqlDbType.BigInt).Value = resetCnt;
-
+                    command.Parameters.Add("@relicList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(relicDataDic);
+                    command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCount;
+       
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
@@ -212,10 +235,8 @@ namespace CloudBread.Controllers
                 }
             }
 
-            result.gas = gas;
-            result.cashGas = cashGas;
-            result.gem = gem;
-            result.cashGem = cashGem;
+            result.relicData = relicData;
+            result.relicBoxCount = relicBoxCount;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;

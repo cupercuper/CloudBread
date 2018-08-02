@@ -348,6 +348,7 @@
     <Compile Include="Controllers\DWRankController.cs" />
     <Compile Include="Controllers\DWReadMailController.cs" />
     <Compile Include="Controllers\DWRefreshDailyQuestController.cs" />
+    <Compile Include="Controllers\DWRelicBoxOpenController.cs" />
     <Compile Include="Controllers\DWRelicBuyController.cs" />
     <Compile Include="Controllers\DWRelicDestroyController.cs" />
     <Compile Include="Controllers\DWRelicInventorySlotUpgradeController.cs" />
@@ -441,6 +442,7 @@
     <Compile Include="Models\DWRankData.cs" />
     <Compile Include="Models\DWReadMailData.cs" />
     <Compile Include="Models\DWRefreshDailyQuestData.cs" />
+    <Compile Include="Models\DWRelicBoxOpenData.cs" />
     <Compile Include="Models\DWRelicBuyData.cs" />
     <Compile Include="Models\DWRelicDestroyData.cs" />
     <Compile Include="Models\DWRelicInventorySlotUpgradeData.cs" />
