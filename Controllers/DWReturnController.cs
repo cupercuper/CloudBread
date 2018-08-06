@@ -161,7 +161,8 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            long bonusEther = (long)Math.Pow(((stageNo - 20) / 12), 1.82);
+            //long bonusEther = (long)Math.Pow(((stageNo - 20) / 12), 1.82);
+            long bonusEther = (long)Math.Pow((double)stageNo / 2.0, 1.82);
             bonusEther = bonusEther < 0 ? 0 : bonusEther;
             DWMemberData.AddEther(ref ether, ref cashEther, bonusEther, 0, logMessage);
 
