@@ -135,8 +135,7 @@ namespace CloudBread.Controllers
                 }
             }
 
-            TimeSpan subTime = DateTime.UtcNow - luckySupplyShipLastTime;
-            if (subTime.TotalHours < DWDataTableManager.GlobalSettingDataTable.LuckySupplyShipResetTime)
+            if (DateTime.UtcNow < luckySupplyShipLastTime)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
