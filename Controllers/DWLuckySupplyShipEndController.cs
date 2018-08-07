@@ -121,12 +121,13 @@ namespace CloudBread.Controllers
             long relicBoxCnt = 0;
             short lastWorld = 0;
             short lastStage = 0;
+            bool droneAdvertisingOff = false;
 
             // Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage  FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, DroneAdvertisingOff FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -158,6 +159,7 @@ namespace CloudBread.Controllers
                             relicBoxCnt = (long)dreader[8];
                             lastWorld = (short)dreader[9];
                             lastStage = (short)dreader[10];
+                            droneAdvertisingOff = (bool)dreader[11];
                         }
                     }
                 }
@@ -172,13 +174,13 @@ namespace CloudBread.Controllers
             //아이템을 넣어 준다.
             for (int i = 0; i < shipData.itemList.Count; ++i)
             {
-                DWMemberData.AddItem(shipData.itemList[i], ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, stageNo, logMessage, false);   
+                DWMemberData.AddItem(shipData.itemList[i], ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, ref droneAdvertisingOff, stageNo, logMessage, false);   
             }
 
             DateTime lastTime = DateTime.UtcNow.AddHours(DWDataTableManager.GlobalSettingDataTable.LuckySupplyShipResetTime);
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET LuckySupplyShipLastTime = @luckySupplyShipLastTime, Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList, RelicBoxCount = @relicBoxCount WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET LuckySupplyShipLastTime = @luckySupplyShipLastTime, Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList, RelicBoxCount = @relicBoxCount, DroneAdvertisingOff = @droneAdvertisingOff WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@luckySupplyShipLastTime", SqlDbType.DateTime).Value = lastTime;
@@ -188,6 +190,7 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@skillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(skillItemList);
                     command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
                     command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCnt;
+                    command.Parameters.Add("@droneAdvertisingOff", SqlDbType.Bit).Value = droneAdvertisingOff;
                     
                     connection.OpenWithRetry(retryPolicy);
 
@@ -215,6 +218,7 @@ namespace CloudBread.Controllers
             result.boxList = boxList;
             result.relicBoxCnt = relicBoxCnt;
             result.itemList = shipData.itemList;
+            result.droneAdvertisingOff = droneAdvertisingOff;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

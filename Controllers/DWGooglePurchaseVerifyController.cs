@@ -114,11 +114,12 @@ namespace CloudBread.Controllers
             List<SkillItemData> skillItemList = null;
             List<BoxData> boxList = null;
             List<LimitShopItemData> limitShopItemDataList = null;
+            bool droneAdvertisingOff = false;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, LimitShopItemDataList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, LimitShopItemDataList, DroneAdvertisingOff FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -144,6 +145,7 @@ namespace CloudBread.Controllers
                             lastWorld = (short)dreader[9];
                             lastStage = (short)dreader[10];
                             limitShopItemDataList = DWMemberData.ConvertLimitShopItemDataList(dreader[11] as byte[]);
+                            droneAdvertisingOff = (bool)dreader[12];
                         }
                     }
                 }
@@ -247,12 +249,12 @@ namespace CloudBread.Controllers
                     itemData.subType = shopDataTable.ItemSubTypeList[k];
                     itemData.value = shopDataTable.ItemValueList[k];
 
-                    DWMemberData.AddItem(itemData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, stageNo, logMessage, true, true);
+                    DWMemberData.AddItem(itemData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, ref droneAdvertisingOff, stageNo, logMessage, true, true);
                 }
 
                 using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
                 {
-                    string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, CashGem = @cashGem, Ether = @ether, CashEther = @cashEther, Gas = @gas, CashGas = @cashGas, SkillItemList = @skillItemList, BoxList=@boxList, RelicBoxCount=@relicBoxCount, LimitShopItemDataList=@limitShopItemDataList WHERE MemberID = '{0}'", p.memberID);
+                    string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, CashGem = @cashGem, Ether = @ether, CashEther = @cashEther, Gas = @gas, CashGas = @cashGas, SkillItemList = @skillItemList, BoxList=@boxList, RelicBoxCount=@relicBoxCount, LimitShopItemDataList=@limitShopItemDataList, DroneAdvertisingOff = @droneAdvertisingOff WHERE MemberID = '{0}'", p.memberID);
                     using (SqlCommand command = new SqlCommand(strQuery, connection))
                     {
                         command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
@@ -265,7 +267,8 @@ namespace CloudBread.Controllers
                         command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
                         command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCnt;
                         command.Parameters.Add("@limitShopItemDataList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(limitShopItemDataList);
-
+                        command.Parameters.Add("@droneAdvertisingOff", SqlDbType.Bit).Value = droneAdvertisingOff;
+                        
                         connection.OpenWithRetry(retryPolicy);
 
                         int rowCount = command.ExecuteNonQuery();
@@ -321,6 +324,7 @@ namespace CloudBread.Controllers
             result.boxList = boxList;
             result.relicBoxCnt = relicBoxCnt;
             result.limitShopItemDataList = limitShopItemDataList;
+            result.droneAdvertisingOff = droneAdvertisingOff;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;

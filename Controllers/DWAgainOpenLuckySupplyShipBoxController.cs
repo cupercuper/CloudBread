@@ -144,6 +144,7 @@ namespace CloudBread.Controllers
             short lastStage = 0;
             long gem = 0;
             long cashGem = 0;
+            bool droneAdvertisingOff = false;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
@@ -213,7 +214,7 @@ namespace CloudBread.Controllers
             itemData.value = luckySupplyShipDataTable.ItemValueLIst[itemIdx];
 
             ulong stageNo = (((ulong)lastWorld - 1) * 10) + (ulong)lastStage;
-            DWMemberData.AddItem(itemData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, stageNo, logMessage);
+            DWMemberData.AddItem(itemData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, ref droneAdvertisingOff, stageNo, logMessage);
 
             shipData.itemList.Add(itemData);
 

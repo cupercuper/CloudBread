@@ -1233,7 +1233,7 @@ namespace CloudBread
             remainTime = subTime.Ticks;
         }
 
-        public static void AddItem(DWItemData itemData, ref double gold, ref long gem, ref long cashGem, ref long ether, ref long cashEther, ref long gas, ref long cashGas, ref long relicBoxCnt, ref List<SkillItemData> skillItemList, ref List<BoxData> boxList, ulong stageNo, Logging.CBLoggers logMessage, bool build = true, bool cash = false)
+        public static void AddItem(DWItemData itemData, ref double gold, ref long gem, ref long cashGem, ref long ether, ref long cashEther, ref long gas, ref long cashGas, ref long relicBoxCnt, ref List<SkillItemData> skillItemList, ref List<BoxData> boxList, ref bool droneAdvertisingOff, ulong stageNo, Logging.CBLoggers logMessage, bool build = true, bool cash = false)
         {
             switch ((ITEM_TYPE)itemData.itemType)
             {
@@ -1378,6 +1378,11 @@ namespace CloudBread
                     {
                         uint value = uint.Parse(itemData.value);
                         relicBoxCnt += value;
+                    }
+                    break;
+                case ITEM_TYPE.DRONE_ADVERTISING_OFF_TYPE:
+                    {
+                        droneAdvertisingOff = true;
                     }
                     break;
             }

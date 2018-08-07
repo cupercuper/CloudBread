@@ -175,6 +175,7 @@ namespace CloudBread.Controllers
                 lastReturnStage = 0,
                 baseCampResetCnt = 0,
                 relicInventorySlotIdx = 1,
+                droneAdvertisingOff = false,
             };
 
             List<ulong> dailyQuestNoList = DWDataTableManager.GetDailyQuestList();
@@ -277,6 +278,8 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@baseCampResetCount", SqlDbType.BigInt).Value = result.userData.baseCampResetCnt;
                     command.Parameters.Add("@relicInventorySlotIdx", SqlDbType.BigInt).Value = result.userData.relicInventorySlotIdx;
 
+
+                    
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();

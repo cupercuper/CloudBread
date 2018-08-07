@@ -121,12 +121,13 @@ namespace CloudBread.Controllers
             short lastStage = 0;
             List<SkillItemData> skillItemList = null;
             List<BoxData> boxList = null;
+            bool droneAdvertisingOff = false;
 
             // Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT AchievementList, Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT AchievementList, Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, DroneAdvertisingOff FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -159,6 +160,7 @@ namespace CloudBread.Controllers
                             relicBoxCnt = (long)dreader[9];
                             lastWorld = (short)dreader[10];
                             lastStage = (short)dreader[11];
+                            droneAdvertisingOff = (bool)dreader[12];
                         }
                     }
                 }
@@ -180,7 +182,7 @@ namespace CloudBread.Controllers
             itemData.subType = achievementDataTable.ItemSubType;
             itemData.value = achievementDataTable.ItemValue;
 
-            DWMemberData.AddItem(itemData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, stageNo, logMessage);
+            DWMemberData.AddItem(itemData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, ref droneAdvertisingOff, stageNo, logMessage);
 
             if (achievementDataTable.NextAchievement > 0)
             {
@@ -193,7 +195,7 @@ namespace CloudBread.Controllers
             result.nextSerialNo = achievementDataTable.NextAchievement;
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET AchievementList = @achievementList, Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET AchievementList = @achievementList, Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList, DroneAdvertisingOff = @droneAdvertisingOff WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@achievementList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(achievementList);
@@ -202,7 +204,8 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@gas", SqlDbType.BigInt).Value = gas;
                     command.Parameters.Add("@skillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(skillItemList);
                     command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
-
+                    command.Parameters.Add("@droneAdvertisingOff", SqlDbType.Bit).Value = droneAdvertisingOff;
+                    
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();

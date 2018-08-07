@@ -133,6 +133,7 @@ namespace CloudBread.Controllers
             short lastStage = 0;
             List<SkillItemData> skillItemList = null;
             List<BoxData> boxList = null;
+            bool droneAdvertisingOff = false;
 
             DateTime lastAttendanceRewardTime = DateTime.UtcNow;
             int timeZoneTotalMin = 0;
@@ -140,7 +141,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastAttendanceRewardTime, TimeZone, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, Gem, CashGem, Gas, CashGas, Ether, CashEther, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT LastAttendanceRewardTime, TimeZone, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, Gem, CashGem, Gas, CashGas, Ether, CashEther, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, DroneAdvertisingOff FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -171,6 +172,7 @@ namespace CloudBread.Controllers
                             relicBoxCnt = (long)dreader[14];
                             lastWorld = (short)dreader[15];
                             lastStage = (short)dreader[16];
+                            droneAdvertisingOff = (bool)dreader[17];
                         }
                     }
                 }
@@ -210,7 +212,7 @@ namespace CloudBread.Controllers
             continueAttendanceRewardData.itemType = continueAttendanceTable[continueAttendanceCnt].itemType;
             continueAttendanceRewardData.subType = continueAttendanceTable[continueAttendanceCnt].subType;
             continueAttendanceRewardData.value = continueAttendanceTable[continueAttendanceCnt].value;
-            DWMemberData.AddItem(continueAttendanceRewardData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGem, ref relicBoxCnt, ref skillItemList, ref boxList, stageNo, logMessage);
+            DWMemberData.AddItem(continueAttendanceRewardData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGem, ref relicBoxCnt, ref skillItemList, ref boxList, ref droneAdvertisingOff, stageNo, logMessage);
 
             List<DWItemData> accAttendanceTable = DWDataTableManager.GetAccAttendanceTable(accAttendanceNo);
             if (accAttendanceTable == null || accAttendanceTable.Count <= accAttendanceCnt)
@@ -225,14 +227,14 @@ namespace CloudBread.Controllers
             accAttendanceRewardData.subType = accAttendanceTable[accAttendanceCnt].subType;
             accAttendanceRewardData.value = accAttendanceTable[accAttendanceCnt].value;
 
-            DWMemberData.AddItem(accAttendanceRewardData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGem, ref relicBoxCnt, ref skillItemList, ref boxList, stageNo, logMessage);
+            DWMemberData.AddItem(accAttendanceRewardData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGem, ref relicBoxCnt, ref skillItemList, ref boxList, ref droneAdvertisingOff, stageNo, logMessage);
 
             continueAttendanceCnt++;
             accAttendanceCnt++;
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET LastAttendanceRewardTime = @lastAttendanceRewardTime, ContinueAttendanceCnt = @continueAttendanceCnt, ContinueAttendanceNo = @continueAttendanceNo, AccAttendanceCnt=@accAttendanceCnt, AccAttendanceNo=@accAttendanceNo, Gem=@gem, Gas=@gas, Ether=@ether, SkillItemList=@skillItemList, BoxList=@boxList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET LastAttendanceRewardTime = @lastAttendanceRewardTime, ContinueAttendanceCnt = @continueAttendanceCnt, ContinueAttendanceNo = @continueAttendanceNo, AccAttendanceCnt=@accAttendanceCnt, AccAttendanceNo=@accAttendanceNo, Gem=@gem, Gas=@gas, Ether=@ether, SkillItemList=@skillItemList, BoxList=@boxList, RelicBoxCount = @relicBoxCount, DroneAdvertisingOff=@droneAdvertisingOff WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@lastAttendanceRewardTime", SqlDbType.DateTime).Value = utcNow;
@@ -245,6 +247,8 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
                     command.Parameters.Add("@skillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(skillItemList);
                     command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
+                    command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCnt;
+                    command.Parameters.Add("@droneAdvertisingOff", SqlDbType.Bit).Value = droneAdvertisingOff;
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -274,6 +278,8 @@ namespace CloudBread.Controllers
             result.gold = gold;
             result.skillItemList = skillItemList;
             result.boxList = boxList;
+            result.relicBoxCnt = relicBoxCnt;
+            result.droneAdvertisingOff = droneAdvertisingOff;
 
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 

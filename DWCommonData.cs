@@ -57,6 +57,7 @@ namespace DW.CommonData
         GAS_TYPE,
         MINERAL_BOX_TYPE,
         RELIC_BOX_TYPE,
+        DRONE_ADVERTISING_OFF_TYPE,
         MAX_TYPE
     }
     
@@ -334,6 +335,7 @@ namespace DW.CommonData
         public long lastReturnStage;
         public long baseCampResetCnt;
         public byte relicInventorySlotIdx;
+        public bool droneAdvertisingOff;
     }
 
     [Serializable]
