@@ -222,6 +222,14 @@ namespace CloudBread.Controllers
                 }
             }
 
+            result.mineral = gold;
+            result.gem = gem;
+            result.ether = ether;
+            result.gas = gas;
+            result.relicBoxCnt = relicBoxCnt;
+            result.skillItemList = skillItemList;
+            result.boxList = boxList;
+            result.droneAdvertisingOff = droneAdvertisingOff;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

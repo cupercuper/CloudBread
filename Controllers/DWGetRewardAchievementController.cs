@@ -195,7 +195,7 @@ namespace CloudBread.Controllers
             result.nextSerialNo = achievementDataTable.NextAchievement;
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET AchievementList = @achievementList, Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList, DroneAdvertisingOff = @droneAdvertisingOff WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET AchievementList = @achievementList, Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList, DroneAdvertisingOff = @droneAdvertisingOff, RelicBoxCount = @relicBoxCount WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@achievementList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(achievementList);
@@ -205,7 +205,8 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@skillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(skillItemList);
                     command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
                     command.Parameters.Add("@droneAdvertisingOff", SqlDbType.Bit).Value = droneAdvertisingOff;
-                    
+                    command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCnt;
+
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();
@@ -222,6 +223,15 @@ namespace CloudBread.Controllers
                     }
                 }
             }
+
+            result.mineral = gold;
+            result.gem = gem;
+            result.ether = ether;
+            result.gas = gas;
+            result.relicBoxCnt = relicBoxCnt;
+            result.skillItemList = skillItemList;
+            result.boxList = boxList;
+            result.droneAdvertisingOff = droneAdvertisingOff;
 
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
