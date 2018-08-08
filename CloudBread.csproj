@@ -364,6 +364,7 @@
     <Compile Include="Controllers\DWServerCheckController.cs" />
     <Compile Include="Controllers\DWShopController.cs" />
     <Compile Include="Controllers\DWStageWarpController.cs" />
+    <Compile Include="Controllers\DWTutorialSuccessController.cs" />
     <Compile Include="Controllers\DWUdtStageInfoController.cs" />
     <Compile Include="Controllers\DWUnitSlotUpgradeController.cs" />
     <Compile Include="Controllers\DWUnitStoreActiveController.cs" />
@@ -458,6 +459,7 @@
     <Compile Include="Models\DWServerCheckData.cs" />
     <Compile Include="Models\DWShop.cs" />
     <Compile Include="Models\DWStageWarpData.cs" />
+    <Compile Include="Models\DWTutorialSuccessData.cs" />
     <Compile Include="Models\DWUdtStageInfoData.cs" />
     <Compile Include="Models\DWUnitSlotUpgradeData.cs" />
     <Compile Include="Models\DWUnitStoreActiveData.cs" />

@@ -336,6 +336,7 @@ namespace DW.CommonData
         public long baseCampResetCnt;
         public byte relicInventorySlotIdx;
         public bool droneAdvertisingOff;
+        public List<byte> tutorialSuccessList;
     }
 
     [Serializable]

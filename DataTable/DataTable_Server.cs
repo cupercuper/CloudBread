@@ -586,6 +586,9 @@ public class GlobalSettingDataTable : DataTableBase
 	public byte GameSpeedItemMaxCount;
 	public int MonsterMineralValue;
 	public ulong WarpMonsterID;
+	public ulong OfflineRewardHP;
+	public short OfflineMaxTime;
+	public short OfflineMinTime;
 	public void Load(DataRow dataRow)
 	{
 		CoinGetTime = float.Parse(dataRow[1].ToString());
@@ -600,6 +603,9 @@ public class GlobalSettingDataTable : DataTableBase
 		GameSpeedItemMaxCount = byte.Parse(dataRow[10].ToString());
 		MonsterMineralValue = int.Parse(dataRow[11].ToString());
 		WarpMonsterID = ulong.Parse(dataRow[12].ToString());
+		OfflineRewardHP = ulong.Parse(dataRow[13].ToString());
+		OfflineMaxTime = short.Parse(dataRow[14].ToString());
+		OfflineMinTime = short.Parse(dataRow[15].ToString());
 	}
 }
 
@@ -1284,6 +1290,7 @@ public class SkillItemDataTable : DataTableBase
 	public int CoolTime;
 	public int BuffApplyTime;
 	public ulong OpenStage;
+	public string Sound;
 	public void Load(DataRow dataRow)
 	{
 		Type = byte.Parse(dataRow[1].ToString());
@@ -1298,6 +1305,7 @@ public class SkillItemDataTable : DataTableBase
 		CoolTime = int.Parse(dataRow[10].ToString());
 		BuffApplyTime = int.Parse(dataRow[11].ToString());
 		OpenStage = ulong.Parse(dataRow[12].ToString());
+		Sound = dataRow[13].ToString();
 	}
 }
 
@@ -1378,16 +1386,44 @@ public class TutorialDataTable_List : DataTableListBase
 
 public class TutorialDataTable : DataTableBase
 {
-	public List<string> TutorialList;
+	public string Title;
+	public List<string> TutorialPrefabList;
+	public List<string> TutorialTitleList;
+	public List<string> TutorialDescList;
+	public byte CheckType;
+	public byte Value;
+	public int ItemType;
+	public byte ItemSubType;
+	public string ItemValue;
 	public void Load(DataRow dataRow)
 	{
-		TutorialList = new List<string>();
-		string [] TutorialList_tempArray = dataRow[1].ToString().Split(',');
-		for( int i = 0; i < TutorialList_tempArray.Length; ++i)
+		Title = dataRow[1].ToString();
+		TutorialPrefabList = new List<string>();
+		string [] TutorialPrefabList_tempArray = dataRow[2].ToString().Split(',');
+		for( int i = 0; i < TutorialPrefabList_tempArray.Length; ++i)
 		{
-			string temp = TutorialList_tempArray[i];
-			TutorialList.Add(temp);
+			string temp = TutorialPrefabList_tempArray[i];
+			TutorialPrefabList.Add(temp);
 		}
+		TutorialTitleList = new List<string>();
+		string [] TutorialTitleList_tempArray = dataRow[3].ToString().Split(',');
+		for( int i = 0; i < TutorialTitleList_tempArray.Length; ++i)
+		{
+			string temp = TutorialTitleList_tempArray[i];
+			TutorialTitleList.Add(temp);
+		}
+		TutorialDescList = new List<string>();
+		string [] TutorialDescList_tempArray = dataRow[4].ToString().Split(',');
+		for( int i = 0; i < TutorialDescList_tempArray.Length; ++i)
+		{
+			string temp = TutorialDescList_tempArray[i];
+			TutorialDescList.Add(temp);
+		}
+		CheckType = byte.Parse(dataRow[5].ToString());
+		Value = byte.Parse(dataRow[6].ToString());
+		ItemType = int.Parse(dataRow[7].ToString());
+		ItemSubType = byte.Parse(dataRow[8].ToString());
+		ItemValue = dataRow[9].ToString();
 	}
 }
 

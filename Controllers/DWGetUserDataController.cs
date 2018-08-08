@@ -116,7 +116,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, Gold, Gem, CashGem, Ether, CashEther, AllClear, ActiveItemList, LimitShopItemDataList, LastStage, AccStageCnt, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime, BossClearList, TimeZone, TimeZoneID, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, DailyQuestList, DailyQuestAcceptTime, AchievementList, ResouceDrillIdx, ResouceDrillStartTime, LuckySupplyShipLastTime, SkillItemList, BoxList, RelicList, RelicStoreList, RelicSlotIdx, Gas, CashGas, BaseCampList, RelicBoxCount, GameSpeedItemCount, GameSpeedItemStartTime, LastReturnStage, BaseCampResetCount, RelicInventorySlotIdx, DroneAdvertisingOff FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, Gold, Gem, CashGem, Ether, CashEther, AllClear, ActiveItemList, LimitShopItemDataList, LastStage, AccStageCnt, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime, BossClearList, TimeZone, TimeZoneID, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, DailyQuestList, DailyQuestAcceptTime, AchievementList, ResouceDrillIdx, ResouceDrillStartTime, LuckySupplyShipLastTime, SkillItemList, BoxList, RelicList, RelicStoreList, RelicSlotIdx, Gas, CashGas, BaseCampList, RelicBoxCount, GameSpeedItemCount, GameSpeedItemStartTime, LastReturnStage, BaseCampResetCount, RelicInventorySlotIdx, DroneAdvertisingOff, TutorialSuccessList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -207,6 +207,7 @@ namespace CloudBread.Controllers
                             workItem.baseCampResetCnt = (long)dreader[48];
                             workItem.relicInventorySlotIdx = (byte)dreader[49];
                             workItem.droneAdvertisingOff = (bool)dreader[50];
+                            workItem.tutorialSuccessList = DWMemberData.ConvertByteList(dreader[51] as byte []);
 
                             result.userDataList.Add(workItem);
                             result.errorCode = (byte)DW_ERROR_CODE.OK;
@@ -215,7 +216,20 @@ namespace CloudBread.Controllers
                 }
             }
 
+            // Init Unit
+            // 유닛이 하나도 없다면 하나를 넣어준다.
+            if (result.userDataList[0].unitList.Count == 0)
             {
+                List<ulong> unitList = DWDataTableManager.GetFirstUnitList();
+                for (int i = 0; i < unitList.Count; ++i)
+                {
+                    UnitData unitData = new UnitData();
+                    unitData.serialNo = unitList[i];
+                    unitData.level = 1;
+
+                    result.userDataList[0].unitList.Add(unitData);
+                }
+
                 result.userDataList[0].dailyQuestList.Clear();
                 List<ulong> dailyQuestNoList = DWDataTableManager.GetDailyQuestList();
                 for (int i = (int)DAILY_QUEST_GRADE_TYPE.GRADE_1; i < (int)DAILY_QUEST_GRADE_TYPE.MAX_TYPE; ++i)
@@ -241,47 +255,6 @@ namespace CloudBread.Controllers
 
                     result.userDataList[0].achievementList.Add(achievementData);
                 }
-            }
-
-            // Init Unit
-            // 유닛이 하나도 없다면 하나를 넣어준다.
-            if (result.userDataList[0].unitList.Count == 0)
-            {
-                List<ulong> unitList = DWDataTableManager.GetFirstUnitList();
-                for (int i = 0; i < unitList.Count; ++i)
-                {
-                    UnitData unitData = new UnitData();
-                    unitData.serialNo = unitList[i];
-                    unitData.level = 1;
-
-                    result.userDataList[0].unitList.Add(unitData);
-                }
-
-                //result.userDataList[0].dailyQuestList.Clear();
-                //List<ulong> dailyQuestNoList = DWDataTableManager.GetDailyQuestList();
-                //for (int i = (int)DAILY_QUEST_GRADE_TYPE.GRADE_1; i < (int)DAILY_QUEST_GRADE_TYPE.MAX_TYPE; ++i)
-                //{
-                //    QuestData dailyQuestData = new QuestData();
-                //    dailyQuestData.serialNo = dailyQuestNoList[i - 1];
-                //    dailyQuestData.complete = 0;
-                //    dailyQuestData.getReward = 0;
-                //    dailyQuestData.curValue = "0";
-
-                //    result.userDataList[0].dailyQuestList.Add(dailyQuestData);
-                //}
-
-                //result.userDataList[0].achievementList.Clear();
-                //List<ulong> achievementNoList = DWDataTableManager.FirstAchievementList();
-                //for (int i = 0; i < achievementNoList.Count; ++i)
-                //{
-                //    QuestData achievementData = new QuestData();
-                //    achievementData.serialNo = achievementNoList[i];
-                //    achievementData.complete = 0;
-                //    achievementData.getReward = 0;
-                //    achievementData.curValue = "0";
-
-                //    result.userDataList[0].achievementList.Add(achievementData);
-                //}
 
                 result.userDataList[0].skillItemList.Clear();
                 // Init Skill Item

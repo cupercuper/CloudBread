@@ -136,6 +136,45 @@ namespace CloudBread
         //    return ms.ToArray();
         //}
 
+        public static byte[] ConvertByte(List<byte> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i]);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static List<byte> ConvertByteList(byte[] buffer)
+        {
+            List<byte> byteList = new List<byte>();
+            if (buffer == null)
+            {
+                return byteList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = 0;
+            count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                byteList.Add(br.ReadByte());
+            }
+
+            br.Close();
+            ms.Close();
+            return byteList;
+        }
 
         public static List<ulong> ConvertUnitList(byte[] buffer)
         {
@@ -594,7 +633,7 @@ namespace CloudBread
             return ms.ToArray();
         }
 
-        public static Dictionary<byte, int> ConvertByteList(byte[] buffer)
+        public static Dictionary<byte, int> ConvertByteDic(byte[] buffer)
         {
             Dictionary<byte, int> byteList = new Dictionary<byte, int>();
             if(buffer == null)
