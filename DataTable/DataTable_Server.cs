@@ -1395,6 +1395,7 @@ public class TutorialDataTable : DataTableBase
 	public int ItemType;
 	public byte ItemSubType;
 	public string ItemValue;
+	public int LockType;
 	public void Load(DataRow dataRow)
 	{
 		Title = dataRow[1].ToString();
@@ -1424,6 +1425,7 @@ public class TutorialDataTable : DataTableBase
 		ItemType = int.Parse(dataRow[7].ToString());
 		ItemSubType = byte.Parse(dataRow[8].ToString());
 		ItemValue = dataRow[9].ToString();
+		LockType = int.Parse(dataRow[10].ToString());
 	}
 }
 
