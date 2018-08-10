@@ -111,7 +111,38 @@ namespace CloudBread.Controllers
             DWAttendanceCheckDataModel result = new DWAttendanceCheckDataModel();
 
             result.errorCode = (byte)DW_ERROR_CODE.OK;
-            if (CBRedis.KeyExists(RedisIndex.ATTENDANCE_RANK_IDX, p.memberID))
+
+            int timeZoneTotalMin = 0;
+            DateTime nextAttendanceCheckTime = DateTime.UtcNow;
+
+            RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("SELECT TimeZone, NextAttendanceCheckTime FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    connection.OpenWithRetry(retryPolicy);
+                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+                    {
+                        if (dreader.HasRows == false)
+                        {
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                            return result;
+                        }
+
+                        while (dreader.Read())
+                        {
+                            timeZoneTotalMin = (int)dreader[0];
+                            nextAttendanceCheckTime = (DateTime)dreader[1];
+                        }
+                    }
+                }
+            }
+
+            DateTime utcNow = DateTime.UtcNow;
+            DateTime curUserTime = utcNow.AddMinutes((double)timeZoneTotalMin);
+
+            if(curUserTime < nextAttendanceCheckTime)
             {
                 result.attendanceCheck = 0;
                 return result;
@@ -136,9 +167,7 @@ namespace CloudBread.Controllers
             bool droneAdvertisingOff = false;
 
             DateTime lastAttendanceRewardTime = DateTime.UtcNow;
-            int timeZoneTotalMin = 0;
 
-            RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
                 string strQuery = string.Format("SELECT LastAttendanceRewardTime, TimeZone, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, Gem, CashGem, Gas, CashGas, Ether, CashEther, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, DroneAdvertisingOff FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
@@ -179,18 +208,12 @@ namespace CloudBread.Controllers
             }
 
             ulong stageNo = (((ulong)lastWorld - 1) * 10) + (ulong)lastStage;
-
-            DateTime utcNow = DateTime.UtcNow;
-            DateTime curUserTime = utcNow.AddMinutes((double)timeZoneTotalMin);
+            
             DateTime nextRefreshTime = curUserTime.AddDays(1);
             nextRefreshTime = nextRefreshTime.AddHours(-nextRefreshTime.Hour);
             nextRefreshTime = nextRefreshTime.AddMinutes(-nextRefreshTime.Minute);
             nextRefreshTime = nextRefreshTime.AddSeconds(-nextRefreshTime.Second);
             nextRefreshTime = nextRefreshTime.AddMilliseconds(-nextRefreshTime.Millisecond);
-
-            TimeSpan nextTime = nextRefreshTime - curUserTime;
-
-            CBRedis.SetRedisExpireKey(RedisIndex.ATTENDANCE_RANK_IDX, p.memberID, p.memberID, nextTime);
 
             TimeSpan subTime = curUserTime - lastAttendanceRewardTime;
             // 지난 출석 보상 받은 시간보다 하루가 지나서 출석 했으면 연속 출석은 리셋
@@ -234,7 +257,7 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET LastAttendanceRewardTime = @lastAttendanceRewardTime, ContinueAttendanceCnt = @continueAttendanceCnt, ContinueAttendanceNo = @continueAttendanceNo, AccAttendanceCnt=@accAttendanceCnt, AccAttendanceNo=@accAttendanceNo, Gem=@gem, Gas=@gas, Ether=@ether, SkillItemList=@skillItemList, BoxList=@boxList, RelicBoxCount = @relicBoxCount, DroneAdvertisingOff=@droneAdvertisingOff WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET LastAttendanceRewardTime = @lastAttendanceRewardTime, ContinueAttendanceCnt = @continueAttendanceCnt, ContinueAttendanceNo = @continueAttendanceNo, AccAttendanceCnt=@accAttendanceCnt, AccAttendanceNo=@accAttendanceNo, Gem=@gem, Gas=@gas, Ether=@ether, SkillItemList=@skillItemList, BoxList=@boxList, RelicBoxCount = @relicBoxCount, DroneAdvertisingOff=@droneAdvertisingOff, NextAttendanceCheckTime = @nextAttendanceCheckTime WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@lastAttendanceRewardTime", SqlDbType.DateTime).Value = utcNow;
@@ -249,6 +272,8 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
                     command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCnt;
                     command.Parameters.Add("@droneAdvertisingOff", SqlDbType.Bit).Value = droneAdvertisingOff;
+                    command.Parameters.Add("@nextAttendanceCheckTime", SqlDbType.DateTime).Value = nextRefreshTime;
+
 
                     connection.OpenWithRetry(retryPolicy);
 
