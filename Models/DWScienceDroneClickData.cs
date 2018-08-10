@@ -23,6 +23,7 @@ namespace CloudBread.Models
         public List<BoxData> boxList;
         public long relicBoxCnt;
         public bool droneAdvertisingOff;
+        public DWItemData itemData;
         public byte errorCode;
     }
 }

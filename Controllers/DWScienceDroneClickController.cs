@@ -224,6 +224,7 @@ namespace CloudBread.Controllers
             result.boxList = boxList;
             result.relicBoxCnt = relicBoxCnt;
             result.droneAdvertisingOff = droneAdvertisingOff;
+            result.itemData = itemData;
 
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
