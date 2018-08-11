@@ -16,6 +16,7 @@ namespace CloudBread.Models
     {
         public List<DWUserData> userDataList = new List<DWUserData>();
         public byte refreshDailyQeust;
+        public byte reset;
         public byte errorCode;
     }
 }

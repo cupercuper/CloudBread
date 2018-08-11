@@ -218,6 +218,7 @@ namespace CloudBread.Controllers
 
             // Init Unit
             // 유닛이 하나도 없다면 하나를 넣어준다.
+            result.reset = 0;
             if (result.userDataList[0].unitList.Count == 0)
             {
                 List<ulong> unitList = DWDataTableManager.GetFirstUnitList();
@@ -289,6 +290,8 @@ namespace CloudBread.Controllers
                         }
                     }
                 }
+
+                result.reset = 1;
             }
             //---------------------------------------------------------
 

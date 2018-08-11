@@ -169,12 +169,13 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-            ulong relicNo = DWDataTableManager.GetRelicNo(relicDataDic);
-            if(relicNo == 0)
+            ulong relicNo = RelicNo(relicDataDic);
+            if (relicNo == 0)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
             }
+
 
             RelicDataTable relicDataTable = DWDataTableManager.GetDataTable(RelicDataTable_List.NAME, relicNo) as RelicDataTable;
             if(relicDataTable == null)
@@ -247,6 +248,34 @@ namespace CloudBread.Controllers
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;
+        }
+
+        ulong RelicNo(Dictionary<uint, RelicData> curRelicDic)
+        {
+            double maxRate = 1.0;
+
+            List<DWDataTableManager.RelicRatioData> ratioList = new List<DWDataTableManager.RelicRatioData>();
+            ratioList.AddRange(DWDataTableManager.GetRelicRatioList().ToArray());
+
+            foreach (KeyValuePair<uint, RelicData> kv in curRelicDic)
+            {
+                DWDataTableManager.RelicRatioData ratioData = ratioList.Find(a => a.SerialNo == kv.Value.serialNo);
+                maxRate -= ratioData.Ratio;
+                ratioList.Remove(ratioData);
+            }
+
+            Random random = new Random((int)DateTime.Now.Ticks);
+            double num = random.NextDouble() * maxRate;
+            for (int i = 0; i < ratioList.Count; ++i)
+            {
+                num -= ratioList[i].Ratio;
+                if (num <= 0.0)
+                {
+                    return ratioList[i].SerialNo;
+                }
+            }
+
+            return ratioList[ratioList.Count - 1].SerialNo;
         }
     }
 

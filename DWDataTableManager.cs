@@ -1029,6 +1029,11 @@ namespace CloudBread
             }
         }
 
+        public static List<RelicRatioData> GetRelicRatioList()
+        {
+            return _relicRatioList;
+        }
+
         static void BuildSkillItemList()
         {
             Dictionary<ulong, DataTableBase> skillItemLIst = GetDataTableList(SkillItemDataTable_List.NAME);
