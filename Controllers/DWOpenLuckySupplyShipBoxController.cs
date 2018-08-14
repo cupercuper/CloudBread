@@ -109,10 +109,33 @@ namespace CloudBread.Controllers
 
             DWOpenLuckySupplyShipBoxModel result = new DWOpenLuckySupplyShipBoxModel();
 
-            byte [] value = CBRedis.GetRedisKeyValue(RedisIndex.LUCKY_SUPPLY_SHIP_RANK_IDX, p.memberID);
-            LuckySupplyShipData shipData = DWMemberData.ConvertLuckySupplyShipData(value);
+            RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
+            
+            LuckySupplyShipData shipData = null;
 
-            if(shipData.shipIdx + 1 != p.shipIdx)
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("SELECT TempData FROM DWLuckySupplyShipTempData WHERE MemberID = '{0}'", p.memberID);
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    connection.OpenWithRetry(retryPolicy);
+                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+                    {
+                        if (dreader.HasRows == false)
+                        {
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                            return result;
+                        }
+
+                        while (dreader.Read())
+                        {
+                            shipData = DWMemberData.ConvertLuckySupplyShipData(dreader[0] as byte[]);
+                        }
+                    }
+                }
+            }
+
+            if (shipData.shipIdx + 1 != p.shipIdx)
             {
                 result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
                 return result;
@@ -149,7 +172,6 @@ namespace CloudBread.Controllers
                 short lastStage = 0;
                 bool droneAdvertisingOff = false;
 
-                RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
                 using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
                 {
                     string strQuery = string.Format("SELECT SkillItemList, LastWorld, LastStage FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
@@ -181,7 +203,29 @@ namespace CloudBread.Controllers
 
             shipData.shipIdx = p.shipIdx;
 
-            CBRedis.SetRedisKey(RedisIndex.LUCKY_SUPPLY_SHIP_RANK_IDX, p.memberID, DWMemberData.ConvertByte(shipData), null);
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("UPDATE DWLuckySupplyShipTempData SET TempData=@tempData WHERE MemberID = '{0}'", p.memberID);
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@tempData", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(shipData);
+
+                    connection.OpenWithRetry(retryPolicy);
+
+                    int rowCount = command.ExecuteNonQuery();
+                    if (rowCount <= 0)
+                    {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "Error";
+                        logMessage.Logger = "DWReadMailController";
+                        logMessage.Message = string.Format("Update Failed DWMembersNew");
+                        Logging.RunLog(logMessage);
+
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                        return result;
+                    }
+                }
+            }
 
             result.itemIdx = itemIdx;
             result.itemData = itemData;

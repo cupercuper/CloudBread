@@ -1403,9 +1403,11 @@ namespace CloudBread
                     {
                         if (build)
                         {
-                            gold += DWDataTableManager.GetMineral((MINERAL_BOX_TYPE)itemData.subType, stageNo);
-                            gold = Math.Truncate(gold);
-                            itemData.value = gold.ToString();
+                            double mineralBox = DWDataTableManager.GetMineral((MINERAL_BOX_TYPE)itemData.subType, stageNo);
+                            mineralBox = Math.Truncate(mineralBox);
+                            itemData.value = mineralBox.ToString();
+
+                            gold += mineralBox;
                         }
                         else
                         {

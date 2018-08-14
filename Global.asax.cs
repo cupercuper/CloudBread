@@ -18,6 +18,7 @@ using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using CloudBread.globals;
 using CloudBreadRedis;
 using DW.CommonData;
+using StackExchange.Redis;
 
 namespace CloudBread
 {
@@ -60,8 +61,6 @@ namespace CloudBread
                 //    // execute redis rank fill task
                 //    CBRedis.FillAllRankFromDB();
                 //}
-
-                //CBRedis.KeyDelete(RedisIndex.ATTENDANCE_RANK_IDX, "testtest");
 
                 DWDataTableManager.LoadAllDataTable();
                 string token = GoogleJsonWebToken.instance.Token;

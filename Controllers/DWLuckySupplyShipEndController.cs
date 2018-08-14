@@ -167,10 +167,34 @@ namespace CloudBread.Controllers
 
             ulong stageNo = (((ulong)lastWorld - 1) * 10) + (ulong)lastStage;
 
-            byte[] value = CBRedis.GetRedisKeyValue(RedisIndex.LUCKY_SUPPLY_SHIP_RANK_IDX, p.memberID);
-            LuckySupplyShipData shipData = DWMemberData.ConvertLuckySupplyShipData(value);
+            //byte[] value = CBRedis.GetRedisKeyValue(RedisIndex.LUCKY_SUPPLY_SHIP_RANK_IDX, p.memberID);
+            //LuckySupplyShipData shipData = DWMemberData.ConvertLuckySupplyShipData(value);
 
-            CBRedis.KeyDelete(RedisIndex.LUCKY_SUPPLY_SHIP_RANK_IDX, p.memberID);
+            //CBRedis.KeyDelete(RedisIndex.LUCKY_SUPPLY_SHIP_RANK_IDX, p.memberID);
+
+            LuckySupplyShipData shipData = null;
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("SELECT TempData FROM DWLuckySupplyShipTempData WHERE MemberID = '{0}'", p.memberID);
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    connection.OpenWithRetry(retryPolicy);
+                    using (SqlDataReader dreader = command.ExecuteReaderWithRetry(retryPolicy))
+                    {
+                        if (dreader.HasRows == false)
+                        {
+                            result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                            return result;
+                        }
+
+                        while (dreader.Read())
+                        {
+                            shipData = DWMemberData.ConvertLuckySupplyShipData(dreader[0] as byte[]);
+                        }
+                    }
+                }
+            }
+
             //아이템을 넣어 준다.
             for (int i = 0; i < shipData.itemList.Count; ++i)
             {
@@ -205,6 +229,34 @@ namespace CloudBread.Controllers
                         logMessage.Message = string.Format("Unit List Update Failed");
                         Logging.RunLog(logMessage);
 
+                        return result;
+                    }
+                }
+            }
+
+            shipData.shipIdx = 0;
+            shipData.fail = 0;
+            shipData.itemList.Clear();
+
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = string.Format("UPDATE DWLuckySupplyShipTempData SET TempData=@tempData WHERE MemberID = '{0}'", p.memberID);
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@tempData", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(shipData);
+
+                    connection.OpenWithRetry(retryPolicy);
+
+                    int rowCount = command.ExecuteNonQuery();
+                    if (rowCount <= 0)
+                    {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "Error";
+                        logMessage.Logger = "DWReadMailController";
+                        logMessage.Message = string.Format("Update Failed DWMembersNew");
+                        Logging.RunLog(logMessage);
+
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
                         return result;
                     }
                 }

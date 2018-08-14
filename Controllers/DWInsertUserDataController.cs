@@ -324,6 +324,35 @@ namespace CloudBread.Controllers
                 }
             }
 
+            LuckySupplyShipData shipData = new LuckySupplyShipData();
+            shipData.fail = 0;
+            shipData.shipIdx = 0;
+            shipData.itemList = new List<DWItemData>();
+            using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
+            {
+                string strQuery = "Insert into DWLuckySupplyShipTempData (MemberID, TempData) VALUES (@memberID, @tempData)";
+                using (SqlCommand command = new SqlCommand(strQuery, connection))
+                {
+                    command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
+                    command.Parameters.Add("@tempData", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(shipData);
+
+                    connection.OpenWithRetry(retryPolicy);
+
+                    int rowCount = command.ExecuteNonQuery();
+                    if (rowCount <= 0)
+                    {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "Error";
+                        logMessage.Logger = "DWInsertUserDataController";
+                        logMessage.Message = string.Format("Insert Failed DWMembersInputEventNew");
+                        Logging.RunLog(logMessage);
+
+                        result.errorCode = (byte)DW_ERROR_CODE.DB_ERROR;
+                        return result;
+                    }
+                }
+            }
+
             //if (DWMemberData.IsTestMemberID(p.memberID) == false)
             //{
             //    CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, 1);
