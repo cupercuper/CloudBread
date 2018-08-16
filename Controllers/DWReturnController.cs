@@ -113,13 +113,14 @@ namespace CloudBread.Controllers
             long ether = 0;
             long cashEther = 0;
             long captainChangeStageNo = 0;
-            List<UnitData> unitList = null; 
+            List<UnitData> unitList = null;
+            List<BuffValueData> buffValueDataList = new List<BuffValueData>();
 
             /// Database connection retry policy
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT LastWorld, LastStage, Gas, CashGas, Ether, CashEther, UnitList, CaptianChange FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT LastWorld, LastStage, Gas, CashGas, Ether, CashEther, UnitList, CaptianChange, BuffValueList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -142,6 +143,7 @@ namespace CloudBread.Controllers
                             cashEther = (long)dreader[5];
                             unitList = DWMemberData.ConvertUnitDataList(dreader[6] as byte[]);
                             captainChangeStageNo = (long)dreader[7];
+                            buffValueDataList = DWMemberData.ConvertBuffValueList(dreader[8] as byte[]);
                         }
                     }
                 }
@@ -164,6 +166,14 @@ namespace CloudBread.Controllers
             //long bonusEther = (long)Math.Pow(((stageNo - 20) / 12), 1.82);
             long bonusEther = (long)Math.Pow((double)stageNo / 2.0, 1.82);
             bonusEther = bonusEther < 0 ? 0 : bonusEther;
+
+            BuffValueData etherBuffValueData = buffValueDataList.Find(a => a.type == (byte)BUFF_TYPE.RETURN_GAS);
+            if (etherBuffValueData != null)
+            {
+                long buffEther = (long)((double)bonusEther * etherBuffValueData.value);
+                bonusEther += buffEther;
+            }
+
             DWMemberData.AddEther(ref ether, ref cashEther, bonusEther, 0, logMessage);
 
             long addGas = 0;
@@ -180,6 +190,13 @@ namespace CloudBread.Controllers
 
             if(addGas > 0)
             {
+                BuffValueData gasBuffValueData = buffValueDataList.Find(a => a.type == (byte)BUFF_TYPE.RETURN_GAS);
+                if (gasBuffValueData != null)
+                {
+                    long buffGas = (long)((double)addGas * gasBuffValueData.value);
+                    addGas += buffGas;
+                }
+
                 DWMemberData.AddGas(ref gas, ref cashGas, addGas, 0, logMessage);
             }
 

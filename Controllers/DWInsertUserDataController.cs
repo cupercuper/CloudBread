@@ -138,7 +138,7 @@ namespace CloudBread.Controllers
                 lastStage = 1,
                 unitList = new List<UnitData>(),
                 gold = 0,
-                gem = 10000,
+                gem = 0,
                 cashGem = 0,
                 ether = 0,
                 cashEther = 0,
@@ -353,11 +353,8 @@ namespace CloudBread.Controllers
                 }
             }
 
-            //if (DWMemberData.IsTestMemberID(p.memberID) == false)
-            //{
-            //    CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, 1);
-            //    CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, 1);
-            //}
+            CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, 1);
+            CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, 1);
 
             logMessage.memberID = p.memberID;
             logMessage.Level = "INFO";

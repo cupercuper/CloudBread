@@ -111,11 +111,12 @@ namespace CloudBread.Controllers
             long gas = 0;
             long cashGas = 0;
             Dictionary<ulong, ushort> baseCampDic = new Dictionary<ulong, ushort>();
+            List<BuffValueData> buffValueList = new List<BuffValueData>();
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gas, CashGas, BaseCampList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gas, CashGas, BaseCampList, BuffValueList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -138,6 +139,7 @@ namespace CloudBread.Controllers
                             gas = (long)dreader[0];
                             cashGas = (long)dreader[1];
                             baseCampDic = DWMemberData.ConvertBaseCampDic(dreader[2] as byte[]);
+                            buffValueList = DWMemberData.ConvertBuffValueList(dreader[3] as byte[]);
                         }
                     }
                 }
@@ -165,14 +167,20 @@ namespace CloudBread.Controllers
             baseCampDic.Remove(p.serialNo);
             baseCampDic.Add(p.serialNo, level);
 
+            double prevValue = (double)(level - 1) * ((double)baseCampDataTable.BuffValue / 1000.0);
+            double nextValue = (double)level * ((double)baseCampDataTable.BuffValue / 1000.0);
+
+            DWMemberData.AddBuffValueDataList(ref buffValueList, baseCampDataTable.BuffType, prevValue, nextValue);
+
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET Gas = @gas, CashGas = @cashGas, BaseCampList = @baseCampList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Gas = @gas, CashGas = @cashGas, BaseCampList = @baseCampList, BuffValueList = @buffValueList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@gas", SqlDbType.BigInt).Value = gas;
                     command.Parameters.Add("@cashGas", SqlDbType.BigInt).Value = cashGas;
                     command.Parameters.Add("@baseCampList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(baseCampDic);
+                    command.Parameters.Add("@buffValueList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(buffValueList);
 
                     connection.OpenWithRetry(retryPolicy);
 

@@ -975,6 +975,50 @@ namespace CloudBread
             return boxDataList;
         }
 
+        public static byte[] ConvertByte(List<BuffValueData> list)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(list.Count);
+            for (int i = 0; i < list.Count; ++i)
+            {
+                bw.Write(list[i].type);
+                bw.Write(list[i].value);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static List<BuffValueData> ConvertBuffValueList(byte[] buffer)
+        {
+            List<BuffValueData> buffValueList = new List<BuffValueData>();
+            if(buffer == null)
+            {
+                return buffValueList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                BuffValueData buffValueData = new BuffValueData();
+                buffValueData.type = br.ReadByte();
+                buffValueData.value = br.ReadDouble();
+
+                buffValueList.Add(buffValueData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return buffValueList;
+        }
 
         public static double GetPoint(short worldNo, long changeCaptianCnt)
         {
@@ -1478,6 +1522,31 @@ namespace CloudBread
                 {
                     return true;
                 }
+            }
+        }
+
+        public static void AddBuffValueDataList(ref List<BuffValueData> buffValueDataList,  ulong buffNo, double originValue, double nextValue)
+        {
+            BuffDataTable buffDataTable = DWDataTableManager.GetDataTable(BuffDataTable_List.NAME, buffNo) as BuffDataTable;
+
+            if (buffDataTable.BuffType == (byte)BUFF_TYPE.RETURN_ETHER ||
+                buffDataTable.BuffType == (byte)BUFF_TYPE.LUCKY_SHIP_MINERAL ||
+                buffDataTable.BuffType == (byte)BUFF_TYPE.RETURN_GAS ||
+                buffDataTable.BuffType == (byte)BUFF_TYPE.RETURN_STAGE)
+            {
+                BuffValueData buffValueData = buffValueDataList.Find(a => a.type == buffDataTable.BuffType);
+                if (buffValueData == null)
+                {
+                    buffValueData = new BuffValueData();
+                    buffValueData.type = buffDataTable.BuffType;
+                    buffValueDataList.Add(buffValueData);
+                }
+                else
+                {
+                    buffValueData.value -= originValue;
+                }
+
+                buffValueData.value += nextValue;
             }
         }
     }

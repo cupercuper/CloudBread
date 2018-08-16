@@ -460,4 +460,11 @@ namespace DW.CommonData
         public uint count;
     }
 
+    [Serializable]
+    public class BuffValueData
+    {
+        public byte type;
+        public double value;
+    }
+
 }

@@ -114,12 +114,12 @@ namespace CloudBread.Controllers
             long cashGem = 0;
             Dictionary<ulong, ushort> baseCampDic = new Dictionary<ulong, ushort>();
             long resetCnt = 0;
-
+            List<BuffValueData> buffValueDataList = new List<BuffValueData>();
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gas, CashGas, Gem, CashGem, BaseCampList, BaseCampResetCount FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gas, CashGas, Gem, CashGem, BaseCampList, BaseCampResetCount, BuffValueList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -145,6 +145,7 @@ namespace CloudBread.Controllers
                             cashGem = (long)dreader[3];
                             baseCampDic = DWMemberData.ConvertBaseCampDic(dreader[4] as byte[]);
                             resetCnt = (long)dreader[5];
+                            buffValueDataList = DWMemberData.ConvertBuffValueList(dreader[6] as byte[]);
                         }
                     }
                 }
@@ -168,7 +169,17 @@ namespace CloudBread.Controllers
             long totalGas = 0;
             foreach (KeyValuePair<ulong, ushort> kv in baseCampDic)
             {
-                ushort level = kv.Value; 
+                ushort level = kv.Value;
+
+                BaseCampDataTable baseCampDataTable = DWDataTableManager.GetDataTable(BaseCampDataTable_List.NAME, kv.Key) as BaseCampDataTable;
+                if(baseCampDataTable == null)
+                {
+                    continue;
+                }
+                
+                double value = (double)level * ((double)baseCampDataTable.BuffValue / 1000.0);
+                DWMemberData.AddBuffValueDataList(ref buffValueDataList, baseCampDataTable.BuffType, value, 0.0);
+
                 for (int i = 0; i < level; ++i)
                 {
                     totalGas += i + 1;
@@ -185,7 +196,7 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET Gas = @gas, CashGas = @cashGas, Gem = @gem, CashGem = @cashGem, BaseCampList = @baseCampList, BaseCampResetCount = @baseCampResetCount WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Gas = @gas, CashGas = @cashGas, Gem = @gem, CashGem = @cashGem, BaseCampList = @baseCampList, BaseCampResetCount = @baseCampResetCount, BuffValueList = @buffValueList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@gas", SqlDbType.BigInt).Value = gas;
@@ -194,6 +205,7 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@cashGem", SqlDbType.BigInt).Value = cashGem;
                     command.Parameters.Add("@baseCampList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(baseCampDic);
                     command.Parameters.Add("@baseCampResetCount", SqlDbType.BigInt).Value = resetCnt;
+                    command.Parameters.Add("@buffValueList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(buffValueDataList);
 
                     connection.OpenWithRetry(retryPolicy);
 

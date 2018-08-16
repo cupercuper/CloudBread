@@ -111,11 +111,12 @@ namespace CloudBread.Controllers
             long ether = 0;
             long cashEther = 0;
             Dictionary<uint, RelicData> relicDataDic = new Dictionary<uint, RelicData>();
+            List<BuffValueData> buffValueDataList = new List<BuffValueData>();
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Ether, CashEther, RelicList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Ether, CashEther, RelicList, BuffValueList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -138,6 +139,7 @@ namespace CloudBread.Controllers
                             ether = (long)dreader[0];
                             cashEther = (long)dreader[1];
                             relicDataDic = DWMemberData.ConvertRelicDataDic(dreader[2] as byte[]);
+                            buffValueDataList = DWMemberData.ConvertBuffValueList(dreader[3] as byte[]);
                         }
                     }
                 }
@@ -184,16 +186,46 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            ushort prevLevel = relicData.level;
             relicData.level += p.levelCnt;
+            ushort nextLevel = relicData.level;
+
+            if (relicDataTable.Buff_1 != 0)
+            {
+                double ratio = relicDataTable.BuffLevelRatio_1 / 1000.0;
+                double prevValue = relicData.buffValue[0] + ((prevLevel - 1) * ratio);
+                double nextValue = relicData.buffValue[0] + ((nextLevel - 1) * ratio);
+
+                DWMemberData.AddBuffValueDataList(ref buffValueDataList, relicDataTable.Buff_1, prevValue, nextValue);
+            }
+
+            if (relicDataTable.Buff_2 != 0)
+            {
+                double ratio = relicDataTable.BuffLevelRatio_2 / 1000.0;
+                double prevValue = relicData.buffValue[1] + ((prevLevel - 1) * ratio);
+                double nextValue = relicData.buffValue[1] + ((nextLevel - 1) * ratio);
+
+                DWMemberData.AddBuffValueDataList(ref buffValueDataList, relicDataTable.Buff_2, prevValue, nextValue);
+            }
+
+            if (relicDataTable.Buff_3 != 0)
+            {
+                double ratio = relicDataTable.BuffLevelRatio_3 / 1000.0;
+                double prevValue = relicData.buffValue[2] + ((prevLevel - 1) * ratio);
+                double nextValue = relicData.buffValue[2] + ((nextLevel - 1) * ratio);
+
+                DWMemberData.AddBuffValueDataList(ref buffValueDataList, relicDataTable.Buff_3, prevValue, nextValue);
+            }
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET Ether = @ether, CashEther = @cashEther, RelicList = @relicList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Ether = @ether, CashEther = @cashEther, RelicList = @relicList, BuffValueList = @buffValueList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
                     command.Parameters.Add("@cashEther", SqlDbType.BigInt).Value = cashEther;
                     command.Parameters.Add("@relicList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(relicDataDic);
+                    command.Parameters.Add("@buffValueList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(buffValueDataList);
 
                     connection.OpenWithRetry(retryPolicy);
 

@@ -112,11 +112,12 @@ namespace CloudBread.Controllers
             long cashEther = 0;
             byte relicSlotIdx = 0;
             Dictionary<uint, RelicData> relicDataDic = new Dictionary<uint, RelicData>();
+            List<BuffValueData> buffValueDataList = new List<BuffValueData>();
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Ether, CashEther, RelicSlotIdx, RelicList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Ether, CashEther, RelicSlotIdx, RelicList, BuffValueList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -140,6 +141,7 @@ namespace CloudBread.Controllers
                             cashEther = (long)dreader[1];
                             relicSlotIdx = (byte)dreader[2];
                             relicDataDic = DWMemberData.ConvertRelicDataDic(dreader[3] as byte []);
+                            buffValueDataList = DWMemberData.ConvertBuffValueList(dreader[4] as byte[]);
                         }
                     }
                 }
@@ -176,7 +178,6 @@ namespace CloudBread.Controllers
                 return result;
             }
 
-
             RelicDataTable relicDataTable = DWDataTableManager.GetDataTable(RelicDataTable_List.NAME, relicNo) as RelicDataTable;
             if(relicDataTable == null)
             {
@@ -195,17 +196,23 @@ namespace CloudBread.Controllers
             List<double> buffValueList = new List<double>();
             if(relicDataTable.Buff_1 != 0)
             {
-                buffValueList.Add(DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_1, relicDataTable.BuffMaxValue_1));
+                double value = DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_1, relicDataTable.BuffMaxValue_1);
+                DWMemberData.AddBuffValueDataList(ref buffValueDataList, relicDataTable.Buff_1, 0.0, value);
+                buffValueList.Add(value);
             }
 
             if (relicDataTable.Buff_2 != 0)
             {
-                buffValueList.Add(DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_2, relicDataTable.BuffMaxValue_2));
+                double value = DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_2, relicDataTable.BuffMaxValue_2);
+                DWMemberData.AddBuffValueDataList(ref buffValueDataList, relicDataTable.Buff_2, 0.0, value);
+                buffValueList.Add(value);
             }
 
             if (relicDataTable.Buff_3 != 0)
             {
-                buffValueList.Add(DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_3, relicDataTable.BuffMaxValue_3));
+                double value = DWMemberData.GetBuffValue(random, relicDataTable.BuffMinValue_3, relicDataTable.BuffMaxValue_3);
+                DWMemberData.AddBuffValueDataList(ref buffValueDataList, relicDataTable.Buff_3, 0.0, value);
+                buffValueList.Add(value);
             }
 
             RelicData relicData = new RelicData();
@@ -218,12 +225,13 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET Ether = @ether, CashEther = @cashEther, RelicList = @relicList WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Ether = @ether, CashEther = @cashEther, RelicList = @relicList, BuffValueList = @buffValueList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
                     command.Parameters.Add("@cashEther", SqlDbType.BigInt).Value = cashEther;
                     command.Parameters.Add("@relicList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(relicDataDic);
+                    command.Parameters.Add("@buffValueList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(buffValueDataList);
 
                     connection.OpenWithRetry(retryPolicy);
 

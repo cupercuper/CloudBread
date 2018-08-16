@@ -24,6 +24,7 @@ using CloudBread.Models;
 using System.IO;
 using DW.CommonData;
 using CloudBread.Manager;
+using CloudBreadRedis;
 
 
 
@@ -221,6 +222,9 @@ namespace CloudBread.Controllers
             result.reset = 0;
             if (result.userDataList[0].unitList.Count == 0)
             {
+                CBRedis.SetSortedSetRank((int)RANK_TYPE.CUR_STAGE_TYPE, p.memberID, 1);
+                CBRedis.SetSortedSetRank((int)RANK_TYPE.ACC_STAGE_TYPE, p.memberID, 1);
+
                 List<ulong> unitList = DWDataTableManager.GetFirstUnitList();
                 for (int i = 0; i < unitList.Count; ++i)
                 {
