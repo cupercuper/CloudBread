@@ -28,6 +28,7 @@ namespace CloudBread.Models
         public long relicBoxCnt;
         public bool droneAdvertisingOff;
         public List<DWItemData> itemList;
+        public bool freeBoxTimeReset;
         public byte errorCode;
     }
 }

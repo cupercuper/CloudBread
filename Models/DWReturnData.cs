@@ -15,12 +15,15 @@ namespace CloudBread.Models
     [Serializable]
     public class DWReturnDataModel
     {
+        public double mineral;
         public long ether;
         public long gas;
         public byte captainIdx;
         public List<UnitData> unitList;
         public long lastGasStageNo;
         public long lastReturnStageNo;
+        public short returnWorldNo;
+        public short returnStageNo;
         public byte errorCode;
     }
 }

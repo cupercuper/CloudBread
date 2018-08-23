@@ -337,6 +337,7 @@ namespace DW.CommonData
         public byte relicInventorySlotIdx;
         public bool droneAdvertisingOff;
         public List<byte> tutorialSuccessList;
+        public long freeBoxTimeRemain;
     }
 
     [Serializable]

@@ -211,15 +211,79 @@ namespace CloudBread.Controllers
                 unitList.Add(unitData);
             }
 
+            ulong returnStageNo = 1;
+            double mineral = 0;
+            BuffValueData returnStageBuffValueData = buffValueDataList.Find(a => a.type == (byte)BUFF_TYPE.RETURN_STAGE);
+            if(returnStageBuffValueData != null)
+            {
+                returnStageBuffValueData.value = Math.Min(returnStageBuffValueData.value, 90.0);
+                returnStageNo = (ulong)((double)stageNo * returnStageBuffValueData.value);
+                returnStageNo = returnStageNo == 0 ? 1 : returnStageNo;
+
+                // 보스 스테이지가 걸렸을경우 다음 스테이지로 바꿔 준다.
+                if (returnStageNo % 10 == 0)
+                {
+                    returnStageNo++;
+                }
+
+                EnemyDataTable enemy = DWDataTableManager.GetDataTable(EnemyDataTable_List.NAME, DWDataTableManager.GlobalSettingDataTable.WarpMonsterID) as EnemyDataTable;
+                if (enemy == null)
+                {
+                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                    return result;
+                }
+
+                double mineralValue = DWDataTableManager.GlobalSettingDataTable.MonsterMineralValue / 1000.0;
+
+                for (ulong i = 1; i < returnStageNo; ++i)
+                {
+                    mineral += enemy.HP * Math.Pow(1.39, Math.Min(i, 115.0)) * Math.Pow(1.13, Math.Max((i - 115.0), 0.0)) * 0.058 * mineralValue + 0.0002 * Math.Min(stageNo, 150) * 40.0;
+                    mineral = Math.Truncate(mineral);
+                }
+            }
+
+            List<UnitData> addUnitList = new List<UnitData>();
+
+            Dictionary<ulong, DataTableBase> unitDic = DWDataTableManager.GetDataTableList(UnitDataTable_List.NAME);
+            foreach (KeyValuePair<ulong, DataTableBase> kv in unitDic)
+            {
+                UnitDataTable unitDataTable = kv.Value as UnitDataTable;
+                if (unitDataTable == null)
+                {
+                    continue;
+                }
+
+                if (unitDataTable.OpenStage <= returnStageNo)
+                {
+                    UnitData unitData = unitList.Find(a => a.serialNo == kv.Key);
+                    if (unitData == null)
+                    {
+                        unitData = new UnitData();
+                        unitData.serialNo = kv.Key;
+                        unitData.level = 1;
+                        addUnitList.Add(unitData);
+                    }
+                }
+            }
+
+            if (addUnitList.Count > 0)
+            {
+                unitList.AddRange(addUnitList.ToArray());
+            }
+
+            ulong returnWorldNo = returnStageNo / 10;
+            returnStageNo = returnStageNo - (returnWorldNo * 10);
+            returnWorldNo++;
+
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
                 string strQuery = string.Format("UPDATE DWMembersNew SET CurWorld = @curWorld, CurStage = @curStage, LastWorld = @lastWorld, LastStage = @lastStage, Gas = @gas, Ether = @ether, UnitList = @unitList, CaptianID = @captianID, CaptianLevel = @captianLevel, CaptianChange = @captianChange, LastReturnStage = @lastReturnStage WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
-                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = 1;
-                    command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = 1;
-                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = 1;
-                    command.Parameters.Add("@lastStage", SqlDbType.SmallInt).Value = 1;
+                    command.Parameters.Add("@curWorld", SqlDbType.SmallInt).Value = (short)returnWorldNo;
+                    command.Parameters.Add("@curStage", SqlDbType.SmallInt).Value = (short)returnStageNo;
+                    command.Parameters.Add("@lastWorld", SqlDbType.SmallInt).Value = (short)returnWorldNo;
+                    command.Parameters.Add("@lastStage", SqlDbType.SmallInt).Value = (short)returnStageNo;
                     command.Parameters.Add("@gas", SqlDbType.BigInt).Value = gas;
                     command.Parameters.Add("@ether", SqlDbType.BigInt).Value = ether;
                     command.Parameters.Add("@unitList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(unitList);
@@ -245,12 +309,15 @@ namespace CloudBread.Controllers
                 }
             }
 
+            result.mineral = mineral;
             result.ether = ether;
             result.gas = gas;
             result.captainIdx = p.captainIdx;
             result.unitList = unitList;
             result.lastGasStageNo = captainChangeStageNo;
             result.lastReturnStageNo = (long)stageNo;
+            result.returnWorldNo = (short)returnWorldNo;
+            result.returnStageNo = (short)returnStageNo;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
 
             return result;

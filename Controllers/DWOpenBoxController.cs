@@ -119,11 +119,12 @@ namespace CloudBread.Controllers
             List<SkillItemData> skillItemList = null;
             List<BoxData> boxList = null;
             bool droneAdvertisingOff = false;
+            DateTime freeBoxOpenTime = DateTime.UtcNow;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, DroneAdvertisingOff FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, DroneAdvertisingOff, FreeBoxOpenTime FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -149,10 +150,13 @@ namespace CloudBread.Controllers
                             lastWorld = (short)dreader[9];
                             lastStage = (short)dreader[10];
                             droneAdvertisingOff = (bool)dreader[11];
+                            freeBoxOpenTime = (DateTime)dreader[12];
                         }
                     }
                 }
             }
+
+            result.freeBoxTimeReset = false;
 
             BoxData boxData = boxList.Find(a => a.type == p.boxType);
             if (boxData != null && boxData.count > 0)
@@ -248,6 +252,17 @@ namespace CloudBread.Controllers
                         Logging.RunLog(logMessage);
 
                         break;
+                    case MONEY_TYPE.ADVERTISING_TYPE:
+                        TimeSpan remainTime = DateTime.UtcNow - freeBoxOpenTime;
+                        if(remainTime.TotalHours < DWDataTableManager.GlobalSettingDataTable.NormalBoxTime)
+                        {
+                            result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                            return result;
+                        }
+
+                        freeBoxOpenTime = DateTime.UtcNow;
+                        result.freeBoxTimeReset = true;
+                        break;
                 }
             }
 
@@ -290,7 +305,7 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, CashGem = @cashGem, Ether = @ether, CashEther = @cashEther, Gas = @gas, CashGas = @cashGas, SkillItemList = @skillItemList, BoxList=@boxList, RelicBoxCount=@relicBoxCount, DroneAdvertisingOff=@droneAdvertisingOff WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET Gem = @gem, CashGem = @cashGem, Ether = @ether, CashEther = @cashEther, Gas = @gas, CashGas = @cashGas, SkillItemList = @skillItemList, BoxList=@boxList, RelicBoxCount=@relicBoxCount, DroneAdvertisingOff=@droneAdvertisingOff, FreeBoxOpenTime=@freeBoxOpenTime WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@gem", SqlDbType.BigInt).Value = gem;
@@ -303,6 +318,7 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
                     command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCnt;
                     command.Parameters.Add("@droneAdvertisingOff", SqlDbType.Bit).Value = droneAdvertisingOff;
+                    command.Parameters.Add("@freeBoxOpenTime", SqlDbType.DateTime).Value = freeBoxOpenTime;
 
                     connection.OpenWithRetry(retryPolicy);
 

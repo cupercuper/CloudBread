@@ -589,6 +589,7 @@ public class GlobalSettingDataTable : DataTableBase
 	public ulong OfflineRewardHP;
 	public short OfflineMaxTime;
 	public short OfflineMinTime;
+	public byte NormalBoxTime;
 	public void Load(DataRow dataRow)
 	{
 		CoinGetTime = float.Parse(dataRow[1].ToString());
@@ -606,6 +607,7 @@ public class GlobalSettingDataTable : DataTableBase
 		OfflineRewardHP = ulong.Parse(dataRow[13].ToString());
 		OfflineMaxTime = short.Parse(dataRow[14].ToString());
 		OfflineMinTime = short.Parse(dataRow[15].ToString());
+		NormalBoxTime = byte.Parse(dataRow[16].ToString());
 	}
 }
 

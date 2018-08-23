@@ -218,14 +218,17 @@ namespace CloudBread.Controllers
                 return result;
             }
 
+            double mineralValue = DWDataTableManager.GlobalSettingDataTable.MonsterMineralValue / 1000.0;
+
             double mineral = 0;
             ulong subStage = warpStageNo - stageNo;
             for(ulong i = 1; i <= subStage; ++i)
             {
                 double mineralStageNo = stageNo + (double)i;
-                mineral += enemy.HP* Math.Pow(1.39, Math.Min(mineralStageNo, 115.0)) * Math.Pow(1.13, Math.Max((mineralStageNo - 115.0), 9.0));
+                mineral += enemy.HP* Math.Pow(1.39, Math.Min(mineralStageNo, 115.0)) * Math.Pow(1.13, Math.Max((mineralStageNo - 115.0), 0.0)) * 0.058 * mineralValue + 0.0002 * Math.Min(stageNo, 150) * 40.0;
+                mineral = Math.Truncate(mineral);
             }
-            
+
             ulong warpWorldNo = warpStageNo / 10;
             warpStageNo = warpStageNo - (warpWorldNo * 10);
             warpWorldNo++;
