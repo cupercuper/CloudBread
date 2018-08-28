@@ -233,7 +233,7 @@ namespace CloudBread.Controllers
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET RelicList = @relicList, RelicStoreList = @relicStoreList, Ether = @ether, CashEther = @cashEther, Gem = @gem, CashGem = @cashGem, BuffValueList = @buffValueLis WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET RelicList = @relicList, RelicStoreList = @relicStoreList, Ether = @ether, CashEther = @cashEther, Gem = @gem, CashGem = @cashGem, BuffValueList = @buffValueList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@relicList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(relicDataDic);
