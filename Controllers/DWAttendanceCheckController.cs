@@ -142,7 +142,7 @@ namespace CloudBread.Controllers
             DateTime utcNow = DateTime.UtcNow;
             DateTime curUserTime = utcNow.AddMinutes((double)timeZoneTotalMin);
 
-            if(curUserTime < nextAttendanceCheckTime)
+            if (curUserTime < nextAttendanceCheckTime)
             {
                 result.attendanceCheck = 0;
                 return result;

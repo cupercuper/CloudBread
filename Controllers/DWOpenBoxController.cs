@@ -266,7 +266,16 @@ namespace CloudBread.Controllers
                 }
             }
 
-            int boxCount = p.boxType == (byte)BOX_TYPE.NORMAL_TYPE ? 2 : 3;
+            int boxCount = 0;
+            if (p.boxType == (byte)BOX_TYPE.NORMAL_TYPE || p.boxType == (byte)BOX_TYPE.BRONZE_TYPE)
+            {
+                boxCount = 2;
+            }
+            else
+            {
+                boxCount = 3;
+            }
+
             ulong stageNo = (((ulong)lastWorld - 1) * 10) + (ulong)lastStage;
             result.itemList = new List<DWItemData>();
 
