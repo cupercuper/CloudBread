@@ -117,7 +117,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, Gold, Gem, CashGem, Ether, CashEther, AllClear, ActiveItemList, LimitShopItemDataList, LastStage, AccStageCnt, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime, BossClearList, TimeZone, TimeZoneID, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, DailyQuestList, DailyQuestAcceptTime, AchievementList, ResouceDrillIdx, ResouceDrillStartTime, LuckySupplyShipLastTime, SkillItemList, BoxList, RelicList, RelicStoreList, RelicSlotIdx, Gas, CashGas, BaseCampList, RelicBoxCount, GameSpeedItemCount, GameSpeedItemStartTime, LastReturnStage, BaseCampResetCount, RelicInventorySlotIdx, DroneAdvertisingOff, TutorialSuccessList, FreeBoxOpenTime FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, UnitList, Gold, Gem, CashGem, Ether, CashEther, AllClear, ActiveItemList, LimitShopItemDataList, LastStage, AccStageCnt, BossDungeonTicket, LastBossDungeonNo, BossDungeonTicketRefreshTime, BossClearList, TimeZone, TimeZoneID, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, DailyQuestList, DailyQuestAcceptTime, AchievementList, ResouceDrillIdx, ResouceDrillStartTime, LuckySupplyShipLastTime, SkillItemList, BoxList, RelicList, RelicStoreList, RelicSlotIdx, Gas, CashGas, BaseCampList, RelicBoxCount, GameSpeedItemCount, GameSpeedItemStartTime, LastReturnStage, BaseCampResetCount, RelicInventorySlotIdx, DroneAdvertisingOff, TutorialSuccessList, FreeBoxOpenTime, ResourceDrillItemList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -221,6 +221,8 @@ namespace CloudBread.Controllers
                             {
                                 workItem.freeBoxTimeRemain = 0;
                             }
+
+                            workItem.resourceDrillItemDataList = DWMemberData.ConvertItemList(dreader[53] as byte[]);
 
                             result.userDataList.Add(workItem);
                             result.errorCode = (byte)DW_ERROR_CODE.OK;
@@ -332,12 +334,12 @@ namespace CloudBread.Controllers
                 }
             }
 
-            DWMemberData.RefreshDrillIdx(resourceDrillStartTime, ref result.userDataList[0].resourceDrillIdx, ref result.userDataList[0].resourceDrillTimeRemain);
+            DWMemberData.RefreshDrillIdx(resourceDrillStartTime, ref result.userDataList[0].resourceDrillIdx, ref result.userDataList[0].resourceDrillTimeRemain, ref result.userDataList[0].resourceDrillItemDataList);
             DWMemberData.RefreshLuckySupplyShipRemainTime(luckySupplyShipLastTime, ref result.userDataList[0].luckySupplyShipTimeRemain);
 
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET BossDungeonTicketRefreshTime = @bossDungeonTicketRefreshTime, BossDungeonTicket = @bossDungeonTicket, BossDungeonEnterType = @bossDungeonEnterType, DailyQuestList = @dailyQuestList, DailyQuestAcceptTime = @dailyQuestAcceptTime, AchievementList = @achievementList, ResouceDrillIdx = @resouceDrillIdx, DestroyScienceDrone = @destroyScienceDrone, GameSpeedItemCount = @gameSpeedItemCount WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET BossDungeonTicketRefreshTime = @bossDungeonTicketRefreshTime, BossDungeonTicket = @bossDungeonTicket, BossDungeonEnterType = @bossDungeonEnterType, DailyQuestList = @dailyQuestList, DailyQuestAcceptTime = @dailyQuestAcceptTime, AchievementList = @achievementList, ResouceDrillIdx = @resouceDrillIdx, DestroyScienceDrone = @destroyScienceDrone, GameSpeedItemCount = @gameSpeedItemCount, ResourceDrillItemList = @resourceDrillItemList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@bossDungeonTicketRefreshTime", SqlDbType.DateTime).Value = bossDungeonTicketRefreshTime;
@@ -349,7 +351,8 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@resouceDrillIdx", SqlDbType.TinyInt).Value = result.userDataList[0].resourceDrillIdx;
                     command.Parameters.Add("@destroyScienceDrone", SqlDbType.Bit).Value = 1;
                     command.Parameters.Add("@gameSpeedItemCount", SqlDbType.TinyInt).Value = result.userDataList[0].gameSpeedItemCnt;
-                    
+                    command.Parameters.Add("@resourceDrillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(result.userDataList[0].resourceDrillItemDataList);
+
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();

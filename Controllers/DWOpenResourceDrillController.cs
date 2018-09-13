@@ -122,11 +122,12 @@ namespace CloudBread.Controllers
             short lastWorld = 0;
             short lastStage = 0;
             bool droneAdvertisingOff = false;
+            List<DWItemData> resourceDrillItemLIst = null;
 
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("SELECT ResouceDrillIdx, ResouceDrillStartTime, Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, DroneAdvertisingOff FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("SELECT ResouceDrillIdx, ResouceDrillStartTime, Gem, CashGem, Ether, CashEther, Gas, CashGas, SkillItemList, BoxList, RelicBoxCount, LastWorld, LastStage, DroneAdvertisingOff, ResourceDrillItemList FROM DWMembersNew WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     connection.OpenWithRetry(retryPolicy);
@@ -156,10 +157,11 @@ namespace CloudBread.Controllers
                             cashGas = (long)dreader[7];
                             skillItemList = DWMemberData.ConvertSkillItemList(dreader[8] as byte[]);
                             boxList = DWMemberData.ConvertBoxDataList(dreader[9] as byte[]);
-                            relicBoxCnt = (long)dreader[8];
-                            lastWorld = (short)dreader[9];
-                            lastStage = (short)dreader[10];
-                            droneAdvertisingOff = (bool)dreader[11];
+                            relicBoxCnt = (long)dreader[10];
+                            lastWorld = (short)dreader[11];
+                            lastStage = (short)dreader[12];
+                            droneAdvertisingOff = (bool)dreader[13];
+                            resourceDrillItemLIst = DWMemberData.ConvertItemList(dreader[14] as byte[]);
                         }
                     }
                 }
@@ -207,30 +209,39 @@ namespace CloudBread.Controllers
                     return result;
                 }
 
-                TimeSpan subTime = DateTime.UtcNow - resouceDrillStartTime;
-                // 아직 시간이 안끝난 상황에서 기존 drill 인덱스 보다 작은 인덱스가 오면 해킹
-                if(subTime.TotalHours < (double)drillDataTable.ResetTime && resouceDrillIdx >= p.drillIdx)
+                DateTime endTime = resouceDrillStartTime.AddHours(drillDataTable.ResetTime);
+                if(endTime <= DateTime.UtcNow)
                 {
-                    logMessage.memberID = p.memberID;
-                    logMessage.Level = "Error";
-                    logMessage.Logger = "DWOpenResourceDrillController";
-                    logMessage.Message = string.Format("Drill TIme Faile orogin={0}, client={1}, remainTime={2}, tableTime={3} ",resouceDrillIdx, p.drillIdx, subTime.ToString(), drillDataTable.ResetTime.ToString());
-                    Logging.RunLog(logMessage);
+                    // 리셋 시간이 다 지난 상황에서 drill 인덱스가 1보다 크면 해킹 무조건 1부터 시작
+                    if (p.drillIdx > 1)
+                    {
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "Error";
+                        logMessage.Logger = "DWOpenResourceDrillController";
+                        logMessage.Message = string.Format("Drill Refresh Idx Over origin={0}, client={1}", resouceDrillIdx, p.drillIdx);
+                        Logging.RunLog(logMessage);
 
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                    return result;
+                        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                        return result;
+                    }
+
+                    resourceDrillItemLIst.Clear();
                 }
-                // 리셋 시간이 다 지난 상황에서 drill 인덱스가 1보다 크면 해킹 무조건 1부터 시작
-                else if(p.drillIdx > 1)
+                else
                 {
-                    logMessage.memberID = p.memberID;
-                    logMessage.Level = "Error";
-                    logMessage.Logger = "DWOpenResourceDrillController";
-                    logMessage.Message = string.Format("Drill Refresh Idx Over origin={0}, client={1}", resouceDrillIdx, p.drillIdx);
-                    Logging.RunLog(logMessage);
+                    // 아직 시간이 안끝난 상황에서 기존 drill 인덱스 보다 작은 인덱스가 오면 해킹
+                    if (resouceDrillIdx >= p.drillIdx)
+                    {
+                        TimeSpan subTime = endTime - DateTime.UtcNow; 
+                        logMessage.memberID = p.memberID;
+                        logMessage.Level = "Error";
+                        logMessage.Logger = "DWOpenResourceDrillController";
+                        logMessage.Message = string.Format("Drill TIme Faile orogin={0}, client={1}, remainTime={2}, tableTime={3} ", resouceDrillIdx, p.drillIdx, subTime.ToString(), drillDataTable.ResetTime.ToString());
+                        Logging.RunLog(logMessage);
 
-                    result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
-                    return result;
+                        result.errorCode = (byte)DW_ERROR_CODE.LOGIC_ERROR;
+                        return result;
+                    }
                 }
             }
             else
@@ -267,9 +278,11 @@ namespace CloudBread.Controllers
             itemData.value = nextDrillDataTable.ItemValue;
             DWMemberData.AddItem(itemData, ref gold, ref gem, ref cashGem, ref ether, ref cashEther, ref gas, ref cashGas, ref relicBoxCnt, ref skillItemList, ref boxList, ref droneAdvertisingOff, stageNo, logMessage);
             //--------------------------------------------------------------   
+
+            resourceDrillItemLIst.Add(itemData);
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = string.Format("UPDATE DWMembersNew SET ResouceDrillIdx = @resouceDrillIdx, ResouceDrillStartTime = @resouceDrillStartTime, Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList, RelicBoxCount = @relicBoxCount, DroneAdvertisingOff = @droneAdvertisingOff WHERE MemberID = '{0}'", p.memberID);
+                string strQuery = string.Format("UPDATE DWMembersNew SET ResouceDrillIdx = @resouceDrillIdx, ResouceDrillStartTime = @resouceDrillStartTime, Gem = @gem, Ether = @ether, Gas = @gas, SkillItemList = @skillItemList, BoxList = @boxList, RelicBoxCount = @relicBoxCount, DroneAdvertisingOff = @droneAdvertisingOff, ResourceDrillItemList = @resourceDrillItemList WHERE MemberID = '{0}'", p.memberID);
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@resouceDrillIdx", SqlDbType.TinyInt).Value = p.drillIdx;
@@ -282,6 +295,9 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@boxList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(boxList);
                     command.Parameters.Add("@relicBoxCount", SqlDbType.BigInt).Value = relicBoxCnt;    
                     command.Parameters.Add("@droneAdvertisingOff", SqlDbType.Bit).Value = droneAdvertisingOff;
+                    command.Parameters.Add("@resourceDrillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(resourceDrillItemLIst);
+
+                    
 
                     connection.OpenWithRetry(retryPolicy);
 
@@ -300,6 +316,14 @@ namespace CloudBread.Controllers
                 }
             }
 
+            result.itemData = itemData;
+            result.ether = ether;
+            result.gas = gas;
+            result.gem = gem;
+            result.gold = gold;
+            result.skillItemList = skillItemList;
+            result.boxList = boxList;
+            result.relicBoxCnt = relicBoxCnt;
             result.errorCode = (byte)DW_ERROR_CODE.OK;
             return result;
         }

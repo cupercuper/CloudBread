@@ -178,6 +178,7 @@ namespace CloudBread.Controllers
                 droneAdvertisingOff = false,
                 tutorialSuccessList = new List<byte>(),
                 freeBoxTimeRemain = 0,
+                resourceDrillItemDataList = new List<DWItemData>(),
             };
 
             List<ulong> dailyQuestNoList = DWDataTableManager.GetDailyQuestList();
@@ -233,7 +234,7 @@ namespace CloudBread.Controllers
             RetryPolicy retryPolicy = new RetryPolicy<SqlAzureTransientErrorDetectionStrategy>(globalVal.conRetryCount, TimeSpan.FromSeconds(globalVal.conRetryFromSeconds));
             using (SqlConnection connection = new SqlConnection(globalVal.DBConnectionString))
             {
-                string strQuery = "Insert into DWMembersNew (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, Gold, Gem, CashGem, Ether, CashEther, ActiveItemList, LimitShopItemDataList, BossDungeonTicket, LastBossDungeonNo, BossClearList, TimeZone, TimeZoneID, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, DailyQuestList, AchievementList, ResouceDrillIdx, LuckySupplyShipLastTime, SkillItemList, BoxList, RelicList, RelicStoreList, RelicSlotIdx, Gas, CashGas, BaseCampList, RelicBoxCount, LastReturnStage, BaseCampResetCount, RelicInventorySlotIdx, TutorialSuccessList, NextAttendanceCheckTime, FreeBoxOpenTime) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @gold, @gem, @cashGem, @ether, @cashEther, @activeItemList, @limitShopItemDataList, @bossDungeonTicket, @lastBossDungeonNo, @bossClearList, @timeZone, @timeZoneID, @continueAttendanceCnt, @continueAttendanceNo, @accAttendanceCnt, @accAttendanceNo, @dailyQuestList, @achievementList, @resouceDrillIdx, @luckySupplyShipLastTime, @skillItemList, @boxList, @relicList, @relicStoreList, @relicSlotIdx, @gas, @cashGas, @baseCampList, @relicBoxCount, @lastReturnStage, @baseCampResetCount, @relicInventorySlotIdx, @tutorialSuccessList, @nextAttendanceCheckTime, @freeBoxOpenTime)";
+                string strQuery = "Insert into DWMembersNew (MemberID, NickName, RecommenderID, CaptianLevel, CaptianID, CaptianChange, LastWorld, CurWorld, CurStage, LastStage, UnitList, Gold, Gem, CashGem, Ether, CashEther, ActiveItemList, LimitShopItemDataList, BossDungeonTicket, LastBossDungeonNo, BossClearList, TimeZone, TimeZoneID, ContinueAttendanceCnt, ContinueAttendanceNo, AccAttendanceCnt, AccAttendanceNo, DailyQuestList, AchievementList, ResouceDrillIdx, LuckySupplyShipLastTime, SkillItemList, BoxList, RelicList, RelicStoreList, RelicSlotIdx, Gas, CashGas, BaseCampList, RelicBoxCount, LastReturnStage, BaseCampResetCount, RelicInventorySlotIdx, TutorialSuccessList, NextAttendanceCheckTime, FreeBoxOpenTime, ResourceDrillItemList) VALUES (@memberID, @nickName, @recommenderID, @captianLevel, @captianID, @captianChange, @lastWorld, @curWorld, @curStage, @lastStage, @unitList, @gold, @gem, @cashGem, @ether, @cashEther, @activeItemList, @limitShopItemDataList, @bossDungeonTicket, @lastBossDungeonNo, @bossClearList, @timeZone, @timeZoneID, @continueAttendanceCnt, @continueAttendanceNo, @accAttendanceCnt, @accAttendanceNo, @dailyQuestList, @achievementList, @resouceDrillIdx, @luckySupplyShipLastTime, @skillItemList, @boxList, @relicList, @relicStoreList, @relicSlotIdx, @gas, @cashGas, @baseCampList, @relicBoxCount, @lastReturnStage, @baseCampResetCount, @relicInventorySlotIdx, @tutorialSuccessList, @nextAttendanceCheckTime, @freeBoxOpenTime, @resourceDrillItemList)";
                 using (SqlCommand command = new SqlCommand(strQuery, connection))
                 {
                     command.Parameters.Add("@memberID", SqlDbType.NVarChar).Value = result.userData.memberID;
@@ -282,7 +283,8 @@ namespace CloudBread.Controllers
                     command.Parameters.Add("@tutorialSuccessList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(new List<byte>());
                     command.Parameters.Add("@nextAttendanceCheckTime", SqlDbType.DateTime).Value = new DateTime(1970, 1, 1);
                     command.Parameters.Add("@freeBoxOpenTime", SqlDbType.DateTime).Value = new DateTime(1970, 1, 1);
-                    
+                    command.Parameters.Add("@resourceDrillItemList", SqlDbType.VarBinary).Value = DWMemberData.ConvertByte(new List<DWItemData>());
+
                     connection.OpenWithRetry(retryPolicy);
 
                     int rowCount = command.ExecuteNonQuery();

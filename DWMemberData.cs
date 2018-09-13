@@ -1020,6 +1020,53 @@ namespace CloudBread
             return buffValueList;
         }
 
+        public static byte[] ConvertByte(List<DWItemData> itemList)
+        {
+            MemoryStream ms = new MemoryStream();
+            BinaryWriter bw = new BinaryWriter(ms);
+
+            bw.Write(itemList.Count);
+            for (int i = 0; i < itemList.Count; ++i)
+            {
+                bw.Write(itemList[i].itemType);
+                bw.Write(itemList[i].subType);
+                bw.Write(itemList[i].value);
+            }
+
+            bw.Close();
+            ms.Close();
+            return ms.ToArray();
+        }
+
+        public static List<DWItemData> ConvertItemList(byte[] buffer)
+        {
+            List<DWItemData> itemList = new List<DWItemData>();
+            if (buffer == null)
+            {
+                return itemList;
+            }
+
+            MemoryStream ms = new MemoryStream(buffer);
+            BinaryReader br = new BinaryReader(ms);
+
+            int count = br.ReadInt32();
+
+            for (int i = 0; i < count; ++i)
+            {
+                DWItemData itemData = new DWItemData();
+                itemData.itemType = br.ReadByte();
+                itemData.subType = br.ReadByte();
+                itemData.value = br.ReadString();
+
+                itemList.Add(itemData);
+            }
+
+            br.Close();
+            ms.Close();
+
+            return itemList;
+        }
+
         public static double GetPoint(short worldNo, long changeCaptianCnt)
         {
             double point = worldNo + changeCaptianCnt * 1000;
@@ -1278,11 +1325,12 @@ namespace CloudBread
             return true;
         }
 
-        public static void RefreshDrillIdx(DateTime drillStartTime, ref byte drillIdx, ref long remainTime)
+        public static void RefreshDrillIdx(DateTime drillStartTime, ref byte drillIdx, ref long remainTime, ref List<DWItemData> itemList)
         {
             remainTime = 0;
             if (drillIdx == 0)
             {
+                itemList.Clear();
                 return;
             }
 
@@ -1292,13 +1340,15 @@ namespace CloudBread
                 return;
             }
 
-            TimeSpan subTime = DateTime.UtcNow - drillStartTime;
-            if(subTime.TotalHours >= (double)drillDataTable.ResetTime)
+            DateTime endTime = drillStartTime.AddHours(drillDataTable.ResetTime);
+            if(endTime <= DateTime.UtcNow)
             {
                 drillIdx = 0;
+                itemList.Clear();
                 return;
             }
 
+            TimeSpan subTime = endTime - DateTime.UtcNow;
             remainTime = subTime.Ticks;
         }
 

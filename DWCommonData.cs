@@ -338,6 +338,7 @@ namespace DW.CommonData
         public bool droneAdvertisingOff;
         public List<byte> tutorialSuccessList;
         public long freeBoxTimeRemain;
+        public List<DWItemData> resourceDrillItemDataList;
     }
 
     [Serializable]
